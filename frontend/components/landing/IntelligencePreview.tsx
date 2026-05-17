@@ -105,9 +105,8 @@ export default function IntelligencePreview() {
           style={{ perspective: '1200px', cursor: 'default' }}
         >
           <motion.div
-            style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
+            style={{ rotateX, rotateY, transformStyle: 'preserve-3d', maxWidth: '820px' }}
             className="rounded-sm overflow-hidden mx-auto"
-            style={{ maxWidth: '820px' }}
           >
             {/* Browser chrome */}
             <div
