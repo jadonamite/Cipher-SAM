@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { sql } from '../lib/db.js'
+import { sql, getOrCreateUser } from '../lib/db.js'
 import { getCachedInsight, setCachedInsight, invalidateInsight } from '../lib/cache.js'
 import { generateSubscriptionInsight } from '../lib/ai.js'
 
@@ -9,6 +9,7 @@ app.get('/', async (c) => {
   const userId = c.req.header('x-user-id')
   if (!userId) return c.json({ error: 'Unauthorized' }, 401)
 
+  const dbUserId = await getOrCreateUser(userId)
   const rows = await sql`
     SELECT s.*,
       json_agg(sig ORDER BY sig.created_at DESC) FILTER (WHERE sig.id IS NOT NULL) AS signals,
@@ -16,7 +17,7 @@ app.get('/', async (c) => {
     FROM subscriptions s
     LEFT JOIN signals sig ON sig.subscription_id = s.id
     LEFT JOIN recommendations r ON r.subscription_id = s.id AND r.status = 'pending'
-    WHERE s.user_id = ${userId} AND s.status = 'active'
+    WHERE s.user_id = ${dbUserId} AND s.status = 'active'
     GROUP BY s.id
     ORDER BY s.amount DESC
   `
@@ -29,8 +30,9 @@ app.get('/:id', async (c) => {
   const { id } = c.req.param()
   if (!userId) return c.json({ error: 'Unauthorized' }, 401)
 
+  const dbUserId = await getOrCreateUser(userId)
   const [sub] = await sql`
-    SELECT * FROM subscriptions WHERE id = ${id} AND user_id = ${userId}
+    SELECT * FROM subscriptions WHERE id = ${id} AND user_id = ${dbUserId}
   `
   if (!sub) return c.json({ error: 'Not found' }, 404)
 
@@ -62,9 +64,10 @@ app.patch('/:id/status', async (c) => {
     return c.json({ error: 'Invalid status' }, 400)
   }
 
+  const dbUserId = await getOrCreateUser(userId)
   const [updated] = await sql`
     UPDATE subscriptions SET status = ${status}
-    WHERE id = ${id} AND user_id = ${userId}
+    WHERE id = ${id} AND user_id = ${dbUserId}
     RETURNING *
   `
   if (!updated) return c.json({ error: 'Not found' }, 404)

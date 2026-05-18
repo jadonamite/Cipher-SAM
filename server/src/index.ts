@@ -6,6 +6,7 @@ import { logger } from 'hono/logger'
 import subscriptions from './routes/subscriptions.js'
 import gmail from './routes/gmail.js'
 import intelligence from './routes/intelligence.js'
+import wallet from './routes/wallet.js'
 
 const app = new Hono()
 
@@ -24,6 +25,7 @@ app.get('/health', (c) => c.json({ status: 'ok', service: 'sam-server' }))
 app.route('/subscriptions', subscriptions)
 app.route('/gmail', gmail)
 app.route('/intelligence', intelligence)
+app.route('/wallet', wallet)
 
 const port = Number(process.env.PORT ?? 3001)
 

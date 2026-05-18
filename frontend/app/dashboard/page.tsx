@@ -42,7 +42,8 @@ function DashboardInner() {
   const [gmailConnected, setGmailConnected] = useState(false)
   const [subs, setSubs] = useState<Subscription[]>([])
   const [scanning, setScanning] = useState(false)
-  const [scanResult, setScanResult] = useState<{ created: number; updated: number } | null>(null)
+  const [walletScanning, setWalletScanning] = useState(false)
+  const [scanResult, setScanResult] = useState<{ created: number; updated: number; source: string } | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Check Gmail status + load subscriptions
@@ -92,18 +93,38 @@ function DashboardInner() {
       })
       const data = await res.json()
       if (res.ok) {
-        setScanResult({ created: data.created, updated: data.updated })
-        // Reload subscriptions
+        setScanResult({ created: data.created, updated: data.updated, source: 'Gmail' })
         const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user.id } })
-        if (subsRes.ok) {
-          const subsData = await subsRes.json()
-          setSubs(subsData.subscriptions ?? [])
-        }
+        if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
       }
     } catch {
       // server offline
     } finally {
       setScanning(false)
+    }
+  }
+
+  async function triggerWalletScan() {
+    const address = user?.wallet?.address
+    if (!address || walletScanning) return
+    setWalletScanning(true)
+    setScanResult(null)
+    try {
+      const res = await fetch('/api/wallet/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
+        body: JSON.stringify({ address }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setScanResult({ created: data.created, updated: data.updated, source: 'Wallet' })
+        const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user!.id } })
+        if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
+      }
+    } catch {
+      // server offline
+    } finally {
+      setWalletScanning(false)
     }
   }
 
@@ -176,7 +197,26 @@ function DashboardInner() {
         >
           SAM
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {user?.wallet?.address && (
+            <motion.button
+              onClick={triggerWalletScan}
+              disabled={walletScanning}
+              whileHover={{ scale: walletScanning ? 1 : 1.02 }}
+              whileTap={{ scale: walletScanning ? 1 : 0.98 }}
+              className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
+              style={{
+                fontFamily: 'var(--font-geist-sans)',
+                background: 'transparent',
+                color: walletScanning ? '#525252' : '#A3A3A3',
+                border: `1px solid ${walletScanning ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius: '2px',
+                letterSpacing: '0.08em',
+              }}
+            >
+              {walletScanning ? 'Scanning...' : 'Scan Wallet'}
+            </motion.button>
+          )}
           {gmailConnected && (
             <motion.button
               onClick={triggerScan}
@@ -193,7 +233,7 @@ function DashboardInner() {
                 letterSpacing: '0.08em',
               }}
             >
-              {scanning ? 'Scanning...' : 'Re-scan'}
+              {scanning ? 'Scanning...' : 'Scan Gmail'}
             </motion.button>
           )}
           <span
@@ -219,7 +259,7 @@ function DashboardInner() {
               color: '#16A34A',
             }}
           >
-            Scan complete — {scanResult.created} new subscription{scanResult.created !== 1 ? 's' : ''} detected
+            {scanResult.source} scan complete — {scanResult.created} new subscription{scanResult.created !== 1 ? 's' : ''} detected
             {scanResult.updated > 0 && `, ${scanResult.updated} updated`}
           </motion.div>
         )}

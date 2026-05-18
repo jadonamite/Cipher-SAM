@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { sql } from '../lib/db.js'
+import { sql, getOrCreateUser } from '../lib/db.js'
 import { getCachedInsight, setCachedInsight } from '../lib/cache.js'
 import { generateSubscriptionInsight } from '../lib/ai.js'
 
@@ -67,8 +67,9 @@ app.post('/analyze/:id', async (c) => {
   const { id } = c.req.param()
   if (!userId) return c.json({ error: 'Unauthorized' }, 401)
 
+  const dbUserId = await getOrCreateUser(userId)
   const rows = await sql`
-    SELECT * FROM subscriptions WHERE id = ${id} AND user_id = ${userId}
+    SELECT * FROM subscriptions WHERE id = ${id} AND user_id = ${dbUserId}
   `
   const sub = rows[0] as { amount: number; cadence: string; last_charged: Date | null; detected_at: Date; name: string } | undefined
   if (!sub) return c.json({ error: 'Not found' }, 404)
@@ -86,20 +87,11 @@ app.post('/analyze/:id', async (c) => {
     `
   }
 
-  // Upsert recommendation
+  // Replace existing recommendation for this subscription
+  await sql`DELETE FROM recommendations WHERE subscription_id = ${id}`
   const [rec] = await sql`
     INSERT INTO recommendations (subscription_id, action, confidence, evidence)
-    VALUES (
-      ${id},
-      ${action},
-      ${confidence},
-      ${JSON.stringify(signals.map((s) => s.label))}
-    )
-    ON CONFLICT (subscription_id) DO UPDATE
-      SET action = EXCLUDED.action,
-          confidence = EXCLUDED.confidence,
-          evidence = EXCLUDED.evidence,
-          status = 'pending'
+    VALUES (${id}, ${action}, ${confidence}, ${JSON.stringify(signals.map((s) => s.label))})
     RETURNING *
   `
 
@@ -123,8 +115,9 @@ app.post('/analyze-all', async (c) => {
   const userId = c.req.header('x-user-id')
   if (!userId) return c.json({ error: 'Unauthorized' }, 401)
 
+  const dbUserId = await getOrCreateUser(userId)
   const subs = await sql`
-    SELECT * FROM subscriptions WHERE user_id = ${userId} AND status = 'active'
+    SELECT * FROM subscriptions WHERE user_id = ${dbUserId} AND status = 'active'
   ` as Array<{ id: string; name: string; amount: number; cadence: string; last_charged: Date | null; detected_at: Date }>
 
   const results = []
