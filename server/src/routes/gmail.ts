@@ -1,17 +1,20 @@
 import { Hono } from 'hono'
+import { google } from 'googleapis'
 import { sql } from '../lib/db.js'
-import { getScanLock } from '../lib/cache.js'
+import { getScanLock, storeGmailTokens, getGmailTokens, hasGmailConnected } from '../lib/cache.js'
 
 const app = new Hono()
 
-// Known merchant normalization map (seed — expand over time)
+// ---------------------------------------------------------------------------
+// Merchant normalization
+// ---------------------------------------------------------------------------
+
 const MERCHANT_MAP: Record<string, string> = {
   'netflix.com': 'Netflix',
   'nflx': 'Netflix',
   'spotify.com': 'Spotify',
   'spotify ab': 'Spotify',
   'figma.com': 'Figma',
-  'notion.so': 'Notion AI',
   'notion labs': 'Notion AI',
   'github.com': 'GitHub',
   'github copilot': 'GitHub Copilot',
@@ -31,9 +34,39 @@ const MERCHANT_MAP: Record<string, string> = {
   'zoom.us': 'Zoom',
   'linear.app': 'Linear',
   'airtable.com': 'Airtable',
+  'canva.com': 'Canva',
+  'notion.so': 'Notion AI',
+  'grammarly.com': 'Grammarly',
+  'duolingo.com': 'Duolingo',
+  'apple.com': 'Apple',
+  'icloud.com': 'iCloud',
+  'microsoft.com': 'Microsoft',
+  'office365': 'Microsoft 365',
+  'youtube premium': 'YouTube Premium',
+  'amazon.com': 'Amazon',
+  'prime video': 'Amazon Prime',
+  'hulu': 'Hulu',
+  'disney': 'Disney+',
+  'paramount': 'Paramount+',
+  'chatgpt': 'ChatGPT Plus',
+  'midjourney': 'Midjourney',
 }
 
-// Subscription detection patterns on email subject lines
+export function normalizeMerchant(raw: string): string {
+  const lower = raw.toLowerCase()
+  for (const [key, name] of Object.entries(MERCHANT_MAP)) {
+    if (lower.includes(key)) return name
+  }
+  return raw
+    .split(' ')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
+}
+
+// ---------------------------------------------------------------------------
+// Email detection helpers
+// ---------------------------------------------------------------------------
+
 const SUB_PATTERNS = [
   /your .+ subscription/i,
   /receipt from .+/i,
@@ -45,19 +78,11 @@ const SUB_PATTERNS = [
   /subscription renewed/i,
   /payment receipt/i,
   /charged .+\$/i,
+  /your .+ plan/i,
+  /thanks for your payment/i,
+  /order confirmation/i,
+  /auto.?renew/i,
 ]
-
-export function normalizeMerchant(raw: string): string {
-  const lower = raw.toLowerCase()
-  for (const [key, name] of Object.entries(MERCHANT_MAP)) {
-    if (lower.includes(key)) return name
-  }
-  // Title-case the raw string as fallback
-  return raw
-    .split(' ')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ')
-}
 
 export function isSubscriptionEmail(subject: string, sender: string): boolean {
   return SUB_PATTERNS.some((p) => p.test(subject) || p.test(sender))
@@ -68,17 +93,110 @@ export function extractAmount(text: string): number | null {
   return match ? parseFloat(match[1]) : null
 }
 
-export function detectCadence(
-  subject: string
-): 'monthly' | 'yearly' | 'weekly' | 'daily' {
+export function detectCadence(subject: string): 'monthly' | 'yearly' | 'weekly' | 'daily' {
   if (/annual|yearly|year/i.test(subject)) return 'yearly'
   if (/weekly|week/i.test(subject)) return 'weekly'
   if (/daily|day/i.test(subject)) return 'daily'
   return 'monthly'
 }
 
-// POST /gmail/scan — trigger a Gmail scan for a user
-// In production: exchange OAuth token, call Gmail API, parse results
+// ---------------------------------------------------------------------------
+// OAuth client factory
+// ---------------------------------------------------------------------------
+
+function getOAuthClient() {
+  return new google.auth.OAuth2(
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
+    process.env.GMAIL_REDIRECT_URI ?? 'http://localhost:3000/api/gmail/callback'
+  )
+}
+
+// ---------------------------------------------------------------------------
+// GET /gmail/status?user_id=<privy_did>
+// ---------------------------------------------------------------------------
+
+app.get('/status', async (c) => {
+  const userId = c.req.query('user_id') ?? c.req.header('x-user-id')
+  if (!userId) return c.json({ error: 'user_id required' }, 400)
+  const connected = await hasGmailConnected(userId)
+  return c.json({ connected })
+})
+
+// ---------------------------------------------------------------------------
+// GET /gmail/auth?user_id=<privy_did>
+// Redirects to Google consent screen. user_id passed as OAuth state.
+// ---------------------------------------------------------------------------
+
+app.get('/auth', (c) => {
+  const userId = c.req.query('user_id')
+  if (!userId) return c.json({ error: 'user_id required' }, 400)
+
+  if (!process.env.GMAIL_CLIENT_ID || !process.env.GMAIL_CLIENT_SECRET) {
+    return c.json(
+      { error: 'Gmail OAuth not configured. Add GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET to server/.env.' },
+      503
+    )
+  }
+
+  const oauth2Client = getOAuthClient()
+  const authUrl = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    prompt: 'consent', // force consent to always get refresh_token
+    scope: ['https://www.googleapis.com/auth/gmail.readonly'],
+    state: userId,
+  })
+
+  return c.redirect(authUrl)
+})
+
+// ---------------------------------------------------------------------------
+// GET /gmail/callback?code=<code>&state=<privy_did>
+// Exchanges auth code for tokens, stores refresh token, redirects to dashboard.
+// ---------------------------------------------------------------------------
+
+app.get('/callback', async (c) => {
+  const code = c.req.query('code')
+  const userId = c.req.query('state')
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000'
+
+  if (!code || !userId) {
+    return c.redirect(`${frontendUrl}/dashboard?error=oauth_failed`)
+  }
+
+  try {
+    const oauth2Client = getOAuthClient()
+    const { tokens } = await oauth2Client.getToken(code)
+
+    if (!tokens.refresh_token) {
+      // refresh_token only comes on first consent — prompt: 'consent' above ensures this
+      return c.redirect(`${frontendUrl}/dashboard?error=no_refresh_token`)
+    }
+
+    // Upsert user record
+    await sql`
+      INSERT INTO users (privy_did) VALUES (${userId})
+      ON CONFLICT (privy_did) DO NOTHING
+    `
+
+    await storeGmailTokens(userId, {
+      refresh_token: tokens.refresh_token,
+      access_token: tokens.access_token ?? undefined,
+    })
+
+    return c.redirect(`${frontendUrl}/dashboard?connected=gmail`)
+  } catch (err) {
+    console.error('[Gmail OAuth] Callback error:', (err as Error).message)
+    return c.redirect(`${frontendUrl}/dashboard?error=oauth_failed`)
+  }
+})
+
+// ---------------------------------------------------------------------------
+// POST /gmail/scan
+// Fetches Gmail messages, runs parser, creates subscription records.
+// Rate-limited to once per 10 min per user via Redis lock.
+// ---------------------------------------------------------------------------
+
 app.post('/scan', async (c) => {
   const userId = c.req.header('x-user-id')
   if (!userId) return c.json({ error: 'Unauthorized' }, 401)
@@ -88,14 +206,94 @@ app.post('/scan', async (c) => {
     return c.json({ error: 'Scan already in progress. Try again in 10 minutes.' }, 429)
   }
 
-  // Placeholder — Phase 1 will plug in real Gmail OAuth + API calls here
-  return c.json({
-    message: 'Scan queued',
-    note: 'Gmail OAuth integration ships in Phase 1.',
-  })
+  const tokens = await getGmailTokens(userId)
+  if (!tokens?.refresh_token) {
+    return c.json({ error: 'Gmail not connected', code: 'GMAIL_NOT_CONNECTED' }, 400)
+  }
+
+  try {
+    const oauth2Client = getOAuthClient()
+    oauth2Client.setCredentials(tokens)
+
+    // Refresh access token if needed
+    oauth2Client.on('tokens', async (newTokens) => {
+      if (newTokens.refresh_token) {
+        await storeGmailTokens(userId, {
+          refresh_token: newTokens.refresh_token,
+          access_token: newTokens.access_token ?? undefined,
+        })
+      }
+    })
+
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client })
+
+    const listRes = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'subject:receipt OR subject:invoice OR subject:subscription OR subject:billing OR subject:renewal OR subject:"payment confirmed" OR subject:"auto-renewal"',
+      maxResults: 100,
+    })
+
+    const messages = listRes.data.messages ?? []
+    let detected = 0
+    let created = 0
+    let updated = 0
+
+    for (const msg of messages) {
+      if (!msg.id) continue
+
+      const full = await gmail.users.messages.get({
+        userId: 'me',
+        id: msg.id,
+        format: 'metadata',
+        metadataHeaders: ['Subject', 'From', 'Date'],
+      })
+
+      const headers = full.data.payload?.headers ?? []
+      const subject = headers.find((h) => h.name === 'Subject')?.value ?? ''
+      const from = headers.find((h) => h.name === 'From')?.value ?? ''
+      const date = headers.find((h) => h.name === 'Date')?.value ?? new Date().toISOString()
+      const snippet = full.data.snippet ?? ''
+
+      if (!isSubscriptionEmail(subject, from)) continue
+      detected++
+
+      // Strip display name, keep only domain/address portion for normalization
+      const fromClean = from.replace(/^.*</, '').replace(/>.*$/, '').trim()
+      const merchant = normalizeMerchant(fromClean || from)
+      const amount = extractAmount(subject + ' ' + snippet)
+      const cadence = detectCadence(subject)
+
+      if (!amount) continue
+
+      const existingRows = await sql`
+        SELECT id FROM subscriptions
+        WHERE user_id = ${userId} AND merchant = ${merchant} AND status = 'active'
+        LIMIT 1
+      `
+
+      if (existingRows.length > 0) {
+        await sql`UPDATE subscriptions SET last_charged = ${date} WHERE id = ${existingRows[0].id}`
+        updated++
+      } else {
+        await sql`
+          INSERT INTO subscriptions (user_id, name, merchant, amount, cadence, source, detected_at, last_charged)
+          VALUES (${userId}, ${merchant}, ${merchant}, ${amount}, ${cadence}, 'gmail', NOW(), ${date})
+        `
+        created++
+      }
+    }
+
+    return c.json({ scanned: messages.length, detected, created, updated })
+  } catch (err) {
+    console.error('[Gmail] Scan error:', err)
+    return c.json({ error: 'Scan failed', detail: (err as Error).message }, 500)
+  }
 })
 
-// POST /gmail/parse — receive parsed email payload and create subscription record
+// ---------------------------------------------------------------------------
+// POST /gmail/parse — manual single-email parse (for testing)
+// ---------------------------------------------------------------------------
+
 app.post('/parse', async (c) => {
   const userId = c.req.header('x-user-id')
   if (!userId) return c.json({ error: 'Unauthorized' }, 401)
@@ -117,28 +315,24 @@ app.post('/parse', async (c) => {
 
   if (!amount) return c.json({ detected: false, reason: 'Could not extract amount' })
 
-  // Check for existing subscription (dedup)
-  const [existing] = await sql`
+  const existingRows = await sql`
     SELECT id FROM subscriptions
     WHERE user_id = ${userId} AND merchant = ${merchant} AND status = 'active'
     LIMIT 1
   `
 
-  if (existing) {
-    await sql`
-      UPDATE subscriptions SET last_charged = ${body.received_at}
-      WHERE id = ${existing.id}
-    `
-    return c.json({ detected: true, action: 'updated', subscription_id: existing.id })
+  if (existingRows.length > 0) {
+    await sql`UPDATE subscriptions SET last_charged = ${body.received_at} WHERE id = ${existingRows[0].id}`
+    return c.json({ detected: true, action: 'updated', subscription_id: existingRows[0].id })
   }
 
-  const [created] = await sql`
-    INSERT INTO subscriptions (user_id, name, merchant, amount, cadence, source, last_charged)
-    VALUES (${userId}, ${merchant}, ${merchant}, ${amount}, ${cadence}, 'gmail', ${body.received_at})
+  const created = await sql`
+    INSERT INTO subscriptions (user_id, name, merchant, amount, cadence, source, detected_at, last_charged)
+    VALUES (${userId}, ${merchant}, ${merchant}, ${amount}, ${cadence}, 'gmail', NOW(), ${body.received_at})
     RETURNING id
   `
 
-  return c.json({ detected: true, action: 'created', subscription_id: created.id })
+  return c.json({ detected: true, action: 'created', subscription_id: created[0].id })
 })
 
 export default app
