@@ -18,7 +18,7 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 | 2 | Wallet Detection | ⏳ | Depends on Phase 0 ✅ |
 | 3 | Intelligence Layer | 🔄 | Core logic built, needs live data |
 | 4 | Dashboard | ✅ | — |
-| 5 | Recommendation Engine | ⏳ | Depends on Phase 3 |
+| 5 | Recommendation Engine | ✅ | — |
 | 6 | Onchain Identity | ⏳ | Chain confirmation needed |
 | 7 | Action Executor | ⏳ | Depends on Phase 5 |
 | 8 | Policy Engine | ⏳ | Depends on Phase 7 |
@@ -95,13 +95,13 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 
 ---
 
-## PHASE 5 — Recommendation Engine ⏳
+## PHASE 5 — Recommendation Engine ✅
 
-- [ ] Ranked recommendation list
-- [ ] Recommendation card UI (score + evidence + suggested action)
-- [ ] One-click approval flow
-- [ ] Reminder scheduling
-- [ ] Deep-link to service cancellation/pause pages
+- [x] Ranked recommendation list — `/recommendations` page, sorted by confidence
+- [x] Recommendation card UI — merchant, confidence bar, evidence bullets, action badge
+- [x] One-click approval flow — accept applies action (cancel/pause) to subscription immediately
+- [x] Reminder scheduling — accept 'remind' marks it accepted (push delivery is Phase 7)
+- [x] Deep-link to service cancellation/pause pages — 25+ merchants mapped
 
 ---
 

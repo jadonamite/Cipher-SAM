@@ -7,6 +7,7 @@ import subscriptions from './routes/subscriptions.js'
 import gmail from './routes/gmail.js'
 import intelligence from './routes/intelligence.js'
 import wallet from './routes/wallet.js'
+import recommendations from './routes/recommendations.js'
 
 const app = new Hono()
 
@@ -26,6 +27,7 @@ app.route('/subscriptions', subscriptions)
 app.route('/gmail', gmail)
 app.route('/intelligence', intelligence)
 app.route('/wallet', wallet)
+app.route('/recommendations', recommendations)
 
 const port = Number(process.env.PORT ?? 3001)
 

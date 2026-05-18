@@ -172,6 +172,12 @@ export default function SubscriptionsPage() {
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/recommendations"
+            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
+          >
+            Recommendations
+          </Link>
           {subs.length > 0 && (
             <motion.button
               onClick={runAnalysis}
