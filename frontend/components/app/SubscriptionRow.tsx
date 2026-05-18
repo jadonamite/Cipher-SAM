@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export type Subscription = {
@@ -8,17 +9,20 @@ export type Subscription = {
   name: string
   merchant: string
   amount: number
+  currency?: string
   cadence: 'daily' | 'weekly' | 'monthly' | 'yearly'
   source: 'gmail' | 'wallet'
   status: 'active' | 'paused' | 'cancelled'
   confidence?: number
   action?: 'cancel' | 'pause' | 'remind' | 'keep'
   last_charged?: string | null
+  detected_at?: string | null
 }
 
 interface SubscriptionRowProps {
   sub: Subscription
   onStatusChange?: (id: string, status: 'active' | 'paused' | 'cancelled') => void
+  href?: string
 }
 
 const ACTION_COLORS: Record<string, string> = {
@@ -54,8 +58,9 @@ function MerchantAvatar({ name }: { name: string }) {
   )
 }
 
-export default function SubscriptionRow({ sub, onStatusChange }: SubscriptionRowProps) {
+export default function SubscriptionRow({ sub, onStatusChange, href }: SubscriptionRowProps) {
   const [hovered, setHovered] = useState(false)
+  const router = useRouter()
   const actionColor = sub.action ? ACTION_COLORS[sub.action] : undefined
 
   const monthlyEquiv =
@@ -71,16 +76,18 @@ export default function SubscriptionRow({ sub, onStatusChange }: SubscriptionRow
     <motion.div
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
+      onClick={() => href && router.push(href)}
       animate={{
         y: hovered ? -2 : 0,
         borderColor: hovered ? 'rgba(229,9,20,0.25)' : 'rgba(255,255,255,0.06)',
       }}
       transition={{ duration: 0.18 }}
-      className="relative flex items-center gap-4 px-4 py-3.5 cursor-default"
+      className="relative flex items-center gap-4 px-4 py-3.5"
       style={{
         background: '#141414',
         border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: '2px',
+        cursor: href ? 'pointer' : 'default',
       }}
     >
       {/* Red left border on hover */}
@@ -173,7 +180,7 @@ export default function SubscriptionRow({ sub, onStatusChange }: SubscriptionRow
             {sub.status === 'active' && (
               <>
                 <button
-                  onClick={() => onStatusChange(sub.id, 'paused')}
+                  onClick={(e) => { e.stopPropagation(); onStatusChange(sub.id, 'paused') }}
                   className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest cursor-pointer"
                   style={{
                     fontFamily: 'var(--font-geist-sans)',
@@ -186,7 +193,7 @@ export default function SubscriptionRow({ sub, onStatusChange }: SubscriptionRow
                   Pause
                 </button>
                 <button
-                  onClick={() => onStatusChange(sub.id, 'cancelled')}
+                  onClick={(e) => { e.stopPropagation(); onStatusChange(sub.id, 'cancelled') }}
                   className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest cursor-pointer"
                   style={{
                     fontFamily: 'var(--font-geist-sans)',
@@ -202,7 +209,7 @@ export default function SubscriptionRow({ sub, onStatusChange }: SubscriptionRow
             )}
             {sub.status === 'paused' && (
               <button
-                onClick={() => onStatusChange(sub.id, 'active')}
+                onClick={(e) => { e.stopPropagation(); onStatusChange(sub.id, 'active') }}
                 className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest cursor-pointer"
                 style={{
                   fontFamily: 'var(--font-geist-sans)',
