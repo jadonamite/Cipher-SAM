@@ -14,10 +14,10 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 | Phase | Name | Status | Blocker |
 |---|---|---|---|
 | 0 | Setup & Scaffold | ✅ | — |
-| 1 | Gmail Detection | ⏳ | Needs Gmail OAuth setup |
+| 1 | Gmail Detection | 🔄 | Code complete — needs GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET |
 | 2 | Wallet Detection | ⏳ | Depends on Phase 0 ✅ |
 | 3 | Intelligence Layer | 🔄 | Core logic built, needs live data |
-| 4 | Dashboard | ⏳ | Depends on Phase 3 |
+| 4 | Dashboard | 🔄 | Real UI built — auth gate, Gmail connect, subscription list |
 | 5 | Recommendation Engine | ⏳ | Depends on Phase 3 |
 | 6 | Onchain Identity | ⏳ | Chain confirmation needed |
 | 7 | Action Executor | ⏳ | Depends on Phase 5 |
@@ -30,27 +30,30 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 - [x] Initialize Next.js 16 project (TypeScript, Tailwind v4, Biome)
 - [x] Set up Hono API server with Node.js adapter
 - [x] Define DB schema (users, subscriptions, signals, recommendations, actions)
-- [x] Configure Privy embedded wallets (client wrapper ready, needs PRIVY_APP_ID)
+- [x] Configure Privy embedded wallets — App ID wired, layout wrapped
 - [x] Wire NVIDIA NIM into Hono server (primary AI provider)
 - [x] Wire Groq as fallback provider (gsk_ key confirmed)
 - [x] Merchant normalization DB — seed entries + regex pipeline
 - [x] Upstash Redis cache layer (insight TTL + scan rate-limiting)
 - [x] CLAUDE.md + AGENTS.md present
 - [x] Initialize git repo, configure .gitignore
-- [ ] Create Neon DB project → add NEON_DATABASE_URL to server/.env
-- [ ] Create Upstash Redis instance → add UPSTASH_REDIS_URL + TOKEN to server/.env
-- [ ] Get Privy App ID → add NEXT_PUBLIC_PRIVY_APP_ID to frontend/.env.local
+- [x] Neon DB project live — NEON_DATABASE_URL in server/.env
+- [x] Upstash Redis live — UPSTASH_REDIS_URL + TOKEN in server/.env
+- [x] Privy App ID + Secret — wired to frontend/.env.local + server/.env
 
 ---
 
-## PHASE 1 — Gmail Detection ⏳
+## PHASE 1 — Gmail Detection 🔄
 
 - [x] Email parser skeleton (subject patterns, amount extraction, cadence detection)
-- [x] Merchant normalization pipeline (seed DB + regex)
+- [x] Merchant normalization pipeline (seed DB + regex, expanded to 30+ merchants)
 - [x] Subscription record creation + dedup logic built
-- [ ] Gmail OAuth integration (read-only scope) — needs Google Cloud project
-- [ ] Wire OAuth tokens to scan route
-- [ ] Recurring pattern detection (billing cadence from history)
+- [x] Gmail OAuth integration (read-only scope) — `GET /gmail/auth` + `GET /gmail/callback`
+- [x] Wire OAuth tokens to scan route — `POST /gmail/scan` calls real Gmail API
+- [x] Token storage in Redis (30-day TTL, auto-refresh on expiry)
+- [x] `GET /gmail/status` endpoint — frontend checks if Gmail is connected
+- [ ] **ADD GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET to server/.env** (create at console.cloud.google.com)
+- [ ] Recurring pattern detection (billing cadence from email history)
 
 ---
 
@@ -78,15 +81,17 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 
 ---
 
-## PHASE 4 — Dashboard ⏳
+## PHASE 4 — Dashboard 🔄
 
 - [x] Landing page fully built (Hero, Problem, HowItWorks, IntelligencePreview, TrustSection, CTAFinale)
 - [x] Design system implemented (Netflix dark + finalbosu motion)
-- [ ] Subscription list view (categorized, sorted by spend)
+- [x] `/dashboard` — auth gate, Gmail connect CTA, stats row (spend / count / high-risk), subscription list preview
+- [x] `/subscriptions` — full list, categorized by type, filter (all/monthly/yearly/high-risk), sort (spend/risk/detected)
+- [x] SubscriptionRow component — merchant avatar, hover quick-actions (pause/cancel/resume)
+- [x] ConfidenceScore component — large DM Mono number, animated progress bar, signal list
+- [x] ConnectGmail component — full-page and compact variants
 - [ ] Per-subscription detail view
-- [ ] Monthly spend summary
-- [ ] Confidence scores displayed
-- [ ] Realtime updates
+- [ ] Realtime updates (WebSocket or polling)
 
 ---
 
@@ -133,3 +138,4 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 |---|---|---|
 | 2026-05-17 | PRD v1.0 finalized. Architecture confirmed. | Scaffold project. |
 | 2026-05-17 | Phase 0 complete. Phase 3 core logic built. Landing page fully built. | Set up Neon DB + Upstash. Complete Gmail OAuth. |
+| 2026-05-18 | Privy wired (App ID + Secret). Gmail OAuth complete (`/auth`, `/callback`, `/scan`). Tokens stored in Redis. `googleapis` installed. Dashboard + subscriptions page built. ConfidenceScore, SubscriptionRow, ConnectGmail components built. | Add GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET to server/.env (Google Cloud). Push to GitHub remote. |

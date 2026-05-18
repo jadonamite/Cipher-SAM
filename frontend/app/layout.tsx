@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Syne, DM_Mono } from 'next/font/google'
 import { GeistSans } from 'geist/font/sans'
+import PrivyProvider from '@/components/providers/PrivyProvider'
 import './globals.css'
 
 const syne = Syne({
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${syne.variable} ${dmMono.variable} ${GeistSans.variable}`}
     >
-      <body className="bg-void text-white antialiased">{children}</body>
+      <body className="bg-void text-white antialiased">
+        <PrivyProvider>{children}</PrivyProvider>
+      </body>
     </html>
   )
 }
