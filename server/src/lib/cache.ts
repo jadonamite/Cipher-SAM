@@ -10,9 +10,10 @@ export const redis = new Redis({
 })
 
 const TTL = {
-  insight: 60 * 60 * 6,    // 6h — re-run when new signals arrive
-  scan: 60 * 10,            // 10m — rate-limit Gmail scans
-  gmail_token: 60 * 60 * 24 * 30, // 30 days
+  insight: 60 * 60 * 6,
+  scan: 60 * 10,
+  wallet_scan: 60 * 5,
+  gmail_token: 60 * 60 * 24 * 30,
 }
 
 export async function getCachedInsight(subId: string): Promise<string | null> {
@@ -26,6 +27,12 @@ export async function setCachedInsight(subId: string, insight: string): Promise<
 export async function getScanLock(userId: string): Promise<boolean> {
   const key = `scan_lock:${userId}`
   const set = await redis.set(key, '1', { ex: TTL.scan, nx: true })
+  return set !== null
+}
+
+export async function getWalletScanLock(userId: string): Promise<boolean> {
+  const key = `wallet_scan_lock:${userId}`
+  const set = await redis.set(key, '1', { ex: TTL.wallet_scan, nx: true })
   return set !== null
 }
 

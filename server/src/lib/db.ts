@@ -6,6 +6,21 @@ if (!process.env.NEON_DATABASE_URL) {
 
 export const sql = neon(process.env.NEON_DATABASE_URL)
 
+// Upserts user by privy_did, returns their UUID. Use this before any subscription query.
+export async function getOrCreateUser(privyDid: string): Promise<string> {
+  const rows = await sql`
+    INSERT INTO users (privy_did)
+    VALUES (${privyDid})
+    ON CONFLICT (privy_did) DO UPDATE SET privy_did = EXCLUDED.privy_did
+    RETURNING id
+  `
+  return rows[0].id as string
+}
+
+export async function setUserWallet(userId: string, walletAddress: string): Promise<void> {
+  await sql`UPDATE users SET wallet_address = ${walletAddress} WHERE id = ${userId}`
+}
+
 export type User = {
   id: string
   privy_did: string

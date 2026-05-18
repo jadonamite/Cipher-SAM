@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { google } from 'googleapis'
-import { sql } from '../lib/db.js'
+import { sql, getOrCreateUser } from '../lib/db.js'
 import { getScanLock, storeGmailTokens, getGmailTokens, hasGmailConnected } from '../lib/cache.js'
 
 const app = new Hono()
@@ -173,12 +173,7 @@ app.get('/callback', async (c) => {
       return c.redirect(`${frontendUrl}/dashboard?error=no_refresh_token`)
     }
 
-    // Upsert user record
-    await sql`
-      INSERT INTO users (privy_did) VALUES (${userId})
-      ON CONFLICT (privy_did) DO NOTHING
-    `
-
+    await getOrCreateUser(userId)
     await storeGmailTokens(userId, {
       refresh_token: tokens.refresh_token,
       access_token: tokens.access_token ?? undefined,
@@ -206,6 +201,7 @@ app.post('/scan', async (c) => {
     return c.json({ error: 'Scan already in progress. Try again in 10 minutes.' }, 429)
   }
 
+  const dbUserId = await getOrCreateUser(userId)
   const tokens = await getGmailTokens(userId)
   if (!tokens?.refresh_token) {
     return c.json({ error: 'Gmail not connected', code: 'GMAIL_NOT_CONNECTED' }, 400)
@@ -267,7 +263,7 @@ app.post('/scan', async (c) => {
 
       const existingRows = await sql`
         SELECT id FROM subscriptions
-        WHERE user_id = ${userId} AND merchant = ${merchant} AND status = 'active'
+        WHERE user_id = ${dbUserId} AND merchant = ${merchant} AND status = 'active'
         LIMIT 1
       `
 
@@ -277,7 +273,7 @@ app.post('/scan', async (c) => {
       } else {
         await sql`
           INSERT INTO subscriptions (user_id, name, merchant, amount, cadence, source, detected_at, last_charged)
-          VALUES (${userId}, ${merchant}, ${merchant}, ${amount}, ${cadence}, 'gmail', NOW(), ${date})
+          VALUES (${dbUserId}, ${merchant}, ${merchant}, ${amount}, ${cadence}, 'gmail', NOW(), ${date})
         `
         created++
       }
@@ -315,9 +311,11 @@ app.post('/parse', async (c) => {
 
   if (!amount) return c.json({ detected: false, reason: 'Could not extract amount' })
 
+  const dbUserId = await getOrCreateUser(userId)
+
   const existingRows = await sql`
     SELECT id FROM subscriptions
-    WHERE user_id = ${userId} AND merchant = ${merchant} AND status = 'active'
+    WHERE user_id = ${dbUserId} AND merchant = ${merchant} AND status = 'active'
     LIMIT 1
   `
 
@@ -328,7 +326,7 @@ app.post('/parse', async (c) => {
 
   const created = await sql`
     INSERT INTO subscriptions (user_id, name, merchant, amount, cadence, source, detected_at, last_charged)
-    VALUES (${userId}, ${merchant}, ${merchant}, ${amount}, ${cadence}, 'gmail', NOW(), ${body.received_at})
+    VALUES (${dbUserId}, ${merchant}, ${merchant}, ${amount}, ${cadence}, 'gmail', NOW(), ${body.received_at})
     RETURNING id
   `
 
