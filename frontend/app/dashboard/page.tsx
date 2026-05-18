@@ -46,32 +46,31 @@ function DashboardInner() {
   const [scanResult, setScanResult] = useState<{ created: number; updated: number; source: string } | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Check Gmail status + load subscriptions
+  async function fetchSubs(uid: string) {
+    const [statusRes, subsRes] = await Promise.all([
+      fetch(`/api/gmail/status?user_id=${uid}`),
+      fetch('/api/subscriptions', { headers: { 'x-user-id': uid } }),
+    ])
+    const statusData = await statusRes.json()
+    setGmailConnected(statusData.connected ?? false)
+    if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
+  }
+
+  // Initial load
   useEffect(() => {
     if (!ready || !authenticated || !user?.id) return
-
-    async function init() {
-      setLoading(true)
-      try {
-        const [statusRes, subsRes] = await Promise.all([
-          fetch(`/api/gmail/status?user_id=${user!.id}`),
-          fetch('/api/subscriptions', { headers: { 'x-user-id': user!.id } }),
-        ])
-        const statusData = await statusRes.json()
-        setGmailConnected(statusData.connected ?? false)
-        if (subsRes.ok) {
-          const subsData = await subsRes.json()
-          setSubs(subsData.subscriptions ?? [])
-        }
-      } catch {
-        // server may not be running locally — subs stay empty
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    init()
+    setLoading(true)
+    fetchSubs(user.id).catch(() => {}).finally(() => setLoading(false))
   }, [ready, authenticated, user?.id])
+
+  // Poll every 30s while tab is visible
+  useEffect(() => {
+    if (!authenticated || !user?.id) return
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchSubs(user!.id).catch(() => {})
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [authenticated, user?.id])
 
   // Handle OAuth redirect params
   useEffect(() => {
@@ -390,7 +389,7 @@ function DashboardInner() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06 }}
                 >
-                  <SubscriptionRow sub={sub} onStatusChange={handleStatusChange} />
+                  <SubscriptionRow sub={sub} onStatusChange={handleStatusChange} href={`/subscriptions/${sub.id}`} />
                 </motion.div>
               ))}
             </div>

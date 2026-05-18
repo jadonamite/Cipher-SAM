@@ -17,7 +17,7 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 | 1 | Gmail Detection | 🔄 | Code complete — needs GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET |
 | 2 | Wallet Detection | ⏳ | Depends on Phase 0 ✅ |
 | 3 | Intelligence Layer | 🔄 | Core logic built, needs live data |
-| 4 | Dashboard | 🔄 | Real UI built — auth gate, Gmail connect, subscription list |
+| 4 | Dashboard | ✅ | — |
 | 5 | Recommendation Engine | ⏳ | Depends on Phase 3 |
 | 6 | Onchain Identity | ⏳ | Chain confirmation needed |
 | 7 | Action Executor | ⏳ | Depends on Phase 5 |
@@ -90,8 +90,8 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 - [x] SubscriptionRow component — merchant avatar, hover quick-actions (pause/cancel/resume)
 - [x] ConfidenceScore component — large DM Mono number, animated progress bar, signal list
 - [x] ConnectGmail component — full-page and compact variants
-- [ ] Per-subscription detail view
-- [ ] Realtime updates (WebSocket or polling)
+- [x] Per-subscription detail view (`/subscriptions/[id]`) — identity, intelligence, AI insight, recommendation, status actions
+- [x] Realtime updates — 30s polling on dashboard + subscriptions, pauses when tab hidden
 
 ---
 
@@ -139,3 +139,4 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 | 2026-05-17 | PRD v1.0 finalized. Architecture confirmed. | Scaffold project. |
 | 2026-05-17 | Phase 0 complete. Phase 3 core logic built. Landing page fully built. | Set up Neon DB + Upstash. Complete Gmail OAuth. |
 | 2026-05-18 | Privy wired (App ID + Secret). Gmail OAuth complete (`/auth`, `/callback`, `/scan`). Tokens stored in Redis. `googleapis` installed. Dashboard + subscriptions page built. ConfidenceScore, SubscriptionRow, ConnectGmail components built. | Add GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET to server/.env (Google Cloud). Push to GitHub remote. |
+| 2026-05-18 | GMAIL_CLIENT_ID + SECRET added. Phase 2 wallet detection built (Celoscan, pattern detection, `/wallet/scan`). Fixed user_id UUID bug across all routes. Phase 4 complete — detail view, polling, clickable rows. | Push to GitHub. Begin Phase 5 (Recommendation Engine). |

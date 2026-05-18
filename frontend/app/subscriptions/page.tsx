@@ -49,29 +49,30 @@ export default function SubscriptionsPage() {
   const [sort, setSort] = useState<Sort>('spend')
   const [analyzing, setAnalyzing] = useState(false)
 
+  async function fetchSubs(uid: string) {
+    const [statusRes, subsRes] = await Promise.all([
+      fetch(`/api/gmail/status?user_id=${uid}`),
+      fetch('/api/subscriptions', { headers: { 'x-user-id': uid } }),
+    ])
+    const statusData = await statusRes.json()
+    setGmailConnected(statusData.connected ?? false)
+    if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
+  }
+
   useEffect(() => {
     if (!ready || !authenticated || !user?.id) return
-    async function load() {
-      setLoading(true)
-      try {
-        const [statusRes, subsRes] = await Promise.all([
-          fetch(`/api/gmail/status?user_id=${user!.id}`),
-          fetch('/api/subscriptions', { headers: { 'x-user-id': user!.id } }),
-        ])
-        const statusData = await statusRes.json()
-        setGmailConnected(statusData.connected ?? false)
-        if (subsRes.ok) {
-          const data = await subsRes.json()
-          setSubs(data.subscriptions ?? [])
-        }
-      } catch {
-        // server offline — keep empty
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
+    setLoading(true)
+    fetchSubs(user.id).catch(() => {}).finally(() => setLoading(false))
   }, [ready, authenticated, user?.id])
+
+  // Poll every 30s while tab is visible
+  useEffect(() => {
+    if (!authenticated || !user?.id) return
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchSubs(user!.id).catch(() => {})
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [authenticated, user?.id])
 
   async function handleStatusChange(id: string, status: 'active' | 'paused' | 'cancelled') {
     if (!user?.id) return
@@ -304,7 +305,7 @@ export default function SubscriptionsPage() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.04 }}
                     >
-                      <SubscriptionRow sub={sub} onStatusChange={handleStatusChange} />
+                      <SubscriptionRow sub={sub} onStatusChange={handleStatusChange} href={`/subscriptions/${sub.id}`} />
                     </motion.div>
                   ))}
                 </div>
@@ -321,7 +322,7 @@ export default function SubscriptionsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <SubscriptionRow sub={sub} onStatusChange={handleStatusChange} />
+                <SubscriptionRow sub={sub} onStatusChange={handleStatusChange} href={`/subscriptions/${sub.id}`} />
               </motion.div>
             ))}
           </div>
