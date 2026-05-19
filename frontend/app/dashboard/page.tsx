@@ -203,6 +203,12 @@ function DashboardInner() {
           >
             Recommendations
           </Link>
+          <Link
+            href="/agent"
+            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
+          >
+            Agent
+          </Link>
           {user?.wallet?.address && (
             <motion.button
               onClick={triggerWalletScan}

@@ -8,6 +8,8 @@ import gmail from './routes/gmail.js'
 import intelligence from './routes/intelligence.js'
 import wallet from './routes/wallet.js'
 import recommendations from './routes/recommendations.js'
+import agent from './routes/agent.js'
+import self from './routes/self.js'
 
 const app = new Hono()
 
@@ -28,6 +30,8 @@ app.route('/gmail', gmail)
 app.route('/intelligence', intelligence)
 app.route('/wallet', wallet)
 app.route('/recommendations', recommendations)
+app.route('/agent', agent)
+app.route('/self', self)
 
 const port = Number(process.env.PORT ?? 3001)
 
