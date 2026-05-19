@@ -6,6 +6,12 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import ConnectGmail from '@/components/app/ConnectGmail'
 import SubscriptionRow, { type Subscription } from '@/components/app/SubscriptionRow'
+import AgentStatusBar from '@/components/app/AgentStatusBar'
+import MonthlyBleed from '@/components/app/MonthlyBleed'
+import OnboardingProgress from '@/components/app/OnboardingProgress'
+import InsightsCarousel from '@/components/app/InsightsCarousel'
+import RenewalsTimeline from '@/components/app/RenewalsTimeline'
+import AgentActivity from '@/components/app/AgentActivity'
 import { useToast } from '@/components/providers/ToastProvider'
 import Link from 'next/link'
 
@@ -43,19 +49,36 @@ function DashboardInner() {
 
   const [gmailConnected, setGmailConnected] = useState(false)
   const [subs, setSubs] = useState<Subscription[]>([])
+  const [hasPolicies, setHasPolicies] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [walletScanning, setWalletScanning] = useState(false)
   const [scanResult, setScanResult] = useState<{ created: number; updated: number; source: string } | null>(null)
+  const [lastScan, setLastScan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   async function fetchSubs(uid: string) {
-    const [statusRes, subsRes] = await Promise.all([
+    const [statusRes, subsRes, polRes] = await Promise.all([
       fetch(`/api/gmail/status?user_id=${uid}`),
       fetch('/api/subscriptions', { headers: { 'x-user-id': uid } }),
+      fetch('/api/policies', { headers: { 'x-user-id': uid } }),
     ])
     const statusData = await statusRes.json()
     setGmailConnected(statusData.connected ?? false)
-    if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
+    if (subsRes.ok) {
+      const list: Subscription[] = (await subsRes.json()).subscriptions ?? []
+      setSubs(list)
+      // derive lastScan from most recent detected_at
+      const latest = list
+        .map((s) => s.detected_at)
+        .filter(Boolean)
+        .sort()
+        .pop()
+      if (latest) setLastScan(latest as string)
+    }
+    if (polRes.ok) {
+      const pols = (await polRes.json()).policies ?? []
+      setHasPolicies(pols.length > 0)
+    }
   }
 
   // Initial load
@@ -275,25 +298,24 @@ function DashboardInner() {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-6 py-10 flex flex-col gap-10">
-        {/* Scan result toast */}
-        {scanResult && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="px-4 py-3 text-sm"
-            style={{
-              background: 'rgba(22,163,74,0.08)',
-              border: '1px solid rgba(22,163,74,0.2)',
-              borderRadius: '2px',
-              fontFamily: 'var(--font-geist-sans)',
-              color: '#16A34A',
-            }}
-          >
-            {scanResult.source} scan complete — {scanResult.created} new subscription{scanResult.created !== 1 ? 's' : ''} detected
-            {scanResult.updated > 0 && `, ${scanResult.updated} updated`}
-          </motion.div>
-        )}
+      {/* Agent status bar */}
+      <AgentStatusBar
+        scanning={scanning || walletScanning}
+        lastScan={lastScan}
+        subCount={subs.filter((s) => s.status === 'active').length}
+      />
+
+      <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-10">
+        {/* Onboarding progress — only when not all steps done */}
+        <OnboardingProgress
+          wallet={Boolean(user?.wallet?.address)}
+          gmail={gmailConnected}
+          firstScan={subs.length > 0}
+          policies={hasPolicies}
+        />
+
+        {/* Monthly bleed hero */}
+        {subs.length > 0 && <MonthlyBleed amount={stats.totalMonthly} />}
 
         {/* Stats row */}
         {subs.length > 0 && (
@@ -304,22 +326,9 @@ function DashboardInner() {
             className="grid grid-cols-3 gap-4"
           >
             {[
-              {
-                label: 'Monthly Spend',
-                value: `$${stats.totalMonthly.toFixed(2)}`,
-                mono: true,
-              },
-              {
-                label: 'Active Subscriptions',
-                value: String(stats.count),
-                mono: true,
-              },
-              {
-                label: 'High Risk',
-                value: String(stats.highRisk),
-                mono: true,
-                alert: stats.highRisk > 0,
-              },
+              { label: 'Active Subscriptions', value: String(stats.count), alert: false },
+              { label: 'High Risk',            value: String(stats.highRisk), alert: stats.highRisk > 0 },
+              { label: 'Yearly Projection',    value: `$${(stats.totalMonthly * 12).toFixed(0)}`, alert: false },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -356,6 +365,12 @@ function DashboardInner() {
             ))}
           </motion.div>
         )}
+
+        {/* AI insights carousel */}
+        {subs.length > 0 && <InsightsCarousel subs={subs} />}
+
+        {/* Renewals timeline */}
+        {subs.length > 0 && <RenewalsTimeline subs={subs} />}
 
         {/* Gmail connect or subscription list */}
         {!gmailConnected ? (
@@ -427,6 +442,9 @@ function DashboardInner() {
             </div>
           </motion.div>
         )}
+
+        {/* Agent activity feed */}
+        {subs.length > 0 && <AgentActivity userId={user?.id} />}
       </div>
     </main>
   )
