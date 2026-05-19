@@ -10,6 +10,8 @@ import wallet from './routes/wallet.js'
 import recommendations from './routes/recommendations.js'
 import agent from './routes/agent.js'
 import self from './routes/self.js'
+import reminders from './routes/reminders.js'
+import actions from './routes/actions.js'
 
 const app = new Hono()
 
@@ -32,6 +34,8 @@ app.route('/wallet', wallet)
 app.route('/recommendations', recommendations)
 app.route('/agent', agent)
 app.route('/self', self)
+app.route('/reminders', reminders)
+app.route('/actions', actions)
 
 const port = Number(process.env.PORT ?? 3001)
 
