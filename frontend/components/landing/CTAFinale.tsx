@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/ui/Button'
@@ -8,11 +9,19 @@ import Button from '@/components/ui/Button'
 export default function CTAFinale() {
   const { ready, authenticated, login } = usePrivy()
   const router = useRouter()
+  const [entering, setEntering] = useState(false)
+
+  useEffect(() => {
+    if (entering && authenticated) router.push('/dashboard')
+  }, [entering, authenticated, router])
 
   function handleCTA() {
     if (!ready) return
     if (authenticated) router.push('/dashboard')
-    else login()
+    else {
+      setEntering(true)
+      login()
+    }
   }
 
   return (
