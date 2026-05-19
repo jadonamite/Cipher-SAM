@@ -69,6 +69,9 @@ export default function SubscriptionDetail() {
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [statusChanging, setStatusChanging] = useState(false)
+  const [reminderSent, setReminderSent] = useState(false)
+  const [reminderSending, setReminderSending] = useState(false)
+  const [reminderError, setReminderError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!ready) return
@@ -129,6 +132,37 @@ export default function SubscriptionDetail() {
       // offline
     } finally {
       setAnalyzing(false)
+    }
+  }
+
+  async function scheduleReminder(daysFromNow: number) {
+    if (!user?.id || reminderSending) return
+    setReminderSending(true)
+    setReminderError(null)
+    const remindAt = new Date(Date.now() + daysFromNow * 86_400_000).toISOString()
+    const email = user.email?.address ?? user.google?.email ?? null
+    try {
+      const res = await fetch('/api/reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        body: JSON.stringify({
+          subscription_id: id,
+          remind_at: remindAt,
+          type: 'review',
+          user_email: email,
+        }),
+      })
+      if (res.ok) {
+        setReminderSent(true)
+        setTimeout(() => setReminderSent(false), 4000)
+      } else {
+        const body = await res.json()
+        setReminderError(body.error ?? 'Failed to set reminder')
+      }
+    } catch {
+      setReminderError('Server offline')
+    } finally {
+      setReminderSending(false)
     }
   }
 
@@ -356,6 +390,62 @@ export default function SubscriptionDetail() {
                   </li>
                 ))}
               </ul>
+            )}
+          </motion.div>
+        )}
+
+        {/* Reminder */}
+        {sub.status !== 'cancelled' && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="flex flex-col gap-3 p-5"
+            style={{ background: '#141414', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '2px' }}
+          >
+            <span
+              style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            >
+              Set Reminder
+            </span>
+            {reminderSent ? (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                style={{ fontFamily: 'var(--font-geist-sans)', color: '#16A34A', fontSize: '12px' }}
+              >
+                Reminder scheduled.
+              </motion.p>
+            ) : (
+              <div className="flex items-center gap-2 flex-wrap">
+                {[
+                  { label: 'Tomorrow', days: 1 },
+                  { label: '3 days', days: 3 },
+                  { label: '1 week', days: 7 },
+                  { label: '1 month', days: 30 },
+                ].map(({ label, days }) => (
+                  <button
+                    key={days}
+                    onClick={() => scheduleReminder(days)}
+                    disabled={reminderSending}
+                    className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
+                    style={{
+                      fontFamily: 'var(--font-geist-sans)',
+                      background: 'transparent',
+                      color: reminderSending ? '#525252' : '#3B82F6',
+                      border: `1px solid ${reminderSending ? 'rgba(255,255,255,0.06)' : 'rgba(59,130,246,0.3)'}`,
+                      borderRadius: '2px',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {reminderError && (
+              <p style={{ fontFamily: 'var(--font-geist-sans)', color: '#E50914', fontSize: '11px' }}>
+                {reminderError}
+              </p>
             )}
           </motion.div>
         )}
