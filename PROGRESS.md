@@ -19,7 +19,7 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 | 3 | Intelligence Layer | 🔄 | Core logic built, needs live data |
 | 4 | Dashboard | ✅ | — |
 | 5 | Recommendation Engine | ✅ | — |
-| 6 | Onchain Identity | ⏳ | Chain confirmation needed |
+| 6 | Onchain Identity | ✅ | — |
 | 7 | Action Executor | ⏳ | Depends on Phase 5 |
 | 8 | Policy Engine | ⏳ | Depends on Phase 7 |
 
@@ -105,12 +105,13 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 
 ---
 
-## PHASE 6 — Onchain Identity ⏳
+## PHASE 6 — Onchain Identity ✅
 
-- [ ] SELF Protocol agent registration
-- [ ] ERC8004 policy setup
-- [ ] Agent wallet as execution signer
-- [ ] Attestation logging for autonomous actions
+- [x] SELF Protocol agent registration — /agent page + /self/verify callback, deep-link flow
+- [x] ERC8004 policy setup — SAMPolicy.sol + grant/revoke routes, 4 scopes (cancel/pause/remind/analyze)
+- [x] Agent wallet as execution signer — server/src/lib/agent.ts, HMAC-SHA256 now, viem upgrade path documented
+- [x] Attestation logging — POST /agent/attest, GET /agent/history, signed records in actions table
+- [x] migration_v2.sql — adds signature, agent_address, metadata to actions; self_verified + policy_granted to users
 
 ---
 
