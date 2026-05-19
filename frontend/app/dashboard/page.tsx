@@ -215,6 +215,12 @@ function DashboardInner() {
           >
             Audit
           </Link>
+          <Link
+            href="/policies"
+            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
+          >
+            Policies
+          </Link>
           {user?.wallet?.address && (
             <motion.button
               onClick={triggerWalletScan}

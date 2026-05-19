@@ -12,6 +12,7 @@ import agent from './routes/agent.js'
 import self from './routes/self.js'
 import reminders from './routes/reminders.js'
 import actions from './routes/actions.js'
+import policies from './routes/policies.js'
 
 const app = new Hono()
 
@@ -36,6 +37,7 @@ app.route('/agent', agent)
 app.route('/self', self)
 app.route('/reminders', reminders)
 app.route('/actions', actions)
+app.route('/policies', policies)
 
 const port = Number(process.env.PORT ?? 3001)
 
