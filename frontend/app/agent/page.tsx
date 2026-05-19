@@ -1,10 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { SelfAppBuilder, type SelfApp } from '@selfxyz/qrcode'
+
+type SelfQRcodeProps = {
+  selfApp: SelfApp
+  onSuccess: () => void
+  onError: (data: { error_code?: string; reason?: string }) => void
+  type?: 'websocket' | 'deeplink'
+  size?: number
+  darkMode?: boolean
+}
+
+// SSR-safe — SelfQRcodeWrapper uses browser WebSocket APIs
+const SelfQRcodeWrapper = dynamic<SelfQRcodeProps>(
+  () => import('@selfxyz/qrcode').then((m) => ({ default: m.SelfQRcodeWrapper })),
+  { ssr: false, loading: () => <div style={{ width: 200, height: 200, background: '#1C1C1C' }} /> }
+)
 
 type AgentStatus = {
   agent: {
@@ -67,9 +84,9 @@ export default function AgentPage() {
   const [status, setStatus] = useState<AgentStatus | null>(null)
   const [history, setHistory] = useState<ActionRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [verifying, setVerifying] = useState(false)
   const [granting, setGranting] = useState(false)
-  const [verifyResult, setVerifyResult] = useState<string | null>(null)
+  const [selfSuccess, setSelfSuccess] = useState(false)
+  const [selfError, setSelfError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!ready) return
@@ -112,6 +129,37 @@ export default function AgentPage() {
     }
   }
 
+  // Build SelfApp config — memoised so it doesn't regenerate on every render
+  const selfApp = useMemo(() => {
+    if (!user?.id) return null
+    return new SelfAppBuilder({
+      appName: 'SAM — Subscription Agentic Manager',
+      scope: 'sam-ciphergon',
+      endpoint: `${process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3001'}/self/verify`,
+      endpointType: 'staging_https',
+      userId: user.id,
+      sessionId: crypto.randomUUID(),
+      devMode: process.env.NODE_ENV !== 'production',
+      chainID: 42220, // Celo mainnet
+    }).build()
+  }, [user?.id])
+
+  async function onSelfSuccess() {
+    setSelfSuccess(true)
+    setSelfError(null)
+    // Mark verified in our DB
+    try {
+      await fetch('/api/self/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user!.id }),
+      })
+      setStatus((prev) =>
+        prev ? { ...prev, user: { ...prev.user!, self_verified: true, self_verified_at: new Date().toISOString() } } : prev
+      )
+    } catch {}
+  }
+
   async function revokePolicy() {
     if (!user?.id) return
     try {
@@ -122,17 +170,6 @@ export default function AgentPage() {
     } catch {}
   }
 
-  // Trigger SELF Protocol verification — opens SELF deep link
-  function triggerSelfVerify() {
-    const selfAppId = process.env.NEXT_PUBLIC_SELF_APP_ID
-    if (!selfAppId || !user?.id) {
-      setVerifyResult('SELF_APP_ID not configured. Add NEXT_PUBLIC_SELF_APP_ID to frontend/.env.local')
-      return
-    }
-    const callbackUrl = encodeURIComponent(`${window.location.origin}/api/self/verify`)
-    const deepLink = `selfxyz://verify?appId=${selfAppId}&scope=sam-ciphergon&userId=${user.id}&callbackUrl=${callbackUrl}`
-    window.location.href = deepLink
-  }
 
   if (!ready || loading) {
     return (
@@ -255,35 +292,33 @@ export default function AgentPage() {
             )}
           </div>
 
-          {isVerified ? (
+          {isVerified || selfSuccess ? (
             <p style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252', fontSize: '13px' }}>
-              Your identity is verified. SAM can log attributable attestations tied to your ZK proof.
+              Identity verified. SAM logs attributable attestations tied to your ZK proof.
             </p>
-          ) : (
-            <>
+          ) : selfApp ? (
+            <div className="flex flex-col gap-3">
               <p style={{ fontFamily: 'var(--font-geist-sans)', color: '#A3A3A3', fontSize: '13px', lineHeight: 1.6 }}>
-                Verify your identity with SELF Protocol to enable attributable on-chain attestations.
-                Open the SELF app on your phone and scan to generate a ZK proof.
+                Scan with the SELF app to generate a ZK proof of identity.
               </p>
-              <motion.button
-                onClick={triggerSelfVerify}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="self-start px-5 py-2.5 text-xs font-semibold uppercase tracking-widest cursor-pointer"
-                style={{
-                  fontFamily: 'var(--font-geist-sans)',
-                  background: 'transparent',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: '2px',
-                }}
-              >
-                Verify with SELF →
-              </motion.button>
-              {verifyResult && (
-                <p style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}>{verifyResult}</p>
+              <div style={{ background: '#fff', padding: '12px', borderRadius: '2px', width: 'fit-content' }}>
+                <SelfQRcodeWrapper
+                  selfApp={selfApp}
+                  onSuccess={onSelfSuccess}
+                  onError={(data: { error_code?: string; reason?: string }) => setSelfError(data.reason ?? data.error_code ?? 'Verification failed')}
+                  type="websocket"
+                  size={180}
+                  darkMode={false}
+                />
+              </div>
+              {selfError && (
+                <p style={{ fontFamily: 'var(--font-dm-mono)', color: '#E50914', fontSize: '11px' }}>{selfError}</p>
               )}
-            </>
+            </div>
+          ) : (
+            <p style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252', fontSize: '13px' }}>
+              Connect wallet to enable SELF verification.
+            </p>
           )}
         </motion.div>
 
