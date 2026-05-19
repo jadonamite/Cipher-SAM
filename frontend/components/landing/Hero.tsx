@@ -139,11 +139,19 @@ function SubscriptionRadar() {
 export default function Hero() {
   const { ready, authenticated, login } = usePrivy()
   const router = useRouter()
+  const [entering, setEntering] = useState(false)
+
+  useEffect(() => {
+    if (entering && authenticated) router.push('/dashboard')
+  }, [entering, authenticated, router])
 
   function handleCTA() {
     if (!ready) return
     if (authenticated) router.push('/dashboard')
-    else login()
+    else {
+      setEntering(true)
+      login()
+    }
   }
 
   return (
