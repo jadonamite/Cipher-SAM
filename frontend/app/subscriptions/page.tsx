@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import SubscriptionRow, { type Subscription } from '@/components/app/SubscriptionRow'
 import ConnectGmail from '@/components/app/ConnectGmail'
+import { useToast } from '@/components/providers/ToastProvider'
 import Link from 'next/link'
 
 type Filter = 'all' | 'monthly' | 'yearly' | 'high-risk'
@@ -41,6 +42,7 @@ function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
 export default function SubscriptionsPage() {
   const { ready, authenticated, user, login } = usePrivy()
   const router = useRouter()
+  const { showToast } = useToast()
 
   const [subs, setSubs] = useState<Subscription[]>([])
   const [gmailConnected, setGmailConnected] = useState(false)
@@ -77,13 +79,20 @@ export default function SubscriptionsPage() {
   async function handleStatusChange(id: string, status: 'active' | 'paused' | 'cancelled') {
     if (!user?.id) return
     try {
-      await fetch(`/api/subscriptions/${id}/status`, {
+      const res = await fetch(`/api/subscriptions/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify({ status }),
       })
-      setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
-    } catch {}
+      if (res.ok) {
+        setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
+        showToast(`Subscription ${status}`, 'success')
+      } else {
+        showToast('Failed to update subscription', 'error')
+      }
+    } catch {
+      showToast('Could not reach server', 'error')
+    }
   }
 
   async function runAnalysis() {
@@ -102,8 +111,13 @@ export default function SubscriptionsPage() {
             return r ? { ...s, confidence: r.confidence, action: r.action } : s
           })
         )
+        showToast('Analysis complete', 'success')
+      } else {
+        showToast('Analysis failed', 'error')
       }
-    } catch {} finally {
+    } catch {
+      showToast('Could not reach server', 'error')
+    } finally {
       setAnalyzing(false)
     }
   }

@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { usePrivy } from '@privy-io/react-auth'
+import { useRouter } from 'next/navigation'
 import Button from '@/components/ui/Button'
 
 const radarItems = [
@@ -135,6 +137,15 @@ function SubscriptionRadar() {
 }
 
 export default function Hero() {
+  const { ready, authenticated, login } = usePrivy()
+  const router = useRouter()
+
+  function handleCTA() {
+    if (!ready) return
+    if (authenticated) router.push('/dashboard')
+    else login()
+  }
+
   return (
     <section
       className="relative min-h-screen flex items-center overflow-hidden"
@@ -216,7 +227,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.55 }}
             >
-              <Button size="lg">Connect &amp; Find Out</Button>
+              <Button size="lg" onClick={handleCTA}>Connect &amp; Find Out</Button>
             </motion.div>
           </div>
 

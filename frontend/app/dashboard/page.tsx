@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import ConnectGmail from '@/components/app/ConnectGmail'
 import SubscriptionRow, { type Subscription } from '@/components/app/SubscriptionRow'
+import { useToast } from '@/components/providers/ToastProvider'
 import Link from 'next/link'
 
 export default function Dashboard() {
@@ -38,6 +39,7 @@ function DashboardInner() {
   const { ready, authenticated, user, login } = usePrivy()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { showToast } = useToast()
 
   const [gmailConnected, setGmailConnected] = useState(false)
   const [subs, setSubs] = useState<Subscription[]>([])
@@ -93,11 +95,14 @@ function DashboardInner() {
       const data = await res.json()
       if (res.ok) {
         setScanResult({ created: data.created, updated: data.updated, source: 'Gmail' })
+        showToast(`Gmail scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
         const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user.id } })
         if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
+      } else {
+        showToast(data.error ?? `Gmail scan failed (${res.status})`, 'error')
       }
     } catch {
-      // server offline
+      showToast('Could not reach server', 'error')
     } finally {
       setScanning(false)
     }
@@ -117,11 +122,14 @@ function DashboardInner() {
       const data = await res.json()
       if (res.ok) {
         setScanResult({ created: data.created, updated: data.updated, source: 'Wallet' })
+        showToast(`Wallet scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
         const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user!.id } })
         if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
+      } else {
+        showToast(data.error ?? `Wallet scan failed (${res.status})`, 'error')
       }
     } catch {
-      // server offline
+      showToast('Could not reach server', 'error')
     } finally {
       setWalletScanning(false)
     }
