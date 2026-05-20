@@ -207,8 +207,10 @@ export default function Hero() {
               className="text-white font-extrabold leading-none mb-6"
               style={{
                 fontFamily: 'var(--font-syne)',
-                fontSize: 'clamp(38px, 7vw, 100px)',
+                fontSize: 'clamp(26px, 7.5vw, 100px)',
                 letterSpacing: '-0.03em',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
               }}
             >
               Your subscriptions
