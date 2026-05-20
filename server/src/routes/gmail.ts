@@ -78,7 +78,6 @@ const MERCHANT_MAP: Record<string, string> = {
   // Communication & Productivity
   'slack.com': 'Slack',
   'zoom.us': 'Zoom',
-  'notion.so': 'Notion AI',
   'dropbox.com': 'Dropbox',
   'box.com': 'Box',
   'evernote.com': 'Evernote',
