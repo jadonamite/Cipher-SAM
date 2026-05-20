@@ -12,6 +12,7 @@ import OnboardingProgress from '@/components/app/OnboardingProgress'
 import InsightsCarousel from '@/components/app/InsightsCarousel'
 import RenewalsTimeline from '@/components/app/RenewalsTimeline'
 import AgentActivity from '@/components/app/AgentActivity'
+import MobileMenu from '@/components/app/MobileMenu'
 import { useToast } from '@/components/providers/ToastProvider'
 import Link from 'next/link'
 
@@ -218,7 +219,7 @@ function DashboardInner() {
     <main className="min-h-screen bg-void">
       {/* Top bar */}
       <header
-        className="flex items-center justify-between px-6 py-4 border-b"
+        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
         style={{ borderColor: 'rgba(255,255,255,0.06)' }}
       >
         <span
@@ -227,7 +228,9 @@ function DashboardInner() {
         >
           SAM
         </span>
-        <div className="flex items-center gap-3">
+
+        {/* Desktop nav — hidden on mobile */}
+        <div className="hidden md:flex items-center gap-3">
           <Link
             href="/recommendations"
             style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
@@ -296,6 +299,17 @@ function DashboardInner() {
             {user?.email?.address ?? (user?.wallet?.address?.slice(0, 8) + '...')}
           </span>
         </div>
+
+        {/* Mobile menu */}
+        <MobileMenu
+          walletAddress={user?.wallet?.address}
+          email={user?.email?.address}
+          gmailConnected={gmailConnected}
+          scanning={scanning}
+          walletScanning={walletScanning}
+          onScanGmail={triggerScan}
+          onScanWallet={triggerWalletScan}
+        />
       </header>
 
       {/* Agent status bar */}
@@ -305,7 +319,7 @@ function DashboardInner() {
         subCount={subs.filter((s) => s.status === 'active').length}
       />
 
-      <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col gap-6 sm:gap-10">
         {/* Onboarding progress — only when not all steps done */}
         <OnboardingProgress
           wallet={Boolean(user?.wallet?.address)}
@@ -323,7 +337,7 @@ function DashboardInner() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="grid grid-cols-3 gap-4"
+            className="grid grid-cols-3 gap-2 sm:gap-4"
           >
             {[
               { label: 'Active Subscriptions', value: String(stats.count), alert: false },

@@ -51,15 +51,15 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col gap-4 p-5"
+      className="flex flex-col gap-4 p-4 sm:p-5"
       style={{
         background: '#0f0f0f',
         border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: '3px',
       }}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1 min-w-0">
           <span
             style={{
               fontFamily: 'var(--font-geist-sans)',
@@ -81,13 +81,23 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
           >
             ${total.toFixed(2)}{' '}
             <span style={{ color: '#525252', fontSize: '12px' }}>
-              · {renewals.length} renewal{renewals.length !== 1 ? 's' : ''}
+              · {renewals.length}
             </span>
           </span>
         </div>
         {hovered && (
-          <div className="flex flex-col items-end gap-0.5">
-            <span style={{ fontFamily: 'var(--font-geist-sans)', color: '#fff', fontSize: '13px' }}>
+          <div className="flex flex-col items-end gap-0.5 text-right min-w-0">
+            <span
+              style={{
+                fontFamily: 'var(--font-geist-sans)',
+                color: '#fff',
+                fontSize: '13px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                maxWidth: '180px',
+              }}
+            >
               {hovered.sub.merchant}
             </span>
             <span
@@ -97,7 +107,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
                 fontSize: '12px',
               }}
             >
-              ${hovered.sub.amount.toFixed(2)} in {hovered.daysFromNow}d
+              ${hovered.sub.amount.toFixed(2)} · {hovered.daysFromNow}d
             </span>
           </div>
         )}
@@ -149,6 +159,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
             key={r.sub.id}
             onMouseEnter={() => setHovered(r)}
             onMouseLeave={() => setHovered(null)}
+            onClick={() => setHovered((cur) => (cur?.sub.id === r.sub.id ? null : r))}
             whileHover={{ scale: 1.6 }}
             transition={{ duration: 0.18 }}
             className="absolute"
@@ -156,8 +167,8 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
               left: `${(r.daysFromNow / WINDOW) * 100}%`,
               top: '50%',
               transform: 'translate(-50%, -50%)',
-              width: '10px',
-              height: '10px',
+              width: '14px',
+              height: '14px',
               borderRadius: '50%',
               background: r.daysFromNow <= 3 ? '#E50914' : '#fff',
               border: 'none',

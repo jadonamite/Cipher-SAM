@@ -67,10 +67,10 @@ export default function IntelligencePreview() {
   return (
     <section
       ref={sectionRef}
-      className="py-32 overflow-hidden"
+      className="py-20 sm:py-32 overflow-hidden"
       style={{ backgroundColor: '#0D0D0D' }}
     >
-      <div className="max-w-7xl mx-auto px-8 lg:px-16">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-16">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}

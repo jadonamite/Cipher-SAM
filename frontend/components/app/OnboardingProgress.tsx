@@ -29,7 +29,7 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="p-6"
+      className="p-4 sm:p-6"
       style={{
         background: '#0f0f0f',
         border: '1px solid rgba(255,255,255,0.06)',
@@ -109,7 +109,7 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
                 )}
               </motion.div>
 
-              <div className="flex flex-col items-center gap-0.5">
+              <div className="flex flex-col items-center gap-0.5 text-center">
                 <span
                   style={{
                     fontFamily: 'var(--font-geist-sans)',
@@ -122,6 +122,7 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
                   {step.label}
                 </span>
                 <span
+                  className="hidden sm:inline"
                   style={{
                     fontFamily: 'var(--font-geist-sans)',
                     color: '#3a3a3a',

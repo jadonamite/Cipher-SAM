@@ -49,7 +49,7 @@ export default function CTAFinale() {
         }}
       />
 
-      <div className="relative z-10 text-center px-8 max-w-3xl mx-auto">
+      <div className="relative z-10 text-center px-5 sm:px-8 max-w-3xl mx-auto">
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
