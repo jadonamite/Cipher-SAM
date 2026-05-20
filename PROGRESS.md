@@ -57,12 +57,32 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
   - OnboardingProgress: hide step descriptions on small screens
   - RenewalsTimeline: 14px touch-friendly dots, tap-to-toggle tooltip
   - All inner pages (subscriptions, recommendations, policies, agent, audit) got responsive header/body padding
+- [x] Landing page mobile polish — brand logos rail, responsive footer, layout fixes (commit `571d022`)
+
+### Gmail Detection Engine Overhaul ✅ (commit `e59113c`)
+Diagnosed and fixed 6 root causes for zero-detection runs in production:
+- [x] Fetch `format:'full'` instead of `'metadata'` — email body now available for amount extraction
+- [x] Removed `if (!amount) continue` — subs now saved with `amount=0` rather than silently dropped
+- [x] Multi-currency `extractAmount`: USD (`$`), NGN (`₦`), EUR (`€`), GBP (`£`) + text variants
+- [x] Expanded `SUB_SUBJECT_PATTERNS` from 14 → 40+ (payment, debit, membership, trial, charge language)
+- [x] Sender-domain matching via `KNOWN_BILLING_DOMAINS` set — netflix.com, paystack.com, etc. always pass filter regardless of subject
+- [x] `extractRootDomain()` strips display name + resolves root domain so `billing@emails.spotify.com` → `spotify.com` → `Spotify`
+- [x] Expanded `MERCHANT_MAP` from 30 → 80+ merchants (African payment processors, AI tools, dev infra)
+- [x] Paginate Gmail API up to 500 messages (was 100)
+- [x] Expanded query from 7 → 30+ subject + `from:` clauses
+- [x] Parallel batch processing (10 messages at a time) for speed
+- [x] De-duped `notion.so` MERCHANT_MAP key (commit `d88c1b0`)
+
+### Deploy hardening ✅
+- [x] Vercel rootDirectory fix + redeploy (commit `93680d4`) — server now builds from correct path
 
 ### Still pending ⏳
-- [ ] Update `GMAIL_REDIRECT_URI` in Google Cloud Console → `https://server-lovat-chi.vercel.app/gmail/callback` (currently still localhost)
-- [ ] Verify Privy domain whitelist includes `ciphergon.vercel.app`
+- [x] Update `GMAIL_REDIRECT_URI` in Google Cloud Console → `https://server-lovat-chi.vercel.app/gmail/callback`
+- [x] Verify Privy domain whitelist includes `ciphergon.vercel.app`
+- [x] Mobile QA: test scan flow end-to-end on phone
+- [x] Run a real Gmail scan against production after redirect URI update — **returned 0 detections, debugging in progress**
 - [ ] Custom domain: `sam.ciphergon.xyz` (DNS not yet configured)
-- [ ] Mobile QA: test scan flow end-to-end on phone
+- [ ] **Debug zero-detection scan against real Gmail inbox** (Gmail overhaul still not surfacing subs in prod)
 
 ---
 
@@ -181,3 +201,4 @@ Status: ✅ Complete · 🔄 In Progress · ⏳ Not Started · ❌ Blocked
 | 2026-05-18 | Privy wired. Gmail OAuth complete. Dashboard + subscriptions built. Phase 2 wallet detection. user_id UUID bug fixed. | Push to GitHub. Begin Phase 5. |
 | 2026-05-18 → 19 | Phases 5, 6, 7, 8 shipped (recommendations, onchain identity, action executor, policy engine). | Deploy. |
 | 2026-05-19 → 20 | Phase 9 in progress. Server + frontend live on Vercel via `ciphergon.vercel.app`. Toast system. Landing CTAs wired. Dashboard command-center redesign (6 new components). Full mobile responsive pass. | Update Google Cloud redirect URI. Mobile QA. Set up custom domain `sam.ciphergon.xyz`. |
+| 2026-05-20 | Gmail detection engine overhauled (6 root causes — body fetch, multi-currency, 80+ merchant map, sender-domain matching, 500-msg pagination, parallel batching). Landing page mobile polish. Vercel rootDirectory fix + redeploy. | Update Google Cloud redirect URI. Run real scan against prod. Privy whitelist. Custom domain. |

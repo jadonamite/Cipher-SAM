@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/ui/Button'
+import { brandIcons } from '@/components/ui/BrandIcons'
 
 const radarItems = [
   { name: 'Netflix', amount: '$15.99/mo', confidence: 94, category: 'Entertainment' },
@@ -94,11 +95,15 @@ function SubscriptionRadar() {
               }}
             >
               <div className="flex items-center gap-3">
-                <div
-                  className="w-7 h-7 rounded-sm flex items-center justify-center text-xs font-bold"
-                  style={{ backgroundColor: '#1C1C1C', color: '#E50914', fontFamily: 'var(--font-syne)' }}
-                >
-                  {item.name[0]}
+                <div className="w-7 h-7 rounded-sm overflow-hidden shrink-0 flex items-center justify-center">
+                  {brandIcons[item.name] ?? (
+                    <div
+                      className="w-7 h-7 flex items-center justify-center text-xs font-bold"
+                      style={{ backgroundColor: '#1C1C1C', color: '#E50914', fontFamily: 'var(--font-syne)' }}
+                    >
+                      {item.name[0]}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="text-white text-xs font-medium" style={{ fontFamily: 'var(--font-geist-sans)' }}>
@@ -207,10 +212,8 @@ export default function Hero() {
               className="text-white font-extrabold leading-none mb-6"
               style={{
                 fontFamily: 'var(--font-syne)',
-                fontSize: 'clamp(26px, 7.5vw, 100px)',
+                fontSize: 'clamp(32px, 5.8vw, 90px)',
                 letterSpacing: '-0.03em',
-                wordBreak: 'break-word',
-                overflowWrap: 'break-word',
               }}
             >
               Your subscriptions
