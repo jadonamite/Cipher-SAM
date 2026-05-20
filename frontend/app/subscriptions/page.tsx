@@ -168,7 +168,7 @@ export default function SubscriptionsPage() {
     <main className="min-h-screen bg-void">
       {/* Top bar */}
       <header
-        className="flex items-center justify-between px-6 py-4 border-b"
+        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
         style={{ borderColor: 'rgba(255,255,255,0.06)' }}
       >
         <div className="flex items-center gap-4">
@@ -213,7 +213,7 @@ export default function SubscriptionsPage() {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-6 py-8 flex flex-col gap-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-8">
         {/* Monthly total */}
         {subs.length > 0 && (
           <div className="flex items-end gap-2">

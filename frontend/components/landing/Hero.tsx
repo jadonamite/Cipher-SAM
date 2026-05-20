@@ -182,8 +182,8 @@ export default function Hero() {
         }}
       />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-8 lg:px-16 py-24">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-16">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-16 py-16 sm:py-24">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-10 lg:gap-16">
           {/* Left — 60% */}
           <div className="flex-1">
             <motion.p
@@ -207,7 +207,7 @@ export default function Hero() {
               className="text-white font-extrabold leading-none mb-6"
               style={{
                 fontFamily: 'var(--font-syne)',
-                fontSize: 'clamp(56px, 7vw, 100px)',
+                fontSize: 'clamp(38px, 7vw, 100px)',
                 letterSpacing: '-0.03em',
               }}
             >

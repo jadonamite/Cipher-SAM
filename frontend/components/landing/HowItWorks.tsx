@@ -136,7 +136,7 @@ export default function HowItWorks() {
               className="font-bold select-none pointer-events-none"
               style={{
                 fontFamily: 'var(--font-dm-mono)',
-                fontSize: 'clamp(80px, 10vw, 120px)',
+                fontSize: 'clamp(48px, 10vw, 120px)',
                 color: 'rgba(255,255,255,0.04)',
                 lineHeight: 1,
                 letterSpacing: '-0.04em',

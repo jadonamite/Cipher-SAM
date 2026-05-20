@@ -190,7 +190,7 @@ export default function AgentPage() {
   return (
     <main className="min-h-screen bg-void">
       <header
-        className="flex items-center justify-between px-6 py-4 border-b"
+        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
         style={{ borderColor: 'rgba(255,255,255,0.06)' }}
       >
         <div className="flex items-center gap-4">

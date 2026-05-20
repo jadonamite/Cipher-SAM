@@ -27,14 +27,15 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
 
   return (
     <div
-      className="flex items-center gap-4 px-6 py-2.5 border-b"
+      className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2.5 border-b overflow-x-auto whitespace-nowrap"
       style={{
         borderColor: 'rgba(255,255,255,0.04)',
         background: 'rgba(20,20,20,0.4)',
+        scrollbarWidth: 'none',
       }}
     >
       {/* Status dot */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-shrink-0">
         <motion.span
           animate={scanning ? { opacity: [1, 0.3, 1] } : { opacity: 1 }}
           transition={scanning ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' } : {}}
@@ -61,7 +62,7 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
 
       <Divider />
 
-      <Field label="MONITORING">{subCount} subscription{subCount !== 1 ? 's' : ''}</Field>
+      <Field label="SUBS">{subCount}</Field>
 
       <Divider />
 
@@ -80,7 +81,7 @@ function Divider() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 flex-shrink-0">
       <span
         style={{
           fontFamily: 'var(--font-geist-sans)',

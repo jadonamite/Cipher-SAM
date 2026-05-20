@@ -67,18 +67,18 @@ export default function Problem() {
   return (
     <section
       ref={sectionRef}
-      className="relative py-32 overflow-hidden"
+      className="relative py-20 sm:py-32 overflow-hidden"
       style={{ backgroundColor: '#0D0D0D' }}
     >
-      <div className="max-w-7xl mx-auto px-8 lg:px-16">
-        <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-start">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-16">
+        <div className="flex flex-col lg:flex-row gap-10 sm:gap-16 lg:gap-24 items-start">
           {/* Large number */}
           <div className="shrink-0">
             <div
               className="font-extrabold leading-none select-none"
               style={{
                 fontFamily: 'var(--font-dm-mono)',
-                fontSize: 'clamp(120px, 16vw, 220px)',
+                fontSize: 'clamp(80px, 16vw, 220px)',
                 color: '#E50914',
                 letterSpacing: '-0.04em',
                 lineHeight: 1,
