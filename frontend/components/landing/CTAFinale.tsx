@@ -58,7 +58,7 @@ export default function CTAFinale() {
           className="text-muted uppercase mb-6"
           style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '10px', letterSpacing: '0.16em' }}
         >
-          sam.ciphergon.xyz — Early Access
+          Ciphergon · Subscription Intelligence
         </motion.p>
 
         <motion.h2
@@ -88,15 +88,6 @@ export default function CTAFinale() {
         </motion.div>
       </div>
 
-      {/* Footer */}
-      <div className="absolute bottom-8 w-full text-center">
-        <p
-          className="text-muted"
-          style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '10px', letterSpacing: '0.1em' }}
-        >
-          Part of the Ciphergon ecosystem · Built by JADONAMITΞ
-        </p>
-      </div>
     </section>
   )
 }

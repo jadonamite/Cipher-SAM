@@ -73,26 +73,18 @@ export default function HowItWorks() {
       className="overflow-hidden"
       style={{ backgroundColor: '#0D0D0D' }}
     >
-      {/* Section label — visible before scroll starts */}
-      <div
-        className="absolute top-8 left-8 lg:left-16 z-10 pointer-events-none"
-        style={{ position: 'sticky' }}
-      >
-        <p
-          className="text-muted uppercase"
-          style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '10px', letterSpacing: '0.16em' }}
-        >
-          How it works
-        </p>
-      </div>
-
       <div
         ref={trackRef}
         className="flex items-center"
-        style={{ width: 'max-content', height: '100vh', paddingLeft: '8vw', gap: '4vw' }}
+        style={{
+          width: 'max-content',
+          height: '100vh',
+          paddingLeft: 'clamp(20px, 8vw, 120px)',
+          gap: 'clamp(24px, 5vw, 60px)',
+        }}
       >
         {/* Intro label */}
-        <div className="shrink-0" style={{ width: '30vw' }}>
+        <div className="shrink-0" style={{ width: 'min(75vw, 360px)' }}>
           <p
             className="text-muted uppercase mb-4"
             style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '10px', letterSpacing: '0.16em' }}
@@ -103,7 +95,7 @@ export default function HowItWorks() {
             className="text-white font-extrabold leading-tight"
             style={{
               fontFamily: 'var(--font-syne)',
-              fontSize: 'clamp(36px, 4vw, 56px)',
+              fontSize: 'clamp(32px, 4vw, 56px)',
               letterSpacing: '-0.03em',
             }}
           >
@@ -125,7 +117,7 @@ export default function HowItWorks() {
             key={step.number}
             className="shrink-0 relative"
             style={{
-              width: 'clamp(280px, 28vw, 380px)',
+              width: 'min(75vw, 380px)',
               borderLeft: '2px solid #E50914',
               paddingLeft: '28px',
               paddingTop: '8px',
@@ -164,7 +156,7 @@ export default function HowItWorks() {
               className="text-white font-bold mb-3 relative z-10 leading-tight"
               style={{
                 fontFamily: 'var(--font-syne)',
-                fontSize: 'clamp(20px, 2.2vw, 28px)',
+                fontSize: 'clamp(18px, 2.2vw, 28px)',
                 letterSpacing: '-0.02em',
               }}
             >
@@ -181,7 +173,7 @@ export default function HowItWorks() {
         ))}
 
         {/* Trailing space */}
-        <div className="shrink-0" style={{ width: '8vw' }} />
+        <div className="shrink-0" style={{ width: 'clamp(20px, 8vw, 120px)' }} />
       </div>
     </section>
   )
