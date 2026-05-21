@@ -91,44 +91,46 @@ export default function Footer() {
 
         {/* Wordmark and Links */}
         <div
-          className="text-muted flex items-center gap-3"
+          className="text-muted flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 text-center"
           style={{
             fontFamily: 'var(--font-dm-mono)',
             fontSize: '10px',
             letterSpacing: '0.14em',
           }}
         >
-          <span>© 2026 CIPHERGON, ALL RIGHTS RESERVED</span>
-          <span className="opacity-50">|</span>
-          <a href="#" className="underline hover:text-white transition-colors">
-            LICENSE AGREEMENT
-          </a>
-          <span className="opacity-50">|</span>
-          <a
-            href="#"
-            className="hover:text-white transition-colors flex items-center justify-center"
-            aria-label="Cookies"
-            title="Cookies"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <span>© 2026 CIPHERGON, ALL RIGHTS RESERVED.</span>
+          <span className="hidden sm:inline opacity-50">|</span>
+          <div className="flex items-center justify-center gap-2 sm:gap-3">
+            <a href="#" className="underline hover:text-white transition-colors">
+              LICENSE AGREEMENT
+            </a>
+            <span className="opacity-50">|</span>
+            <a
+              href="#"
+              className="hover:text-white transition-colors flex items-center justify-center"
+              aria-label="Cookies"
+              title="Cookies"
             >
-              <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
-              <path d="M8.5 8.5v.01" />
-              <path d="M16 15.5v.01" />
-              <path d="M12 12v.01" />
-              <path d="M11 17v.01" />
-              <path d="M7 14v.01" />
-            </svg>
-          </a>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
+                <path d="M8.5 8.5v.01" />
+                <path d="M16 15.5v.01" />
+                <path d="M12 12v.01" />
+                <path d="M11 17v.01" />
+                <path d="M7 14v.01" />
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
     </footer>
