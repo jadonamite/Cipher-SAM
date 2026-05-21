@@ -10,8 +10,10 @@ interface MobileMenuProps {
   gmailConnected?: boolean
   scanning?: boolean
   walletScanning?: boolean
+  debugScanning?: boolean
   onScanGmail?: () => void
   onScanWallet?: () => void
+  onDebugScan?: () => void
 }
 
 const LINKS = [
@@ -29,8 +31,10 @@ export default function MobileMenu({
   gmailConnected,
   scanning,
   walletScanning,
+  debugScanning,
   onScanGmail,
   onScanWallet,
+  onDebugScan,
 }: MobileMenuProps) {
   const [open, setOpen] = useState(false)
 
@@ -202,6 +206,29 @@ export default function MobileMenu({
                     }}
                   >
                     {scanning ? 'Scanning…' : 'Scan Gmail'}
+                  </button>
+                )}
+                {onDebugScan && (
+                  <button
+                    onClick={() => {
+                      onDebugScan()
+                      setOpen(false)
+                    }}
+                    disabled={debugScanning}
+                    className="w-full py-3 cursor-pointer"
+                    style={{
+                      fontFamily: 'var(--font-geist-sans)',
+                      background: 'transparent',
+                      color: debugScanning ? '#525252' : '#FACC15',
+                      border: `1px solid ${debugScanning ? 'rgba(255,255,255,0.08)' : 'rgba(250,204,21,0.4)'}`,
+                      borderRadius: '2px',
+                      fontSize: '12px',
+                      letterSpacing: '0.08em',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {debugScanning ? 'Debugging…' : 'Debug Scan'}
                   </button>
                 )}
               </div>

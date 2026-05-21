@@ -316,26 +316,24 @@ function DashboardInner() {
               {scanning ? 'Scanning...' : 'Scan Gmail'}
             </motion.button>
           )}
-          {gmailConnected && (
-            <motion.button
-              onClick={debugScan}
-              disabled={debugScanning}
-              whileHover={{ scale: debugScanning ? 1 : 1.02 }}
-              whileTap={{ scale: debugScanning ? 1 : 0.98 }}
-              className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
-              style={{
-                fontFamily: 'var(--font-geist-sans)',
-                background: 'transparent',
-                color: debugScanning ? '#525252' : '#FACC15',
-                border: `1px solid ${debugScanning ? 'rgba(255,255,255,0.08)' : 'rgba(250,204,21,0.4)'}`,
-                borderRadius: '2px',
-                letterSpacing: '0.08em',
-              }}
-              title="Run a Gmail scan with full diagnostic output"
-            >
-              {debugScanning ? 'Debugging...' : 'Debug Scan'}
-            </motion.button>
-          )}
+          <motion.button
+            onClick={debugScan}
+            disabled={debugScanning}
+            whileHover={{ scale: debugScanning ? 1 : 1.02 }}
+            whileTap={{ scale: debugScanning ? 1 : 0.98 }}
+            className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
+            style={{
+              fontFamily: 'var(--font-geist-sans)',
+              background: 'transparent',
+              color: debugScanning ? '#525252' : '#FACC15',
+              border: `1px solid ${debugScanning ? 'rgba(255,255,255,0.08)' : 'rgba(250,204,21,0.4)'}`,
+              borderRadius: '2px',
+              letterSpacing: '0.08em',
+            }}
+            title="Run a Gmail scan with full diagnostic output"
+          >
+            {debugScanning ? 'Debugging...' : 'Debug Scan'}
+          </motion.button>
           <span
             style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
           >
@@ -350,8 +348,10 @@ function DashboardInner() {
           gmailConnected={gmailConnected}
           scanning={scanning}
           walletScanning={walletScanning}
+          debugScanning={debugScanning}
           onScanGmail={triggerScan}
           onScanWallet={triggerWalletScan}
+          onDebugScan={debugScan}
         />
       </header>
 
