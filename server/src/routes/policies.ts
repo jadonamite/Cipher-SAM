@@ -23,15 +23,26 @@ app.get('/', async (c) => {
   const userId = c.req.header('x-user-id')
   if (!userId) return c.json({ error: 'Unauthorized' }, 401)
 
-  const dbUserId = await getOrCreateUser(userId)
-  const rows = await sql`
-    SELECT id, name, trigger, conditions, action, enabled,
-           created_at, last_evaluated_at, last_triggered_at
-    FROM policies
-    WHERE user_id = ${dbUserId}
-    ORDER BY created_at DESC
-  `
-  return c.json({ policies: rows })
+  try {
+    const dbUserId = await getOrCreateUser(userId)
+    const rows = await sql`
+      SELECT id, name, trigger, conditions, action, enabled,
+             created_at, last_evaluated_at, last_triggered_at
+      FROM policies
+      WHERE user_id = ${dbUserId}
+      ORDER BY created_at DESC
+    `
+    return c.json({ policies: rows })
+  } catch (err) {
+    const msg = (err as Error).message
+    console.error('[policies/list] error:', msg)
+    // Table-missing is the expected failure on prod until migration_v4 is applied.
+    // Fail soft so the dashboard's 30s poll doesn't spam 500s.
+    if (/relation .*policies.* does not exist/i.test(msg)) {
+      return c.json({ policies: [], warning: 'policies_table_missing' })
+    }
+    return c.json({ policies: [], error: msg }, 500)
+  }
 })
 
 // POST /policies — create a policy
