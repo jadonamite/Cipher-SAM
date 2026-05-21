@@ -56,6 +56,8 @@ function DashboardInner() {
   const [scanResult, setScanResult] = useState<{ created: number; updated: number; source: string } | null>(null)
   const [lastScan, setLastScan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [debugScanning, setDebugScanning] = useState(false)
+  const [debugOutput, setDebugOutput] = useState<string | null>(null)
 
   async function fetchSubs(uid: string) {
     const [statusRes, subsRes, polRes] = await Promise.all([
@@ -129,6 +131,27 @@ function DashboardInner() {
       showToast('Could not reach server', 'error')
     } finally {
       setScanning(false)
+    }
+  }
+
+  async function debugScan() {
+    if (!user?.id || debugScanning) return
+    setDebugScanning(true)
+    setDebugOutput('Running scan… (up to 60s)')
+    try {
+      await fetch('/api/gmail/scan-lock', { method: 'DELETE', headers: { 'x-user-id': user.id } }).catch(() => {})
+      const t0 = Date.now()
+      const res = await fetch('/api/gmail/scan?debug=1', {
+        method: 'POST',
+        headers: { 'x-user-id': user.id },
+      })
+      const data = await res.json()
+      const wall = Date.now() - t0
+      setDebugOutput(JSON.stringify({ http_status: res.status, wall_ms: wall, ...data }, null, 2))
+    } catch (e) {
+      setDebugOutput(`Network error: ${(e as Error).message}`)
+    } finally {
+      setDebugScanning(false)
     }
   }
 
@@ -291,6 +314,26 @@ function DashboardInner() {
               }}
             >
               {scanning ? 'Scanning...' : 'Scan Gmail'}
+            </motion.button>
+          )}
+          {gmailConnected && (
+            <motion.button
+              onClick={debugScan}
+              disabled={debugScanning}
+              whileHover={{ scale: debugScanning ? 1 : 1.02 }}
+              whileTap={{ scale: debugScanning ? 1 : 0.98 }}
+              className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
+              style={{
+                fontFamily: 'var(--font-geist-sans)',
+                background: 'transparent',
+                color: debugScanning ? '#525252' : '#FACC15',
+                border: `1px solid ${debugScanning ? 'rgba(255,255,255,0.08)' : 'rgba(250,204,21,0.4)'}`,
+                borderRadius: '2px',
+                letterSpacing: '0.08em',
+              }}
+              title="Run a Gmail scan with full diagnostic output"
+            >
+              {debugScanning ? 'Debugging...' : 'Debug Scan'}
             </motion.button>
           )}
           <span
@@ -460,6 +503,82 @@ function DashboardInner() {
         {/* Agent activity feed */}
         {subs.length > 0 && <AgentActivity userId={user?.id} />}
       </div>
+
+      {/* Debug scan output modal */}
+      {debugOutput !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.85)' }}
+          onClick={() => setDebugOutput(null)}
+        >
+          <div
+            className="w-full max-w-3xl max-h-[85vh] flex flex-col"
+            style={{
+              background: '#0A0A0A',
+              border: '1px solid rgba(250,204,21,0.3)',
+              borderRadius: '4px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <span
+                className="text-[11px] font-semibold uppercase tracking-widest"
+                style={{ fontFamily: 'var(--font-geist-sans)', color: '#FACC15', letterSpacing: '0.12em' }}
+              >
+                Debug Scan Output
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    if (debugOutput) {
+                      try {
+                        await navigator.clipboard.writeText(debugOutput)
+                        showToast('Copied to clipboard', 'success')
+                      } catch {
+                        showToast('Copy failed', 'error')
+                      }
+                    }
+                  }}
+                  className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest cursor-pointer"
+                  style={{
+                    background: 'transparent',
+                    color: '#A3A3A3',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '2px',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  Copy
+                </button>
+                <button
+                  onClick={() => setDebugOutput(null)}
+                  className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest cursor-pointer"
+                  style={{
+                    background: 'transparent',
+                    color: '#A3A3A3',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '2px',
+                    letterSpacing: '0.1em',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            <pre
+              className="px-4 py-3 overflow-auto flex-1 text-[11px] leading-relaxed"
+              style={{
+                fontFamily: 'var(--font-dm-mono)',
+                color: '#D4D4D4',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+              }}
+            >
+              {debugOutput}
+            </pre>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
