@@ -1,145 +1,11 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/ui/Button'
-import { brandIcons } from '@/components/ui/BrandIcons'
-
-const radarItems = [
-  { name: 'Netflix', amount: '$15.99/mo', confidence: 94, category: 'Entertainment' },
-  { name: 'Figma Pro', amount: '$15/mo', confidence: 87, category: 'Design' },
-  { name: 'Notion AI', amount: '$16/mo', confidence: 73, category: 'Productivity' },
-  { name: 'GitHub Copilot', amount: '$10/mo', confidence: 91, category: 'Dev Tools' },
-]
-
-function ConfidenceTicker({ target, active }: { target: number; active: boolean }) {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    if (!active) return
-    let frame = 0
-    const total = 40
-    const interval = setInterval(() => {
-      frame++
-      setCount(Math.floor((frame / total) * target))
-      if (frame >= total) clearInterval(interval)
-    }, 18)
-    return () => clearInterval(interval)
-  }, [active, target])
-
-  return (
-    <span style={{ fontFamily: 'var(--font-dm-mono)' }} className="text-sam-red text-xs font-medium">
-      {count}%
-    </span>
-  )
-}
-
-function SubscriptionRadar() {
-  const [visibleCount, setVisibleCount] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setVisibleCount((c) => {
-        if (c >= radarItems.length) {
-          clearInterval(interval)
-          return c
-        }
-        return c + 1
-      })
-    }, 700)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div
-      className="rounded-sm overflow-hidden"
-      style={{
-        backgroundColor: '#141414',
-        border: '1px solid rgba(255,255,255,0.06)',
-        width: '100%',
-        maxWidth: '400px',
-      }}
-    >
-      <div
-        className="px-5 py-3 flex items-center justify-between"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-      >
-        <span
-          className="text-secondary uppercase text-xs tracking-widest"
-          style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '10px' }}
-        >
-          SAM scanning
-        </span>
-        <motion.div
-          animate={{ opacity: [1, 0.3, 1] }}
-          transition={{ duration: 1.2, repeat: Infinity }}
-          className="w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: '#E50914' }}
-        />
-      </div>
-
-      <div className="p-2">
-        <AnimatePresence>
-          {radarItems.slice(0, visibleCount).map((item, i) => (
-            <motion.div
-              key={item.name}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-              className="flex items-center justify-between px-3 py-3 rounded-sm"
-              style={{
-                borderBottom:
-                  i < radarItems.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-sm overflow-hidden shrink-0 flex items-center justify-center">
-                  {brandIcons[item.name] ?? (
-                    <div
-                      className="w-7 h-7 flex items-center justify-center text-xs font-bold"
-                      style={{ backgroundColor: '#1C1C1C', color: '#E50914', fontFamily: 'var(--font-syne)' }}
-                    >
-                      {item.name[0]}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="text-white text-xs font-medium" style={{ fontFamily: 'var(--font-geist-sans)' }}>
-                    {item.name}
-                  </p>
-                  <p className="text-muted" style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '10px' }}>
-                    {item.category}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-white text-xs" style={{ fontFamily: 'var(--font-dm-mono)' }}>
-                  {item.amount}
-                </p>
-                <ConfidenceTicker target={item.confidence} active={i < visibleCount} />
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {visibleCount < radarItems.length && (
-          <div className="px-3 py-3 flex items-center gap-2">
-            <motion.div
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 0.8, repeat: Infinity }}
-              className="text-muted text-xs"
-              style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '10px' }}
-            >
-              detecting...
-            </motion.div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+import NotificationCascade from '@/components/landing/NotificationCascade'
 
 export default function Hero() {
   const { ready, authenticated, login } = usePrivy()
@@ -249,9 +115,9 @@ export default function Hero() {
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-            className="w-full lg:w-auto lg:min-w-[380px]"
+            className="w-full lg:w-auto lg:min-w-[400px]"
           >
-            <SubscriptionRadar />
+            <NotificationCascade />
           </motion.div>
         </div>
       </div>
