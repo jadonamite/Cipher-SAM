@@ -11,8 +11,8 @@ export const redis = new Redis({
 
 const TTL = {
   insight: 60 * 60 * 6,
-  scan: 60 * 10,
-  wallet_scan: 60 * 5,
+  scan: 60 * 2,
+  wallet_scan: 60 * 2,
   gmail_token: 60 * 60 * 24 * 30,
 }
 
@@ -28,6 +28,10 @@ export async function getScanLock(userId: string): Promise<boolean> {
   const key = `scan_lock:${userId}`
   const set = await redis.set(key, '1', { ex: TTL.scan, nx: true })
   return set !== null
+}
+
+export async function releaseScanLock(userId: string): Promise<void> {
+  await redis.del(`scan_lock:${userId}`)
 }
 
 export async function getWalletScanLock(userId: string): Promise<boolean> {
