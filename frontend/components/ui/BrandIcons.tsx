@@ -74,10 +74,38 @@ export function LoomIcon() {
   )
 }
 
+export function YouTubeIcon() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" style={{ width: '100%', height: '100%' }}>
+      <rect width="32" height="32" rx="2" fill="#0D0D0D" />
+      <path
+        d="M25.4 11.2c-.2-.9-.9-1.6-1.8-1.8C22 9 16 9 16 9s-6 0-7.6.4c-.9.2-1.6.9-1.8 1.8C6.2 12.8 6.2 16 6.2 16s0 3.2.4 4.8c.2.9.9 1.6 1.8 1.8C10 23 16 23 16 23s6 0 7.6-.4c.9-.2 1.6-.9 1.8-1.8.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8z"
+        fill="#FF0000"
+      />
+      <path d="M14.2 19l5-3-5-3v6z" fill="white" />
+    </svg>
+  )
+}
+
+export function SpotifyIcon() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" style={{ width: '100%', height: '100%' }}>
+      <rect width="32" height="32" rx="2" fill="#0D0D0D" />
+      <circle cx="16" cy="16" r="9" fill="#1DB954" />
+      <path
+        d="M20.6 19.4c-.2.3-.6.4-.9.2-2.4-1.5-5.5-1.8-9.1-1-.4.1-.7-.1-.8-.5-.1-.4.1-.7.5-.8 4-.9 7.4-.5 10.1 1.1.3.2.4.6.2 1zm1.2-2.7c-.3.4-.7.5-1.1.3-2.8-1.7-7-2.2-10.2-1.2-.4.1-.9-.1-1-.5-.1-.4.1-.9.5-1 3.7-1.1 8.3-.6 11.5 1.4.4.2.5.7.3 1zm.1-2.8c-3.3-2-8.8-2.2-12-1.2-.5.2-1.1-.1-1.2-.6-.2-.5.1-1.1.6-1.2 3.7-1.1 9.7-.9 13.5 1.4.5.3.6.9.4 1.4-.3.4-.9.5-1.3.2z"
+        fill="black"
+      />
+    </svg>
+  )
+}
+
 export const brandIcons: Record<string, React.ReactNode> = {
   'Netflix': <NetflixIcon />,
   'Figma Pro': <FigmaIcon />,
   'Notion AI': <NotionIcon />,
   'GitHub Copilot': <GitHubIcon />,
   'Loom Pro': <LoomIcon />,
+  'YouTube Premium': <YouTubeIcon />,
+  'Spotify': <SpotifyIcon />,
 }
