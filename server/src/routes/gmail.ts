@@ -2,7 +2,13 @@ import { Hono } from 'hono'
 import { google } from 'googleapis'
 import type { gmail_v1 } from 'googleapis'
 import { sql, getOrCreateUser } from '../lib/db.js'
-import { getScanLock, storeGmailTokens, getGmailTokens, hasGmailConnected } from '../lib/cache.js'
+import {
+  getScanLock,
+  releaseScanLock,
+  storeGmailTokens,
+  getGmailTokens,
+  hasGmailConnected,
+} from '../lib/cache.js'
 
 const app = new Hono()
 
@@ -471,23 +477,30 @@ const GMAIL_QUERY = [
   'from:gumroad.com',
 ].join(' OR ')
 
-const MAX_RESULTS = 500
-const BATCH_SIZE = 10
+const MAX_RESULTS = 200
+const BATCH_SIZE = 15
 
 app.post('/scan', async (c) => {
   const userId = c.req.header('x-user-id')
   if (!userId) return c.json({ error: 'Unauthorized' }, 401)
 
+  const debug = c.req.query('debug') === '1'
+  const t0 = Date.now()
+  const log = (...args: unknown[]) => console.log('[gmail/scan]', ...args)
+
   const acquired = await getScanLock(userId)
   if (!acquired) {
-    return c.json({ error: 'Scan already in progress. Try again in 10 minutes.' }, 429)
+    return c.json({ error: 'Scan already in progress. Try again in 2 minutes.' }, 429)
   }
 
   const dbUserId = await getOrCreateUser(userId)
   const tokens = await getGmailTokens(userId)
   if (!tokens?.refresh_token) {
+    await releaseScanLock(userId)
     return c.json({ error: 'Gmail not connected', code: 'GMAIL_NOT_CONNECTED' }, 400)
   }
+
+  log('start', { userId, dbUserId, hasAccessToken: !!tokens.access_token, query_len: GMAIL_QUERY.length })
 
   try {
     const oauth2Client = getOAuthClient()
@@ -504,41 +517,67 @@ app.post('/scan', async (c) => {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client })
 
-    // --- Paginated message fetch (up to MAX_RESULTS) ---
+    // --- Paginated message fetch ---
     const allMessages: gmail_v1.Schema$Message[] = []
     let pageToken: string | undefined
+    let pages = 0
+    const queryWithScope = `${GMAIL_QUERY} newer_than:1y`
 
     do {
       const listRes = await gmail.users.messages.list({
         userId: 'me',
-        q: GMAIL_QUERY,
+        q: queryWithScope,
         maxResults: 100,
         ...(pageToken ? { pageToken } : {}),
       })
       const msgs = listRes.data.messages ?? []
       allMessages.push(...msgs)
       pageToken = listRes.data.nextPageToken ?? undefined
+      pages++
+      log('list', { page: pages, got: msgs.length, total: allMessages.length, resultSizeEstimate: listRes.data.resultSizeEstimate })
     } while (pageToken && allMessages.length < MAX_RESULTS)
+
+    const listElapsed = Date.now() - t0
 
     let detected = 0
     let created = 0
     let updated = 0
     let noAmount = 0
+    let fetchErrors = 0
+    let dbErrors = 0
+    const rejectedSamples: Array<{ subject: string; from: string }> = []
+    const acceptedSamples: Array<{ subject: string; from: string; merchant: string; amount: number; currency: string }> = []
 
-    // --- Process in parallel batches ---
+    // --- Process in parallel batches, with hard time budget ---
+    const TIME_BUDGET_MS = 50_000
+    let timedOut = false
+    let processed = 0
+
     for (let i = 0; i < allMessages.length; i += BATCH_SIZE) {
+      if (Date.now() - t0 > TIME_BUDGET_MS) {
+        timedOut = true
+        log('time-budget-exceeded', { processed, total: allMessages.length })
+        break
+      }
       const batch = allMessages.slice(i, i + BATCH_SIZE)
 
       await Promise.all(
         batch.map(async (msg) => {
           if (!msg.id) return
+          processed++
 
-          // Fetch full message to get body
-          const full = await gmail.users.messages.get({
-            userId: 'me',
-            id: msg.id,
-            format: 'full',
-          })
+          let full
+          try {
+            full = await gmail.users.messages.get({
+              userId: 'me',
+              id: msg.id,
+              format: 'full',
+            })
+          } catch (e) {
+            fetchErrors++
+            log('fetch-error', { id: msg.id, err: (e as Error).message })
+            return
+          }
 
           const headers = full.data.payload?.headers ?? []
           const subject = headers.find((h) => h.name === 'Subject')?.value ?? ''
@@ -546,11 +585,12 @@ app.post('/scan', async (c) => {
           const date = headers.find((h) => h.name === 'Date')?.value ?? new Date().toISOString()
           const snippet = full.data.snippet ?? ''
 
-          // Gate: must look like a subscription email
-          if (!isSubscriptionEmail(subject, from)) return
+          if (!isSubscriptionEmail(subject, from)) {
+            if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from })
+            return
+          }
           detected++
 
-          // Extract amount from subject + snippet + full body
           const body = full.data.payload ? getEmailBody(full.data.payload) : ''
           const searchText = `${subject} ${snippet} ${body}`.slice(0, 4000)
           const amountResult = extractAmount(searchText)
@@ -562,49 +602,85 @@ app.post('/scan', async (c) => {
           const currency = amountResult?.currency ?? 'USD'
 
           if (!amountResult) noAmount++
+          if (acceptedSamples.length < 10) {
+            acceptedSamples.push({ subject, from, merchant, amount, currency })
+          }
 
-          const existingRows = await sql`
-            SELECT id FROM subscriptions
-            WHERE user_id = ${dbUserId} AND merchant = ${merchant} AND status = 'active'
-            LIMIT 1
-          `
-
-          if (existingRows.length > 0) {
-            // Update amount/currency only if we found a real value
-            if (amountResult) {
-              await sql`
-                UPDATE subscriptions
-                SET last_charged = ${date}, amount = ${amount}, currency = ${currency}
-                WHERE id = ${existingRows[0].id}
-              `
-            } else {
-              await sql`UPDATE subscriptions SET last_charged = ${date} WHERE id = ${existingRows[0].id}`
-            }
-            updated++
-          } else {
-            await sql`
-              INSERT INTO subscriptions
-                (user_id, name, merchant, amount, currency, cadence, source, detected_at, last_charged)
-              VALUES
-                (${dbUserId}, ${merchant}, ${merchant}, ${amount}, ${currency}, ${cadence}, 'gmail', NOW(), ${date})
+          try {
+            const existingRows = await sql`
+              SELECT id FROM subscriptions
+              WHERE user_id = ${dbUserId} AND merchant = ${merchant} AND status = 'active'
+              LIMIT 1
             `
-            created++
+
+            if (existingRows.length > 0) {
+              if (amountResult) {
+                await sql`
+                  UPDATE subscriptions
+                  SET last_charged = ${date}, amount = ${amount}, currency = ${currency}
+                  WHERE id = ${existingRows[0].id}
+                `
+              } else {
+                await sql`UPDATE subscriptions SET last_charged = ${date} WHERE id = ${existingRows[0].id}`
+              }
+              updated++
+            } else {
+              await sql`
+                INSERT INTO subscriptions
+                  (user_id, name, merchant, amount, currency, cadence, source, detected_at, last_charged)
+                VALUES
+                  (${dbUserId}, ${merchant}, ${merchant}, ${amount}, ${currency}, ${cadence}, 'gmail', NOW(), ${date})
+              `
+              created++
+            }
+          } catch (e) {
+            dbErrors++
+            log('db-error', { merchant, err: (e as Error).message })
           }
         })
       )
     }
 
-    return c.json({
+    await releaseScanLock(userId)
+    const elapsed = Date.now() - t0
+    log('done', { scanned: allMessages.length, processed, detected, created, updated, noAmount, fetchErrors, dbErrors, timedOut, listElapsed, elapsed })
+
+    const response: Record<string, unknown> = {
       scanned: allMessages.length,
+      processed,
       detected,
       created,
       updated,
       no_amount: noAmount,
-    })
+      fetch_errors: fetchErrors,
+      db_errors: dbErrors,
+      timed_out: timedOut,
+      elapsed_ms: elapsed,
+    }
+    if (debug) {
+      response.debug = {
+        query: queryWithScope,
+        query_len: queryWithScope.length,
+        pages,
+        list_elapsed_ms: listElapsed,
+        rejected_samples: rejectedSamples,
+        accepted_samples: acceptedSamples,
+      }
+    }
+    return c.json(response)
   } catch (err) {
-    console.error('[Gmail] Scan error:', err)
+    await releaseScanLock(userId)
+    console.error('[gmail/scan] fatal:', err)
     return c.json({ error: 'Scan failed', detail: (err as Error).message }, 500)
   }
+})
+
+// DELETE /gmail/scan-lock — clear stuck scan lock (debug)
+app.delete('/scan-lock', async (c) => {
+  const userId = c.req.header('x-user-id')
+  if (!userId) return c.json({ error: 'Unauthorized' }, 401)
+  await releaseScanLock(userId)
+  return c.json({ cleared: true })
 })
 
 // ---------------------------------------------------------------------------
