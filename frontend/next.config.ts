@@ -4,6 +4,7 @@ const config: NextConfig = {
   experimental: {
     optimizePackageImports: ['framer-motion'],
   },
+  allowedDevOrigins: ['localhost:3000', '127.0.0.1:3000'],
   async rewrites() {
     return [
       {
