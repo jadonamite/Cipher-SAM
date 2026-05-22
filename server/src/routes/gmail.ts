@@ -107,11 +107,6 @@ const MERCHANT_MAP: Record<string, string> = {
   'stripe.com': 'Stripe',
   'paystack.com': 'Paystack',
   'flutterwave.com': 'Flutterwave',
-  'moniepoint.com': 'Moniepoint',
-  'opay.com': 'OPay',
-  'kuda.com': 'Kuda',
-  'piggyvest.com': 'PiggyVest',
-  'cowrywise.com': 'Cowrywise',
   'lemonsqueezy.com': 'Lemon Squeezy',
   'paddle.com': 'Paddle',
   'gumroad.com': 'Gumroad',
@@ -235,8 +230,6 @@ const SUB_SUBJECT_PATTERNS = [
   /charged .+₦/i,
   /\$\d+ (charge|debit|billed)/i,
   /₦[\d,]+ (charge|debit)/i,
-  /debit alert/i,
-  /debit notification/i,
   // Service specific patterns
   /your (netflix|spotify|apple|google|microsoft|amazon|adobe|slack|zoom|figma|notion|github|dropbox|paypal) (receipt|invoice|subscription|payment|membership|plan|charge)/i,
   // Upcoming/renewal alerts
@@ -278,9 +271,26 @@ const NEGATIVE_SUBJECT_PATTERNS = [
   /account (created|confirmed|verified)/i,
   /notification settings/i,
   /unsubscribe/i,
+  /debit alert/i,
+  /debit notification/i,
 ]
 
+// Banks and payment processors — they send debit alerts for any transaction, not subscriptions
+const BANK_DOMAINS = new Set([
+  'moniepoint.com', 'opay.com', 'kuda.com', 'piggyvest.com',
+  'cowrywise.com', 'providusbank.com', 'gtbank.com', 'zenithbank.com',
+  'accessbankplc.com', 'firstbanknigeria.com', 'sterling.ng',
+])
+
 export function isSubscriptionEmail(subject: string, sender: string): boolean {
+  // Hard reject bank transaction emails
+  const senderDomain = extractRootDomain(sender.toLowerCase())
+  const senderParts = senderDomain.split('.')
+  if (senderParts.length >= 2) {
+    const rootDomain = `${senderParts[senderParts.length - 2]}.${senderParts[senderParts.length - 1]}`
+    if (BANK_DOMAINS.has(rootDomain)) return false
+  }
+
   // Hard reject non-billing subjects even from billing domains
   if (NEGATIVE_SUBJECT_PATTERNS.some((p) => p.test(subject))) return false
 
