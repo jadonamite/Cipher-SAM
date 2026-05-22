@@ -582,7 +582,11 @@ app.post('/scan', async (c) => {
           const headers = full.data.payload?.headers ?? []
           const subject = headers.find((h) => h.name === 'Subject')?.value ?? ''
           const from = headers.find((h) => h.name === 'From')?.value ?? ''
-          const date = headers.find((h) => h.name === 'Date')?.value ?? new Date().toISOString()
+          const dateRaw = headers.find((h) => h.name === 'Date')?.value ?? ''
+          const parsedDate = dateRaw ? new Date(dateRaw) : null
+          const date = parsedDate && !isNaN(parsedDate.getTime())
+            ? parsedDate.toISOString()
+            : new Date().toISOString()
           const snippet = full.data.snippet ?? ''
 
           if (!isSubscriptionEmail(subject, from)) {
