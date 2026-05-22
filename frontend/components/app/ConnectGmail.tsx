@@ -51,10 +51,10 @@ export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
       }}
     >
       <div
-        className="w-12 h-12 flex items-center justify-center"
-        style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '4px' }}
+        className="flex items-center justify-center"
+        style={{ width: '120px', height: '120px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px' }}
       >
-        <svg viewBox="0 0 512 512" fill="none" width="24" height="24">
+        <svg viewBox="0 0 512 512" fill="none" width="60" height="60">
           <path d="M158 391v-142l-82-63V361q0 30 30 30" fill="#4285f4"/>
           <path d="M154 248l102 77l102-77v-98l-102 77l-102-77" fill="#ea4335"/>
           <path d="M354 391v-142l82-63V361q0 30-30 30" fill="#34a853"/>
