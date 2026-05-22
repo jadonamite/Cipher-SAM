@@ -1,8 +1,11 @@
-import { neon } from '@neondatabase/serverless'
+import { neon, types } from '@neondatabase/serverless'
 
 if (!process.env.NEON_DATABASE_URL) {
   throw new Error('NEON_DATABASE_URL is required')
 }
+
+// Parse PostgreSQL NUMERIC (OID 1700) as JavaScript numbers
+types.setTypeParser(1700, parseFloat)
 
 export const sql = neon(process.env.NEON_DATABASE_URL)
 
