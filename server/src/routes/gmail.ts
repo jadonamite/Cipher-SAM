@@ -9,147 +9,18 @@ import {
   getGmailTokens,
   hasGmailConnected,
 } from '../lib/cache.js'
+import {
+  lookupService,
+  KNOWN_BILLING_DOMAINS,
+  REGISTRY_FROM_QUERY,
+  type SubscriptionCategory,
+} from '../lib/subscriptions-registry.js'
 
 const app = new Hono()
 
 // ---------------------------------------------------------------------------
 // Merchant normalization
 // ---------------------------------------------------------------------------
-
-const MERCHANT_MAP: Record<string, string> = {
-  // Streaming
-  'netflix.com': 'Netflix',
-  'nflx.com': 'Netflix',
-  'spotify.com': 'Spotify',
-  'spotify.ab': 'Spotify',
-  'emails.spotify.com': 'Spotify',
-  'hulu.com': 'Hulu',
-  'disneyplus.com': 'Disney+',
-  'disneyplus': 'Disney+',
-  'primevideo.com': 'Amazon Prime Video',
-  'amazon.com': 'Amazon',
-  'prime video': 'Amazon Prime Video',
-  'youtube.com': 'YouTube Premium',
-  'youtube premium': 'YouTube Premium',
-  'dazn.com': 'DAZN',
-  'peacocktv.com': 'Peacock',
-  'hbomax.com': 'Max',
-  'max.com': 'Max',
-  'paramountplus.com': 'Paramount+',
-  'showtime.com': 'Showtime',
-  'appletv.apple.com': 'Apple TV+',
-  // Design & Productivity
-  'figma.com': 'Figma',
-  'notion.so': 'Notion AI',
-  'notion.com': 'Notion AI',
-  'notion labs': 'Notion AI',
-  'airtable.com': 'Airtable',
-  'canva.com': 'Canva',
-  'miro.com': 'Miro',
-  'linear.app': 'Linear',
-  'loom.com': 'Loom',
-  'grammarly.com': 'Grammarly',
-  'typeform.com': 'Typeform',
-  'webflow.com': 'Webflow',
-  'framer.com': 'Framer',
-  // Dev Tools & Cloud
-  'github.com': 'GitHub',
-  'github copilot': 'GitHub Copilot',
-  'vercel.com': 'Vercel',
-  'render.com': 'Render',
-  'railway.app': 'Railway',
-  'supabase.io': 'Supabase',
-  'supabase.com': 'Supabase',
-  'planetscale': 'PlanetScale',
-  'aws.amazon.com': 'AWS',
-  'amazon web services': 'AWS',
-  'google cloud': 'Google Cloud',
-  'cloud.google.com': 'Google Cloud',
-  'digitalocean.com': 'DigitalOcean',
-  'heroku.com': 'Heroku',
-  'netlify.com': 'Netlify',
-  'fly.io': 'Fly.io',
-  'linode.com': 'Akamai/Linode',
-  'neon.tech': 'Neon',
-  'upstash.com': 'Upstash',
-  // AI Tools
-  'openai.com': 'ChatGPT Plus',
-  'chat.openai.com': 'ChatGPT Plus',
-  'chatgpt': 'ChatGPT Plus',
-  'anthropic.com': 'Claude Pro',
-  'midjourney': 'Midjourney',
-  'elevenlabs.io': 'ElevenLabs',
-  'perplexity.ai': 'Perplexity Pro',
-  'gamma.app': 'Gamma',
-  // Communication & Productivity
-  'slack.com': 'Slack',
-  'zoom.us': 'Zoom',
-  'dropbox.com': 'Dropbox',
-  'box.com': 'Box',
-  'evernote.com': 'Evernote',
-  'todoist.com': 'Todoist',
-  'asana.com': 'Asana',
-  'monday.com': 'Monday.com',
-  'clickup.com': 'ClickUp',
-  'trello.com': 'Trello',
-  // Marketing & Analytics
-  'mailchimp.com': 'Mailchimp',
-  'convertkit.com': 'ConvertKit',
-  'zapier.com': 'Zapier',
-  'make.com': 'Make',
-  'mixpanel.com': 'Mixpanel',
-  'amplitude.com': 'Amplitude',
-  'hotjar.com': 'Hotjar',
-  'semrush.com': 'SEMrush',
-  'ahrefs.com': 'Ahrefs',
-  // Finance & Payments
-  'paypal.com': 'PayPal',
-  'stripe.com': 'Stripe',
-  'paystack.com': 'Paystack',
-  'flutterwave.com': 'Flutterwave',
-  'lemonsqueezy.com': 'Lemon Squeezy',
-  'paddle.com': 'Paddle',
-  'gumroad.com': 'Gumroad',
-  // Apple & Google
-  'apple.com': 'Apple',
-  'icloud.com': 'iCloud',
-  'apps.apple.com': 'App Store',
-  'microsoft.com': 'Microsoft',
-  'office365': 'Microsoft 365',
-  'office.com': 'Microsoft 365',
-  'adobe.com': 'Adobe Creative Cloud',
-  'google.com': 'Google',
-  'accounts.google.com': 'Google',
-  // Education
-  'duolingo.com': 'Duolingo',
-  'coursera.org': 'Coursera',
-  'udemy.com': 'Udemy',
-  'skillshare.com': 'Skillshare',
-  'masterclass.com': 'MasterClass',
-  'brilliant.org': 'Brilliant',
-  'leetcode.com': 'LeetCode',
-  // Music
-  'apple.com/itunes': 'Apple Music',
-  'tidal.com': 'TIDAL',
-  'deezer.com': 'Deezer',
-  // VPN & Security
-  'nordvpn.com': 'NordVPN',
-  'expressvpn.com': 'ExpressVPN',
-  'protonvpn.com': 'ProtonVPN',
-  'proton.me': 'Proton',
-  '1password.com': '1Password',
-  'bitwarden.com': 'Bitwarden',
-  // Storage
-  'backblaze.com': 'Backblaze',
-  'pcloud.com': 'pCloud',
-  // Misc
-  'medium.com': 'Medium',
-  'substack.com': 'Substack',
-  'patreon.com': 'Patreon',
-  'twitch.tv': 'Twitch',
-  'discord.com': 'Discord Nitro',
-  'duolingo': 'Duolingo',
-}
 
 function extractRootDomain(email: string): string {
   // Strip display name: "Netflix <no-reply@netflix.com>" → "no-reply@netflix.com"
@@ -158,31 +29,32 @@ function extractRootDomain(email: string): string {
   return domainMatch ? domainMatch[1] : address
 }
 
-export function normalizeMerchant(raw: string): string {
-  const lower = raw.toLowerCase()
+/**
+ * Resolve a sender header to {merchant, category}. Uses the subscription
+ * registry as the source of truth; falls back to a title-cased version of
+ * the display name / domain when the sender is unknown.
+ */
+export function resolveMerchant(raw: string): { name: string; category: SubscriptionCategory | null } {
+  const hit = lookupService(raw)
+  if (hit) return { name: hit.name, category: hit.category }
 
-  // Direct map check (keys including subdomains)
-  for (const [key, name] of Object.entries(MERCHANT_MAP)) {
-    if (lower.includes(key)) return name
+  // Unknown sender — fall back to title-casing the display name or domain
+  const displayName = raw.replace(/<.*>/, '').trim()
+  if (displayName && !displayName.includes('@')) {
+    const cased = displayName
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ')
+    return { name: cased, category: null }
   }
-
-  // Root domain extraction for sender emails — e.g. "billing@emails.spotify.com" → "spotify.com"
   const domain = extractRootDomain(raw)
-  const parts = domain.split('.')
-  if (parts.length >= 2) {
-    const rootDomain = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`
-    for (const [key, name] of Object.entries(MERCHANT_MAP)) {
-      if (key.includes(rootDomain) || rootDomain.includes(key.split('.')[0])) return name
-    }
-  }
+  const base = domain.split('.')[0] ?? raw
+  return { name: base.charAt(0).toUpperCase() + base.slice(1).toLowerCase(), category: null }
+}
 
-  // Fallback: title-case the raw string
-  return raw
-    .replace(/<.*>/, '')
-    .trim()
-    .split(/\s+/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ')
+// Back-compat for callers that only need the name string (e.g. /gmail/parse)
+export function normalizeMerchant(raw: string): string {
+  return resolveMerchant(raw).name
 }
 
 // ---------------------------------------------------------------------------
@@ -241,20 +113,7 @@ const SUB_SUBJECT_PATTERNS = [
   /access to .+ (continues?|renewed)/i,
 ]
 
-const KNOWN_BILLING_DOMAINS = new Set([
-  'netflix.com', 'spotify.com', 'apple.com', 'google.com', 'microsoft.com',
-  'amazon.com', 'adobe.com', 'figma.com', 'notion.so', 'notion.com',
-  'github.com', 'dropbox.com', 'slack.com', 'zoom.us', 'paypal.com',
-  'stripe.com', 'paystack.com', 'flutterwave.com', 'canva.com', 'loom.com',
-  'grammarly.com', 'duolingo.com', 'openai.com', 'anthropic.com', 'vercel.com',
-  'digitalocean.com', 'airtable.com', 'zapier.com', 'mailchimp.com',
-  'linear.app', 'miro.com', 'webflow.com', 'framer.com', 'render.com',
-  'railway.app', 'heroku.com', 'netlify.com', 'medium.com', 'substack.com',
-  'patreon.com', 'discord.com', 'twitch.tv', 'nordvpn.com', 'expressvpn.com',
-  'protonvpn.com', 'proton.me', '1password.com', 'coursera.org', 'udemy.com',
-  'skillshare.com', 'midjourney.com', 'elevenlabs.io', 'perplexity.ai',
-  'paddle.com', 'lemonsqueezy.com', 'gumroad.com',
-])
+// KNOWN_BILLING_DOMAINS now imported from subscriptions-registry (auto-derived)
 
 // Subjects that indicate non-billing emails even from known billing domains
 const NEGATIVE_SUBJECT_PATTERNS = [
@@ -472,7 +331,7 @@ app.get('/callback', async (c) => {
 // POST /gmail/scan — main detection pipeline
 // ---------------------------------------------------------------------------
 
-const GMAIL_QUERY = [
+const SUBJECT_QUERY = [
   'subject:receipt',
   'subject:invoice',
   'subject:subscription',
@@ -486,8 +345,6 @@ const GMAIL_QUERY = [
   'subject:"auto-renewal"',
   'subject:"order confirmation"',
   'subject:"transaction receipt"',
-  'subject:"debit alert"',
-  'subject:"debit notification"',
   'subject:"membership"',
   'subject:"your plan"',
   'subject:"trial ending"',
@@ -495,36 +352,10 @@ const GMAIL_QUERY = [
   'subject:"thank you for your payment"',
   'subject:"we charged"',
   'subject:"you have been charged"',
-  // Catch known billing senders directly
-  'from:netflix.com',
-  'from:spotify.com',
-  'from:apple.com',
-  'from:google.com',
-  'from:amazon.com',
-  'from:paypal.com',
-  'from:stripe.com',
-  'from:paystack.com',
-  'from:flutterwave.com',
-  'from:figma.com',
-  'from:notion.so',
-  'from:github.com',
-  'from:adobe.com',
-  'from:slack.com',
-  'from:zoom.us',
-  'from:openai.com',
-  'from:vercel.com',
-  'from:digitalocean.com',
-  'from:anthropic.com',
-  'from:midjourney.com',
-  'from:loom.com',
-  'from:canva.com',
-  'from:grammarly.com',
-  'from:dropbox.com',
-  'from:microsoft.com',
-  'from:paddle.com',
-  'from:lemonsqueezy.com',
-  'from:gumroad.com',
 ].join(' OR ')
+
+// Subjects + every known billing domain from the subscription registry
+const GMAIL_QUERY = `${SUBJECT_QUERY} OR ${REGISTRY_FROM_QUERY}`
 
 const MAX_RESULTS = 200
 const BATCH_SIZE = 15
@@ -648,8 +479,7 @@ app.post('/scan', async (c) => {
           const searchText = `${subject} ${snippet} ${body}`.slice(0, 4000)
           const amountResult = extractAmount(searchText)
 
-          const fromClean = from.replace(/^.*</, '').replace(/>.*$/, '').trim()
-          const merchant = normalizeMerchant(fromClean || from)
+          const { name: merchant, category } = resolveMerchant(from)
           const cadence = detectCadence(subject)
           const amount = amountResult?.amount ?? 0
           const currency = amountResult?.currency ?? 'USD'
@@ -670,19 +500,19 @@ app.post('/scan', async (c) => {
               if (amountResult) {
                 await sql`
                   UPDATE subscriptions
-                  SET last_charged = ${date}, amount = ${amount}, currency = ${currency}
+                  SET last_charged = ${date}, amount = ${amount}, currency = ${currency}, category = COALESCE(category, ${category})
                   WHERE id = ${existingRows[0].id}
                 `
               } else {
-                await sql`UPDATE subscriptions SET last_charged = ${date} WHERE id = ${existingRows[0].id}`
+                await sql`UPDATE subscriptions SET last_charged = ${date}, category = COALESCE(category, ${category}) WHERE id = ${existingRows[0].id}`
               }
               updated++
             } else {
               await sql`
                 INSERT INTO subscriptions
-                  (user_id, name, merchant, amount, currency, cadence, source, detected_at, last_charged)
+                  (user_id, name, merchant, amount, currency, cadence, source, category, detected_at, last_charged)
                 VALUES
-                  (${dbUserId}, ${merchant}, ${merchant}, ${amount}, ${currency}, ${cadence}, 'gmail', NOW(), ${date})
+                  (${dbUserId}, ${merchant}, ${merchant}, ${amount}, ${currency}, ${cadence}, 'gmail', ${category}, NOW(), ${date})
               `
               created++
             }
@@ -755,7 +585,7 @@ app.post('/parse', async (c) => {
     return c.json({ detected: false })
   }
 
-  const merchant = normalizeMerchant(body.sender)
+  const { name: merchant, category } = resolveMerchant(body.sender)
   const amountResult = extractAmount(`${body.subject} ${body.body_snippet}`)
   const cadence = detectCadence(body.subject)
 
@@ -771,13 +601,13 @@ app.post('/parse', async (c) => {
   const currency = amountResult?.currency ?? 'USD'
 
   if (existingRows.length > 0) {
-    await sql`UPDATE subscriptions SET last_charged = ${body.received_at} WHERE id = ${existingRows[0].id}`
+    await sql`UPDATE subscriptions SET last_charged = ${body.received_at}, category = COALESCE(category, ${category}) WHERE id = ${existingRows[0].id}`
     return c.json({ detected: true, action: 'updated', subscription_id: existingRows[0].id })
   }
 
   const created = await sql`
-    INSERT INTO subscriptions (user_id, name, merchant, amount, currency, cadence, source, detected_at, last_charged)
-    VALUES (${dbUserId}, ${merchant}, ${merchant}, ${amount}, ${currency}, ${cadence}, 'gmail', NOW(), ${body.received_at})
+    INSERT INTO subscriptions (user_id, name, merchant, amount, currency, cadence, source, category, detected_at, last_charged)
+    VALUES (${dbUserId}, ${merchant}, ${merchant}, ${amount}, ${currency}, ${cadence}, 'gmail', ${category}, NOW(), ${body.received_at})
     RETURNING id
   `
 
