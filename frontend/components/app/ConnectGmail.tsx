@@ -52,17 +52,14 @@ export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
     >
       <div
         className="w-12 h-12 flex items-center justify-center"
-        style={{ background: 'rgba(229,9,20,0.1)', borderRadius: '2px' }}
+        style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '4px' }}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z"
-            stroke="#E50914"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path d="M22 6L12 13L2 6" stroke="#E50914" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <svg viewBox="0 0 512 512" fill="none" width="24" height="24">
+          <path d="M158 391v-142l-82-63V361q0 30 30 30" fill="#4285f4"/>
+          <path d="M154 248l102 77l102-77v-98l-102 77l-102-77" fill="#ea4335"/>
+          <path d="M354 391v-142l82-63V361q0 30-30 30" fill="#34a853"/>
+          <path d="M76 188l82 63v-98l-30-23c-27-21-52 0-52 26" fill="#c5221f"/>
+          <path d="M436 188l-82 63v-98l30-23c27-21 52 0 52 26" fill="#fbbc04"/>
         </svg>
       </div>
 
