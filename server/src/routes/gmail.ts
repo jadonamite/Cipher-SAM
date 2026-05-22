@@ -107,6 +107,11 @@ const MERCHANT_MAP: Record<string, string> = {
   'stripe.com': 'Stripe',
   'paystack.com': 'Paystack',
   'flutterwave.com': 'Flutterwave',
+  'moniepoint.com': 'Moniepoint',
+  'opay.com': 'OPay',
+  'kuda.com': 'Kuda',
+  'piggyvest.com': 'PiggyVest',
+  'cowrywise.com': 'Cowrywise',
   'lemonsqueezy.com': 'Lemon Squeezy',
   'paddle.com': 'Paddle',
   'gumroad.com': 'Gumroad',
@@ -258,17 +263,41 @@ const KNOWN_BILLING_DOMAINS = new Set([
   'paddle.com', 'lemonsqueezy.com', 'gumroad.com',
 ])
 
+// Subjects that indicate non-billing emails even from known billing domains
+const NEGATIVE_SUBJECT_PATTERNS = [
+  /deployment (failed|succeeded|cancelled|completed)/i,
+  /build (failed|succeeded|cancelled|error)/i,
+  /filling out.*form/i,
+  /form.*receipt/i,
+  /hackathon/i,
+  /security alert/i,
+  /new sign.?in/i,
+  /password (reset|changed)/i,
+  /verify your email/i,
+  /welcome to/i,
+  /account (created|confirmed|verified)/i,
+  /notification settings/i,
+  /unsubscribe/i,
+]
+
 export function isSubscriptionEmail(subject: string, sender: string): boolean {
+  // Hard reject non-billing subjects even from billing domains
+  if (NEGATIVE_SUBJECT_PATTERNS.some((p) => p.test(subject))) return false
+
   // 1. Subject pattern match
   if (SUB_SUBJECT_PATTERNS.some((p) => p.test(subject))) return true
 
-  // 2. Sender is a known billing domain
+  // 2. Sender is a known billing domain — only accept if subject looks billing-adjacent
   const senderLower = sender.toLowerCase()
   const domain = extractRootDomain(senderLower)
   const parts = domain.split('.')
   if (parts.length >= 2) {
     const rootDomain = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`
-    if (KNOWN_BILLING_DOMAINS.has(rootDomain)) return true
+    if (KNOWN_BILLING_DOMAINS.has(rootDomain)) {
+      // Require at least a weak billing signal in the subject
+      const billingHint = /receipt|invoice|subscription|billing|charge|payment|renewal|plan|membership|trial|order|debit/i
+      return billingHint.test(subject)
+    }
   }
 
   return false
@@ -318,20 +347,30 @@ function decodeBase64Url(encoded: string): string {
   return Buffer.from(encoded.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8')
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
+}
+
 function extractBodyFromParts(parts: gmail_v1.Schema$MessagePart[]): string {
-  let text = ''
+  let plainText = ''
+  let htmlText = ''
   for (const part of parts) {
     if (part.mimeType === 'text/plain' && part.body?.data) {
-      text += decodeBase64Url(part.body.data) + '\n'
+      plainText += decodeBase64Url(part.body.data) + '\n'
+    } else if (part.mimeType === 'text/html' && part.body?.data) {
+      htmlText += decodeBase64Url(part.body.data) + '\n'
     } else if (part.parts) {
-      text += extractBodyFromParts(part.parts)
+      plainText += extractBodyFromParts(part.parts)
     }
   }
-  return text
+  return plainText || (htmlText ? stripHtml(htmlText) : '')
 }
 
 function getEmailBody(payload: gmail_v1.Schema$MessagePart): string {
-  if (payload.body?.data) return decodeBase64Url(payload.body.data)
+  if (payload.body?.data) {
+    const raw = decodeBase64Url(payload.body.data)
+    return payload.mimeType === 'text/html' ? stripHtml(raw) : raw
+  }
   if (payload.parts) return extractBodyFromParts(payload.parts)
   return ''
 }
