@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import TopNav from '@/components/app/TopNav'
+import { normalizeRec } from '@/lib/normalize'
 
 type Rec = {
   id: string
@@ -110,7 +111,7 @@ export default function RecommendationsPage() {
     setLoading(true)
     try {
       const res = await fetch('/api/recommendations', { headers: { 'x-user-id': user!.id } })
-      if (res.ok) setRecs((await res.json()).recommendations ?? [])
+      if (res.ok) setRecs(((await res.json()).recommendations ?? []).map(normalizeRec))
     } catch {
       // server offline
     } finally {

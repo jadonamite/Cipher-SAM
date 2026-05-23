@@ -9,6 +9,7 @@ import ConnectGmail from '@/components/app/ConnectGmail'
 import { useToast } from '@/components/providers/ToastProvider'
 import Link from 'next/link'
 import TopNav from '@/components/app/TopNav'
+import { normalizeSubscription } from '@/lib/normalize'
 
 type Filter = 'all' | 'monthly' | 'yearly' | 'high-risk'
 type Sort = 'spend' | 'risk' | 'detected'
@@ -59,7 +60,7 @@ export default function SubscriptionsPage() {
     ])
     const statusData = await statusRes.json()
     setGmailConnected(statusData.connected ?? false)
-    if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
+    if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
   }
 
   useEffect(() => {
@@ -109,7 +110,7 @@ export default function SubscriptionsPage() {
         setSubs((prev) =>
           prev.map((s) => {
             const r = results.find((x: any) => x.id === s.id)
-            return r ? { ...s, confidence: r.confidence, action: r.action } : s
+            return r ? { ...s, confidence: r.confidence == null ? undefined : Number(r.confidence), action: r.action } : s
           })
         )
         showToast('Analysis complete', 'success')

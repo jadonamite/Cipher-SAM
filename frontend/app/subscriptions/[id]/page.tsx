@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import ConfidenceScore from '@/components/app/ConfidenceScore'
 import TopNav from '@/components/app/TopNav'
+import { normalizeSubscription } from '@/lib/normalize'
 import type { Subscription } from '@/components/app/SubscriptionRow'
 
 type Signal = {
@@ -90,7 +91,7 @@ export default function SubscriptionDetail() {
       if (!res.ok) { router.replace('/subscriptions'); return }
       const json = await res.json()
       setData({
-        subscription: json.subscription,
+        subscription: normalizeSubscription(json.subscription),
         signals: json.signals ?? [],
         insight: json.insight ?? null,
         recommendation: json.subscription.recommendations?.[0] ?? null,
