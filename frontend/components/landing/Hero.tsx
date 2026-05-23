@@ -55,25 +55,25 @@ export default function Hero() {
       />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-16 py-16 sm:py-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          className="mb-12 flex justify-center"
+        >
+          <Image
+            src="/SAM.png"
+            alt="SAM logo"
+            width={140}
+            height={140}
+            priority
+            className="rounded-lg"
+          />
+        </motion.div>
+
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-10 lg:gap-16">
           {/* Left — 60% */}
           <div className="flex-1">
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.92 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-              className="mb-5 flex justify-start"
-            >
-              <Image
-                src="/SAM.png"
-                alt="SAM logo"
-                width={72}
-                height={72}
-                priority
-                className="rounded-md"
-              />
-            </motion.div>
-
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
