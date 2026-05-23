@@ -6,6 +6,7 @@ import { usePrivy } from '@privy-io/react-auth'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import ConfidenceScore from '@/components/app/ConfidenceScore'
+import TopNav from '@/components/app/TopNav'
 import type { Subscription } from '@/components/app/SubscriptionRow'
 
 type Signal = {
@@ -203,30 +204,30 @@ export default function SubscriptionDetail() {
 
   return (
     <main className="min-h-screen bg-void">
-      <header
-        className="flex items-center justify-between px-6 py-4 border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.06)' }}
-      >
-        <div className="flex items-center gap-4">
-          <Link
-            href="/subscriptions"
-            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '12px' }}
+      <TopNav
+        title={sub.merchant}
+        rightMeta={
+          <span
+            className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest"
+            style={{
+              fontFamily: 'var(--font-geist-sans)',
+              color: statusStyle.color,
+              border: `1px solid ${statusStyle.border}`,
+              borderRadius: '2px',
+            }}
           >
-            ← Subscriptions
-          </Link>
-        </div>
-        <span
-          className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest"
-          style={{
-            fontFamily: 'var(--font-geist-sans)',
-            color: statusStyle.color,
-            border: `1px solid ${statusStyle.border}`,
-            borderRadius: '2px',
-          }}
+            {sub.status}
+          </span>
+        }
+      />
+      <div className="max-w-2xl mx-auto px-6 pt-4">
+        <Link
+          href="/subscriptions"
+          style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '12px' }}
         >
-          {sub.status}
-        </span>
-      </header>
+          ← Subscriptions
+        </Link>
+      </div>
 
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-8">
 

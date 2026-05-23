@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { NAV_LINKS } from '@/lib/nav'
 
 interface MobileMenuProps {
   walletAddress?: string
@@ -16,15 +18,6 @@ interface MobileMenuProps {
   onDebugScan?: () => void
 }
 
-const LINKS = [
-  { href: '/dashboard',       label: 'Dashboard' },
-  { href: '/subscriptions',   label: 'Subscriptions' },
-  { href: '/recommendations', label: 'Recommendations' },
-  { href: '/agent',           label: 'Agent' },
-  { href: '/audit',           label: 'Audit' },
-  { href: '/policies',        label: 'Policies' },
-]
-
 export default function MobileMenu({
   walletAddress,
   email,
@@ -37,6 +30,8 @@ export default function MobileMenu({
   onDebugScan,
 }: MobileMenuProps) {
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+  const showDebug = process.env.NODE_ENV !== 'production'
 
   return (
     <>
@@ -139,22 +134,27 @@ export default function MobileMenu({
 
               {/* nav links */}
               <nav className="flex flex-col py-2 flex-1">
-                {LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className="px-5 py-3"
-                    style={{
-                      fontFamily: 'var(--font-geist-sans)',
-                      color: '#A3A3A3',
-                      fontSize: '14px',
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                {NAV_LINKS.map((link) => {
+                  const active = pathname === link.href || pathname?.startsWith(link.href + '/')
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      className="px-5 py-3"
+                      style={{
+                        fontFamily: 'var(--font-geist-sans)',
+                        color: active ? '#fff' : '#A3A3A3',
+                        fontSize: '14px',
+                        letterSpacing: '-0.01em',
+                        borderLeft: active ? '2px solid #E50914' : '2px solid transparent',
+                      }}
+                    >
+                      {link.label}
+                    </Link>
+                  )
+                })}
               </nav>
 
               {/* action buttons */}
@@ -208,7 +208,7 @@ export default function MobileMenu({
                     {scanning ? 'Scanning…' : 'Scan Gmail'}
                   </button>
                 )}
-                {onDebugScan && (
+                {onDebugScan && showDebug && (
                   <button
                     onClick={() => {
                       onDebugScan()

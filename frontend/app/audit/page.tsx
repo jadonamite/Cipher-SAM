@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import TopNav from '@/components/app/TopNav'
 
 type ActionRecord = {
   id: string
@@ -107,17 +108,16 @@ export default function AuditPage() {
 
   return (
     <main className="min-h-screen bg-void">
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '12px' }}>← Dashboard</Link>
-          <span style={{ fontFamily: 'var(--font-syne)', color: '#fff', fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>Audit Log</span>
-        </div>
-        {reversibleCount > 0 && (
-          <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#D97706', fontSize: '11px' }}>
-            {reversibleCount} reversible
-          </span>
-        )}
-      </header>
+      <TopNav
+        title="Audit Log"
+        rightMeta={
+          reversibleCount > 0 ? (
+            <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#D97706', fontSize: '11px' }}>
+              {reversibleCount} reversible
+            </span>
+          ) : null
+        }
+      />
 
       <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
 

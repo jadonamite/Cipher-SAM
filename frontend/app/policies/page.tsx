@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import TopNav from '@/components/app/TopNav'
 
 type PolicyTrigger = 'trial_cancel' | 'spend_alert' | 'inactivity_pause'
 type PolicyAction = 'cancel' | 'pause' | 'remind' | 'alert'
@@ -206,46 +207,45 @@ export default function PoliciesPage() {
 
   return (
     <main className="min-h-screen bg-void">
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '12px' }}>← Dashboard</Link>
-          <span style={{ fontFamily: 'var(--font-syne)', color: '#fff', fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>Policies</span>
-        </div>
-        <div className="flex items-center gap-3">
-          {policies.length > 0 && (
+      <TopNav
+        title="Policies"
+        actions={
+          <>
+            {policies.length > 0 && (
+              <motion.button
+                onClick={evaluate}
+                disabled={evaluating}
+                whileHover={{ scale: evaluating ? 1 : 1.02 }}
+                whileTap={{ scale: evaluating ? 1 : 0.98 }}
+                className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
+                style={{
+                  fontFamily: 'var(--font-geist-sans)',
+                  background: 'transparent',
+                  color: evaluating ? '#525252' : '#A3A3A3',
+                  border: `1px solid ${evaluating ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.12)'}`,
+                  borderRadius: '2px',
+                }}
+              >
+                {evaluating ? 'Evaluating...' : 'Evaluate'}
+              </motion.button>
+            )}
             <motion.button
-              onClick={evaluate}
-              disabled={evaluating}
-              whileHover={{ scale: evaluating ? 1 : 1.02 }}
-              whileTap={{ scale: evaluating ? 1 : 0.98 }}
+              onClick={() => { setShowNew(true); setDraft(BLANK) }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
               style={{
                 fontFamily: 'var(--font-geist-sans)',
-                background: 'transparent',
-                color: evaluating ? '#525252' : '#A3A3A3',
-                border: `1px solid ${evaluating ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.12)'}`,
+                background: '#E50914',
+                color: '#fff',
                 borderRadius: '2px',
               }}
             >
-              {evaluating ? 'Evaluating...' : 'Evaluate'}
+              + New Policy
             </motion.button>
-          )}
-          <motion.button
-            onClick={() => { setShowNew(true); setDraft(BLANK) }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
-            style={{
-              fontFamily: 'var(--font-geist-sans)',
-              background: '#E50914',
-              color: '#fff',
-              borderRadius: '2px',
-            }}
-          >
-            + New Policy
-          </motion.button>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-4">
 
