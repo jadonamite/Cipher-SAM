@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import TopNav from '@/components/app/TopNav'
+import { normalizeAction } from '@/lib/normalize'
 
 type ActionRecord = {
   id: string
@@ -60,7 +61,7 @@ export default function AuditPage() {
     setLoading(true)
     try {
       const res = await fetch('/api/actions', { headers: { 'x-user-id': user!.id } })
-      if (res.ok) setActions((await res.json()).actions ?? [])
+      if (res.ok) setActions(((await res.json()).actions ?? []).map(normalizeAction))
     } catch {} finally {
       setLoading(false)
     }

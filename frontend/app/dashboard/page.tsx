@@ -14,6 +14,7 @@ import RenewalsTimeline from '@/components/app/RenewalsTimeline'
 import AgentActivity from '@/components/app/AgentActivity'
 import TopNav from '@/components/app/TopNav'
 import { useToast } from '@/components/providers/ToastProvider'
+import { normalizeSubscription } from '@/lib/normalize'
 import Link from 'next/link'
 
 export default function Dashboard() {
@@ -68,7 +69,8 @@ function DashboardInner() {
     const statusData = await statusRes.json()
     setGmailConnected(statusData.connected ?? false)
     if (subsRes.ok) {
-      const list: Subscription[] = (await subsRes.json()).subscriptions ?? []
+      const raw = ((await subsRes.json()).subscriptions ?? []) as Subscription[]
+      const list = raw.map(normalizeSubscription)
       setSubs(list)
       // derive lastScan from most recent detected_at
       const latest = list
@@ -123,7 +125,7 @@ function DashboardInner() {
         setScanResult({ created: data.created, updated: data.updated, source: 'Gmail' })
         showToast(`Gmail scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
         const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user.id } })
-        if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
+        if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
       } else {
         showToast(data.error ?? `Gmail scan failed (${res.status})`, 'error')
       }
@@ -171,7 +173,7 @@ function DashboardInner() {
         setScanResult({ created: data.created, updated: data.updated, source: 'Wallet' })
         showToast(`Wallet scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
         const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user!.id } })
-        if (subsRes.ok) setSubs((await subsRes.json()).subscriptions ?? [])
+        if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
       } else {
         showToast(data.error ?? `Wallet scan failed (${res.status})`, 'error')
       }
