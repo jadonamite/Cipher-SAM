@@ -8,6 +8,7 @@ import SubscriptionRow, { type Subscription } from '@/components/app/Subscriptio
 import ConnectGmail from '@/components/app/ConnectGmail'
 import { useToast } from '@/components/providers/ToastProvider'
 import Link from 'next/link'
+import TopNav from '@/components/app/TopNav'
 
 type Filter = 'all' | 'monthly' | 'yearly' | 'high-risk'
 type Sort = 'spend' | 'risk' | 'detected'
@@ -166,33 +167,10 @@ export default function SubscriptionsPage() {
 
   return (
     <main className="min-h-screen bg-void">
-      {/* Top bar */}
-      <header
-        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.06)' }}
-      >
-        <div className="flex items-center gap-4">
-          <Link
-            href="/dashboard"
-            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '12px' }}
-          >
-            ← Dashboard
-          </Link>
-          <span
-            className="text-white font-bold"
-            style={{ fontFamily: 'var(--font-syne)', fontSize: '16px', letterSpacing: '-0.02em' }}
-          >
-            Subscriptions
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/recommendations"
-            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
-          >
-            Recommendations
-          </Link>
-          {subs.length > 0 && (
+      <TopNav
+        title="Subscriptions"
+        actions={
+          subs.length > 0 ? (
             <motion.button
               onClick={runAnalysis}
               disabled={analyzing}
@@ -209,9 +187,9 @@ export default function SubscriptionsPage() {
             >
               {analyzing ? 'Analyzing...' : 'Run Analysis'}
             </motion.button>
-          )}
-        </div>
-      </header>
+          ) : null
+        }
+      />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-8">
         {/* Monthly total */}

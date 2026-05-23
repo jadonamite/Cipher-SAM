@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Button from '@/components/ui/Button'
 import NotificationCascade from '@/components/landing/NotificationCascade'
 
@@ -57,6 +58,22 @@ export default function Hero() {
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-10 lg:gap-16">
           {/* Left — 60% */}
           <div className="flex-1">
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+              className="mb-5 flex justify-start"
+            >
+              <Image
+                src="/SAM.png"
+                alt="SAM logo"
+                width={72}
+                height={72}
+                priority
+                className="rounded-md"
+              />
+            </motion.div>
+
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

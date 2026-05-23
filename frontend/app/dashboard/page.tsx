@@ -12,7 +12,7 @@ import OnboardingProgress from '@/components/app/OnboardingProgress'
 import InsightsCarousel from '@/components/app/InsightsCarousel'
 import RenewalsTimeline from '@/components/app/RenewalsTimeline'
 import AgentActivity from '@/components/app/AgentActivity'
-import MobileMenu from '@/components/app/MobileMenu'
+import TopNav from '@/components/app/TopNav'
 import { useToast } from '@/components/providers/ToastProvider'
 import Link from 'next/link'
 
@@ -240,120 +240,77 @@ function DashboardInner() {
 
   return (
     <main className="min-h-screen bg-void">
-      {/* Top bar */}
-      <header
-        className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b"
-        style={{ borderColor: 'rgba(255,255,255,0.06)' }}
-      >
-        <span
-          className="text-white font-bold tracking-tight"
-          style={{ fontFamily: 'var(--font-syne)', fontSize: '18px', letterSpacing: '-0.02em' }}
-        >
-          SAM
-        </span>
-
-        {/* Desktop nav — hidden on mobile */}
-        <div className="hidden md:flex items-center gap-3">
-          <Link
-            href="/recommendations"
-            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
-          >
-            Recommendations
-          </Link>
-          <Link
-            href="/agent"
-            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
-          >
-            Agent
-          </Link>
-          <Link
-            href="/audit"
-            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
-          >
-            Audit
-          </Link>
-          <Link
-            href="/policies"
-            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
-          >
-            Policies
-          </Link>
-          {user?.wallet?.address && (
-            <motion.button
-              onClick={triggerWalletScan}
-              disabled={walletScanning}
-              whileHover={{ scale: walletScanning ? 1 : 1.02 }}
-              whileTap={{ scale: walletScanning ? 1 : 0.98 }}
-              className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
-              style={{
-                fontFamily: 'var(--font-geist-sans)',
-                background: 'transparent',
-                color: walletScanning ? '#525252' : '#A3A3A3',
-                border: `1px solid ${walletScanning ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: '2px',
-                letterSpacing: '0.08em',
-              }}
-            >
-              {walletScanning ? 'Scanning...' : 'Scan Wallet'}
-            </motion.button>
-          )}
-          {gmailConnected && (
-            <motion.button
-              onClick={triggerScan}
-              disabled={scanning}
-              whileHover={{ scale: scanning ? 1 : 1.02 }}
-              whileTap={{ scale: scanning ? 1 : 0.98 }}
-              className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
-              style={{
-                fontFamily: 'var(--font-geist-sans)',
-                background: 'transparent',
-                color: scanning ? '#525252' : '#E50914',
-                border: `1px solid ${scanning ? 'rgba(255,255,255,0.08)' : 'rgba(229,9,20,0.4)'}`,
-                borderRadius: '2px',
-                letterSpacing: '0.08em',
-              }}
-            >
-              {scanning ? 'Scanning...' : 'Scan Gmail'}
-            </motion.button>
-          )}
-          <motion.button
-            onClick={debugScan}
-            disabled={debugScanning}
-            whileHover={{ scale: debugScanning ? 1 : 1.02 }}
-            whileTap={{ scale: debugScanning ? 1 : 0.98 }}
-            className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
-            style={{
-              fontFamily: 'var(--font-geist-sans)',
-              background: 'transparent',
-              color: debugScanning ? '#525252' : '#FACC15',
-              border: `1px solid ${debugScanning ? 'rgba(255,255,255,0.08)' : 'rgba(250,204,21,0.4)'}`,
-              borderRadius: '2px',
-              letterSpacing: '0.08em',
-            }}
-            title="Run a Gmail scan with full diagnostic output"
-          >
-            {debugScanning ? 'Debugging...' : 'Debug Scan'}
-          </motion.button>
-          <span
-            style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}
-          >
-            {user?.email?.address ?? (user?.wallet?.address?.slice(0, 8) + '...')}
-          </span>
-        </div>
-
-        {/* Mobile menu */}
-        <MobileMenu
-          walletAddress={user?.wallet?.address}
-          email={user?.email?.address}
-          gmailConnected={gmailConnected}
-          scanning={scanning}
-          walletScanning={walletScanning}
-          debugScanning={debugScanning}
-          onScanGmail={triggerScan}
-          onScanWallet={triggerWalletScan}
-          onDebugScan={debugScan}
-        />
-      </header>
+      <TopNav
+        gmailConnected={gmailConnected}
+        scanning={scanning}
+        walletScanning={walletScanning}
+        debugScanning={debugScanning}
+        onScanGmail={triggerScan}
+        onScanWallet={triggerWalletScan}
+        onDebugScan={debugScan}
+        actions={
+          <>
+            {user?.wallet?.address && (
+              <motion.button
+                onClick={triggerWalletScan}
+                disabled={walletScanning}
+                whileHover={{ scale: walletScanning ? 1 : 1.02 }}
+                whileTap={{ scale: walletScanning ? 1 : 0.98 }}
+                className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
+                style={{
+                  fontFamily: 'var(--font-geist-sans)',
+                  background: 'transparent',
+                  color: walletScanning ? '#525252' : '#A3A3A3',
+                  border: `1px solid ${walletScanning ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.12)'}`,
+                  borderRadius: '2px',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                {walletScanning ? 'Scanning...' : 'Scan Wallet'}
+              </motion.button>
+            )}
+            {gmailConnected && (
+              <motion.button
+                onClick={triggerScan}
+                disabled={scanning}
+                whileHover={{ scale: scanning ? 1 : 1.02 }}
+                whileTap={{ scale: scanning ? 1 : 0.98 }}
+                className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
+                style={{
+                  fontFamily: 'var(--font-geist-sans)',
+                  background: 'transparent',
+                  color: scanning ? '#525252' : '#E50914',
+                  border: `1px solid ${scanning ? 'rgba(255,255,255,0.08)' : 'rgba(229,9,20,0.4)'}`,
+                  borderRadius: '2px',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                {scanning ? 'Scanning...' : 'Scan Gmail'}
+              </motion.button>
+            )}
+            {process.env.NODE_ENV !== 'production' && (
+              <motion.button
+                onClick={debugScan}
+                disabled={debugScanning}
+                whileHover={{ scale: debugScanning ? 1 : 1.02 }}
+                whileTap={{ scale: debugScanning ? 1 : 0.98 }}
+                className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest cursor-pointer"
+                style={{
+                  fontFamily: 'var(--font-geist-sans)',
+                  background: 'transparent',
+                  color: debugScanning ? '#525252' : '#FACC15',
+                  border: `1px solid ${debugScanning ? 'rgba(255,255,255,0.08)' : 'rgba(250,204,21,0.4)'}`,
+                  borderRadius: '2px',
+                  letterSpacing: '0.08em',
+                }}
+                title="Run a Gmail scan with full diagnostic output"
+              >
+                {debugScanning ? 'Debugging...' : 'Debug Scan'}
+              </motion.button>
+            )}
+          </>
+        }
+      />
 
       {/* Agent status bar */}
       <AgentStatusBar
