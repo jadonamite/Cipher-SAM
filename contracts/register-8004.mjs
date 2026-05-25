@@ -46,7 +46,7 @@ const IDENTITY_REGISTRY_ABI = [
       { name: 'tokenId', type: 'uint256', indexed: true },
     ],
   },
-] as const
+]
 
 const PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY
 if (!PRIVATE_KEY) {
