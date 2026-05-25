@@ -177,7 +177,7 @@ Tag: `@CeloDevs` `@Celo`
 |---|---|
 | SAM Agent wallet | `0x3ea23aa1d53eb5209f014f02ca889a6a7b37eed0` |
 | EVM Master (Scripts) | `0xF6795a9E2E9ae0F96CD46b3F9b3F1d24EaD77638` |
-| SAMPolicy contract | `(set after deployment)` |
+| SAMPolicy contract | `0xae0b9b78419fe19b84152be75b4333bbbfd6f158` |
 | Celo RPC | `https://forno.celo.org` |
 | Celoscan | `https://celoscan.io` |
 
