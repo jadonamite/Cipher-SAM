@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { usePrivy } from '@privy-io/react-auth'
 import { NAV_LINKS } from '@/lib/nav'
 import MobileMenu from './MobileMenu'
+import { useMiniPay } from '@/components/providers/MiniPayProvider'
 
 interface TopNavProps {
   title?: string
@@ -34,6 +35,7 @@ export default function TopNav({
 }: TopNavProps) {
   const pathname = usePathname()
   const { user } = usePrivy()
+  const { isMiniPay } = useMiniPay()
 
   return (
     <header
@@ -98,9 +100,24 @@ export default function TopNav({
         {actions}
         {rightMeta}
         {user?.email?.address || user?.wallet?.address ? (
-          <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}>
-            {user?.email?.address ?? user?.wallet?.address?.slice(0, 6) + '...' + user?.wallet?.address?.slice(-4)}
-          </span>
+          <div className="flex items-center gap-2">
+            {isMiniPay && (
+              <span style={{
+                fontFamily: 'var(--font-dm-mono)',
+                color: '#22c55e',
+                fontSize: '9px',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                border: '1px solid rgba(34,197,94,0.3)',
+                padding: '2px 6px',
+              }}>
+                MiniPay
+              </span>
+            )}
+            <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}>
+              {user?.email?.address ?? user?.wallet?.address?.slice(0, 6) + '...' + user?.wallet?.address?.slice(-4)}
+            </span>
+          </div>
         ) : null}
       </div>
 

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { formatMoney, primaryCurrency, type CurrencyMap } from '@/lib/format'
 
 interface MonthlyBleedProps {
-  amount: number
+  byCurrency: CurrencyMap
 }
 
 function useCountUp(target: number, duration = 1200) {
@@ -17,7 +18,6 @@ function useCountUp(target: number, duration = 1200) {
     function tick(now: number) {
       const elapsed = now - start
       const progress = Math.min(elapsed / duration, 1)
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
       setValue(target * eased)
       if (progress < 1) frame = requestAnimationFrame(tick)
@@ -30,9 +30,13 @@ function useCountUp(target: number, duration = 1200) {
   return value
 }
 
-export default function MonthlyBleed({ amount }: MonthlyBleedProps) {
-  const display = useCountUp(amount)
-  const yearly = amount * 12
+export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
+  const primary = primaryCurrency(byCurrency) ?? 'USD'
+  const primaryAmount = byCurrency[primary] ?? 0
+  const display = useCountUp(primaryAmount)
+
+  const extras = Object.entries(byCurrency).filter(([c, v]) => c !== primary && v > 0)
+  const yearlyPrimary = primaryAmount * 12
 
   return (
     <motion.div
@@ -41,7 +45,7 @@ export default function MonthlyBleed({ amount }: MonthlyBleedProps) {
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
       className="flex flex-col gap-1"
     >
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-2 flex-wrap">
         <span
           style={{
             fontFamily: 'var(--font-dm-mono)',
@@ -52,7 +56,7 @@ export default function MonthlyBleed({ amount }: MonthlyBleedProps) {
             fontWeight: 500,
           }}
         >
-          ${display.toFixed(2)}
+          {formatMoney(display, primary)}
         </span>
         <span
           style={{
@@ -65,6 +69,18 @@ export default function MonthlyBleed({ amount }: MonthlyBleedProps) {
           /month
         </span>
       </div>
+      {extras.length > 0 && (
+        <span
+          style={{
+            fontFamily: 'var(--font-dm-mono)',
+            color: '#A3A3A3',
+            fontSize: '13px',
+            marginTop: '4px',
+          }}
+        >
+          + {extras.map(([c, v]) => formatMoney(v, c)).join(' + ')} /month
+        </span>
+      )}
       <span
         style={{
           fontFamily: 'var(--font-geist-sans)',
@@ -75,7 +91,7 @@ export default function MonthlyBleed({ amount }: MonthlyBleedProps) {
       >
         You'll spend{' '}
         <span style={{ color: '#E50914', fontFamily: 'var(--font-dm-mono)' }}>
-          ${yearly.toFixed(2)}
+          {formatMoney(yearlyPrimary, primary)}
         </span>{' '}
         this year if nothing changes.
       </span>

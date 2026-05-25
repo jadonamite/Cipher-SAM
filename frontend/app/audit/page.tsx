@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import TopNav from '@/components/app/TopNav'
 import { normalizeAction } from '@/lib/normalize'
+import { formatMoney } from '@/lib/format'
 
 type ActionRecord = {
   id: string
@@ -34,7 +35,7 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 function formatAmount(amount: number, currency = 'USD') {
-  return currency === 'USD' ? `$${Number(amount).toFixed(2)}` : `${amount} ${currency}`
+  return formatMoney(Number(amount), currency)
 }
 
 function formatDate(iso: string) {

@@ -7,18 +7,20 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Button from '@/components/ui/Button'
 import NotificationCascade from '@/components/landing/NotificationCascade'
+import { useMiniPay } from '@/components/providers/MiniPayProvider'
 
 export default function Hero() {
   const { ready, authenticated, login } = usePrivy()
+  const { isMiniPay, isAutoConnecting } = useMiniPay()
   const router = useRouter()
   const [entering, setEntering] = useState(false)
 
   useEffect(() => {
-    if (entering && authenticated) router.push('/dashboard')
-  }, [entering, authenticated, router])
+    if ((entering || isMiniPay) && authenticated) router.push('/dashboard')
+  }, [entering, isMiniPay, authenticated, router])
 
   function handleCTA() {
-    if (!ready) return
+    if (!ready || isMiniPay) return
     if (authenticated) router.push('/dashboard')
     else {
       setEntering(true)
@@ -123,7 +125,16 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.55 }}
             >
-              <Button size="lg" onClick={handleCTA}>Connect &amp; Find Out</Button>
+              {isMiniPay ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
+                  <span style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '12px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                    {isAutoConnecting ? 'Connecting MiniPay...' : 'Connected'}
+                  </span>
+                </div>
+              ) : (
+                <Button size="lg" onClick={handleCTA}>Connect &amp; Find Out</Button>
+              )}
             </motion.div>
           </div>
 

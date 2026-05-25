@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Subscription } from './SubscriptionRow'
+import { aggregateByCurrency, formatAggregate } from '@/lib/format'
 
 interface Insight {
   id: string
@@ -50,15 +51,17 @@ function computeInsights(subs: Subscription[]): Insight[] {
     if (!byCategory[cat]) byCategory[cat] = []
     byCategory[cat].push(s)
   }
+  const currencyOf = (s: Subscription) => s.currency ?? 'USD'
+
   for (const [cat, items] of Object.entries(byCategory)) {
     if (items.length >= 2) {
-      const total = items.reduce((sum, s) => sum + monthly(s), 0)
+      const total = formatAggregate(aggregateByCurrency(items, monthly, currencyOf))
       const names = items.map((s) => s.merchant).join(' + ')
       insights.push({
         id: `dup-${cat}`,
         tag: 'DUPLICATE STACK',
         title: `${items.length} ${cat.toLowerCase()} tools running in parallel`,
-        detail: `${names} — $${total.toFixed(2)}/mo combined. Likely overlapping value.`,
+        detail: `${names} — ${total}/mo combined. Likely overlapping value.`,
         tone: 'warn',
       })
     }
@@ -67,31 +70,40 @@ function computeInsights(subs: Subscription[]): Insight[] {
   // 2. High-risk (confidence >= 60)
   const highRisk = active.filter((s) => (s.confidence ?? 0) >= 60)
   if (highRisk.length > 0) {
-    const total = highRisk.reduce((sum, s) => sum + monthly(s), 0)
+    const total = formatAggregate(aggregateByCurrency(highRisk, monthly, currencyOf))
     insights.push({
       id: 'high-risk',
       tag: 'AT RISK',
       title: `${highRisk.length} subscription${highRisk.length === 1 ? '' : 's'} flagged for review`,
-      detail: `$${total.toFixed(2)}/mo across services with weak engagement signals.`,
+      detail: `${total}/mo across services with weak engagement signals.`,
       tone: 'alert',
     })
   }
 
-  // 3. Top spend category
-  const catTotals = Object.entries(byCategory).map(([cat, items]) => ({
-    cat,
-    total: items.reduce((sum, s) => sum + monthly(s), 0),
-  }))
-  catTotals.sort((a, b) => b.total - a.total)
-  if (catTotals.length > 0 && catTotals[0].total > 0) {
+  // 3. Top spend category — pick by the largest single-currency bucket so the
+  // percentage stays meaningful even when totals span multiple currencies.
+  const catTotals = Object.entries(byCategory).map(([cat, items]) => {
+    const map = aggregateByCurrency(items, monthly, currencyOf)
+    const peak = Math.max(0, ...Object.values(map))
+    return { cat, items, map, peak }
+  })
+  catTotals.sort((a, b) => b.peak - a.peak)
+  if (catTotals.length > 0 && catTotals[0].peak > 0) {
     const top = catTotals[0]
-    const grandTotal = active.reduce((sum, s) => sum + monthly(s), 0)
-    const pct = Math.round((top.total / grandTotal) * 100)
+    const grandByCurrency = aggregateByCurrency(active, monthly, currencyOf)
+    const totalStr = formatAggregate(top.map)
+    // Percentage uses the dominant currency in the top category against the
+    // same currency's grand total, falling back to absolute share if absent.
+    const dominantCurrency = Object.entries(top.map).sort((a, b) => b[1] - a[1])[0][0]
+    const grandSame = grandByCurrency[dominantCurrency] ?? 0
+    const pct = grandSame > 0 ? Math.round((top.map[dominantCurrency] / grandSame) * 100) : null
     insights.push({
       id: 'top-spend',
       tag: 'SPEND BREAKDOWN',
       title: `${top.cat} is your largest recurring cost`,
-      detail: `$${top.total.toFixed(2)}/mo — ${pct}% of total recurring spend.`,
+      detail: pct != null
+        ? `${totalStr}/mo — ${pct}% of total ${dominantCurrency} spend.`
+        : `${totalStr}/mo across this category.`,
       tone: 'info',
     })
   }
@@ -99,12 +111,12 @@ function computeInsights(subs: Subscription[]): Insight[] {
   // 4. Yearly cadence — often overlooked
   const yearly = active.filter((s) => s.cadence === 'yearly')
   if (yearly.length > 0) {
-    const total = yearly.reduce((sum, s) => sum + s.amount, 0)
+    const total = formatAggregate(aggregateByCurrency(yearly, (s) => s.amount, currencyOf))
     insights.push({
       id: 'yearly',
       tag: 'YEARLY BILLING',
       title: `${yearly.length} annual subscription${yearly.length === 1 ? '' : 's'} active`,
-      detail: `$${total.toFixed(2)} renews each year — easy to forget until charged.`,
+      detail: `${total} renews each year — easy to forget until charged.`,
       tone: 'info',
     })
   }

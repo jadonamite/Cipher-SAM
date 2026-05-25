@@ -8,6 +8,7 @@ import Link from 'next/link'
 import ConfidenceScore from '@/components/app/ConfidenceScore'
 import TopNav from '@/components/app/TopNav'
 import { normalizeSubscription } from '@/lib/normalize'
+import { formatMoney } from '@/lib/format'
 import type { Subscription } from '@/components/app/SubscriptionRow'
 
 type Signal = {
@@ -52,10 +53,7 @@ const STATUS_STYLES: Record<string, { color: string; border: string }> = {
   cancelled: { color: '#525252', border: 'rgba(255,255,255,0.1)' },
 }
 
-function formatAmount(amount: number, currency = 'USD') {
-  if (currency === 'USD') return `$${amount.toFixed(2)}`
-  return `${amount} ${currency}`
-}
+const formatAmount = formatMoney
 
 function formatDate(iso: string | null | undefined) {
   if (!iso) return '—'
