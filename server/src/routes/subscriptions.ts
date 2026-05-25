@@ -27,7 +27,12 @@ app.get('/', async (c) => {
     ORDER BY s.amount DESC
   `
 
-  return c.json({ subscriptions: rows })
+  return c.json({
+    subscriptions: rows.map((r: Record<string, unknown>) => ({
+      ...r,
+      amount: parseFloat(r.amount as string),
+    })),
+  })
 })
 
 app.get('/:id', async (c) => {
@@ -40,6 +45,7 @@ app.get('/:id', async (c) => {
     SELECT * FROM subscriptions WHERE id = ${id} AND user_id = ${dbUserId}
   `
   if (!sub) return c.json({ error: 'Not found' }, 404)
+  sub.amount = parseFloat(sub.amount)
 
   const signals = await sql`
     SELECT * FROM signals WHERE subscription_id = ${id} ORDER BY created_at DESC
@@ -71,17 +77,17 @@ app.post('/purge-unregistered', async (c) => {
     SELECT id, merchant FROM subscriptions WHERE user_id = ${dbUserId}
   `
 
-  const stale = rows.filter(
-    (r: { merchant: string }) => !REGISTERED_MERCHANT_NAMES.has(r.merchant.toLowerCase())
+  const stale = (rows as any[]).filter(
+    (r) => !REGISTERED_MERCHANT_NAMES.has((r.merchant as string).toLowerCase())
   )
   if (stale.length === 0) return c.json({ deleted: 0, merchants: [] })
 
-  const ids = stale.map((r: { id: string }) => r.id)
+  const ids = stale.map((r) => r.id as string)
   await sql`DELETE FROM subscriptions WHERE id = ANY(${ids})`
 
   return c.json({
     deleted: stale.length,
-    merchants: stale.map((r: { merchant: string }) => r.merchant),
+    merchants: stale.map((r) => r.merchant as string),
   })
 })
 
@@ -104,7 +110,7 @@ app.patch('/:id/status', async (c) => {
   if (!updated) return c.json({ error: 'Not found' }, 404)
 
   await invalidateInsight(id)
-  return c.json({ subscription: updated })
+  return c.json({ subscription: { ...updated, amount: parseFloat(updated.amount) } })
 })
 
 export default app

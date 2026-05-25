@@ -9,6 +9,7 @@ import {
   getGmailTokens,
   hasGmailConnected,
 } from '../lib/cache.js'
+import { runAnalyzeAll } from '../lib/scoring.js'
 import {
   lookupService,
   REGISTRY_FROM_QUERY,
@@ -400,8 +401,18 @@ app.post('/scan', async (c) => {
     }
 
     await releaseScanLock(userId)
+
+    // Auto-score all subs now that detection is fresh — no AI calls, just DB writes.
+    // Ensures confidence + recommendations are populated immediately after every scan.
+    let analyzed = 0
+    try {
+      analyzed = await runAnalyzeAll(dbUserId)
+    } catch (err) {
+      log('analyze-all-error', (err as Error).message)
+    }
+
     const elapsed = Date.now() - t0
-    log('done', { scanned: allMessages.length, processed, detected, created, updated, noAmount, fetchErrors, dbErrors, timedOut, listElapsed, elapsed })
+    log('done', { scanned: allMessages.length, processed, detected, created, updated, analyzed, noAmount, fetchErrors, dbErrors, timedOut, listElapsed, elapsed })
 
     const response: Record<string, unknown> = {
       scanned: allMessages.length,
@@ -409,6 +420,7 @@ app.post('/scan', async (c) => {
       detected,
       created,
       updated,
+      analyzed,
       no_amount: noAmount,
       fetch_errors: fetchErrors,
       db_errors: dbErrors,

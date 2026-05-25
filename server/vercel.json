@@ -6,5 +6,11 @@
     "api/index.ts": {
       "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/reminders/send-due",
+      "schedule": "0 9 * * *"
+    }
+  ]
 }
