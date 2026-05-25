@@ -1,6 +1,13 @@
 import { Hono } from 'hono'
 import { sql, getOrCreateUser } from '../lib/db.js'
-import { isAgentConfigured, getAgentAddress, getPolicyContract, buildAttestation } from '../lib/agent.js'
+import {
+  isAgentConfigured,
+  getAgentAddress,
+  getPolicyContract,
+  buildAttestation,
+  checkOnchainAuthorization,
+  SCOPES,
+} from '../lib/agent.js'
 
 const app = new Hono()
 
@@ -10,13 +17,19 @@ app.get('/status', async (c) => {
   const agentReady = isAgentConfigured()
 
   let userStatus = null
+  let onchainAuthorized = false
+
   if (userId) {
     const dbUserId = await getOrCreateUser(userId)
     const [row] = await sql`
-      SELECT self_verified, self_verified_at, policy_granted, policy_granted_at
+      SELECT self_verified, self_verified_at, policy_granted, policy_granted_at, wallet_address
       FROM users WHERE id = ${dbUserId}
     `
     userStatus = row ?? null
+
+    if (row?.wallet_address) {
+      onchainAuthorized = await checkOnchainAuthorization(row.wallet_address, SCOPES.ANALYZE)
+    }
   }
 
   return c.json({
@@ -24,8 +37,11 @@ app.get('/status', async (c) => {
       address: getAgentAddress(),
       configured: agentReady,
       policyContract: getPolicyContract() || null,
+      erc8004Registry: '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432',
+      scan8004Url: `https://8004scan.me/agent/${getAgentAddress()}`,
     },
     user: userStatus,
+    onchainAuthorized,
   })
 })
 
@@ -54,7 +70,7 @@ app.post('/attest', async (c) => {
   `
   if (!sub) return c.json({ error: 'Not found' }, 404)
 
-  const { payload, signature } = buildAttestation(subscription_id, action_type, userId)
+  const { payload, signature } = await buildAttestation(subscription_id, action_type, userId)
 
   const [action] = await sql`
     INSERT INTO actions

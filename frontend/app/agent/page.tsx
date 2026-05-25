@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { usePrivy } from '@privy-io/react-auth'
+import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { createWalletClient, custom } from 'viem'
+import { celo } from 'viem/chains'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -29,6 +31,8 @@ type AgentStatus = {
     address: string
     configured: boolean
     policyContract: string | null
+    erc8004Registry?: string
+    scan8004Url?: string
   }
   user: {
     self_verified: boolean
@@ -36,6 +40,7 @@ type AgentStatus = {
     policy_granted: boolean
     policy_granted_at: string | null
   } | null
+  onchainAuthorized?: boolean
 }
 
 type ActionRecord = {
@@ -57,6 +62,18 @@ const SCOPE_LABELS: Record<string, string> = {
   remind: 'Schedule reminders',
   analyze: 'Run analysis',
 }
+
+const SAM_POLICY_ADDRESS = '0xae0b9b78419fe19b84152be75b4333bbbfd6f158' as const
+const SAM_AGENT_ADDRESS  = '0x3ea23aa1d53eb5209f014f02ca889a6a7b37eed0' as const
+const SAM_POLICY_ABI = [
+  {
+    name: 'grantDefaultScopes',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'agent', type: 'address' }],
+    outputs: [],
+  },
+] as const
 
 function ShortAddress({ address }: { address: string }) {
   if (!address || address === '0x0000000000000000000000000000000000000000') {
@@ -80,6 +97,7 @@ function StatusDot({ ok }: { ok: boolean }) {
 
 export default function AgentPage() {
   const { ready, authenticated, user, login } = usePrivy()
+  const { wallets } = useWallets()
   const router = useRouter()
 
   const [status, setStatus] = useState<AgentStatus | null>(null)
@@ -116,13 +134,31 @@ export default function AgentPage() {
     if (granting || !user?.id) return
     setGranting(true)
     try {
+      const wallet = wallets[0]
+      if (wallet) {
+        const provider = await wallet.getEthereumProvider()
+        const walletClient = createWalletClient({
+          chain: celo,
+          transport: custom(provider),
+        })
+        const [account] = await walletClient.getAddresses()
+        await walletClient.writeContract({
+          address: SAM_POLICY_ADDRESS,
+          abi: SAM_POLICY_ABI,
+          functionName: 'grantDefaultScopes',
+          args: [SAM_AGENT_ADDRESS],
+          account,
+        })
+      }
       const res = await fetch('/api/agent/grant-policy', {
         method: 'POST',
         headers: { 'x-user-id': user.id },
       })
       if (res.ok) {
         setStatus((prev) =>
-          prev ? { ...prev, user: { ...prev.user!, policy_granted: true, policy_granted_at: new Date().toISOString() } } : prev
+          prev
+            ? { ...prev, user: { ...prev.user!, policy_granted: true, policy_granted_at: new Date().toISOString() }, onchainAuthorized: true }
+            : prev
         )
       }
     } catch {} finally {
@@ -223,7 +259,7 @@ export default function AgentPage() {
             {[
               { label: 'Agent Address', value: <ShortAddress address={agent?.address ?? ''} /> },
               { label: 'Policy Contract', value: agent?.policyContract ? <ShortAddress address={agent.policyContract} /> : <span style={{ color: '#525252' }}>Not deployed</span> },
-              { label: 'Signing', value: <span style={{ color: isConfigured ? '#16A34A' : '#525252' }}>{isConfigured ? 'HMAC-SHA256 (upgrade to ETH sign)' : 'No key set'}</span> },
+              { label: 'Signing', value: <span style={{ color: isConfigured ? '#16A34A' : '#525252' }}>{isConfigured ? 'EIP-191 personal_sign' : 'No key set'}</span> },
               { label: 'Chain', value: <span style={{ color: '#A3A3A3' }}>Celo Mainnet</span> },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col gap-1">
@@ -343,6 +379,27 @@ export default function AgentPage() {
                 <span style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252', fontSize: '12px' }}>{label}</span>
               </div>
             ))}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <StatusDot ok={status?.onchainAuthorized ?? false} />
+              <span style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252', fontSize: '12px' }}>
+                {status?.onchainAuthorized ? 'Onchain authorized' : 'Not onchain authorized'}
+              </span>
+            </div>
+            {status?.agent?.scan8004Url && (
+              <a
+                href={status.agent.scan8004Url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '10px', textDecoration: 'none' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#A3A3A3')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#525252')}
+              >
+                8004scan ↗
+              </a>
+            )}
           </div>
 
           <div className="flex gap-3">
