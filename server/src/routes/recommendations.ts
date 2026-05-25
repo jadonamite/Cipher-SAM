@@ -32,7 +32,12 @@ app.get('/', async (c) => {
       AND s.status = 'active'
     ORDER BY r.confidence DESC
   `
-  return c.json({ recommendations: rows })
+  return c.json({
+    recommendations: rows.map((r: Record<string, unknown>) => ({
+      ...r,
+      amount: parseFloat(r.amount as string),
+    })),
+  })
 })
 
 // PATCH /recommendations/:id — accept or dismiss
