@@ -1,0 +1,12 @@
+{
+  "name": "sam-contracts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "deploy": "node deploy.mjs"
+  },
+  "dependencies": {
+    "solc": "0.8.20",
+    "viem": "^2.0.0"
+  }
+}
