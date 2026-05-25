@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { formatMoney } from '@/lib/format'
 
 export type Subscription = {
   id: string
@@ -125,7 +126,7 @@ export default function SubscriptionRow({ sub, onStatusChange, href }: Subscript
       </div>
 
       {/* Confidence badge */}
-      {sub.confidence !== undefined && (
+      {(sub.confidence != null || sub.action) && (
         <div className="flex flex-col items-end gap-0.5">
           <span
             style={{
@@ -135,7 +136,7 @@ export default function SubscriptionRow({ sub, onStatusChange, href }: Subscript
               letterSpacing: '0.04em',
             }}
           >
-            {sub.confidence}% risk
+            {sub.confidence != null ? `${sub.confidence}% risk` : '— risk'}
           </span>
           {sub.action && (
             <span
@@ -158,7 +159,7 @@ export default function SubscriptionRow({ sub, onStatusChange, href }: Subscript
         <span
           style={{ fontFamily: 'var(--font-dm-mono)', color: '#fff', fontSize: '15px', letterSpacing: '-0.01em' }}
         >
-          ${sub.amount.toFixed(2)}
+          {formatMoney(sub.amount, sub.currency)}
         </span>
         <span
           style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}

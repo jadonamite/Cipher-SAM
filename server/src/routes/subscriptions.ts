@@ -2,8 +2,13 @@ import { Hono } from 'hono'
 import { sql, getOrCreateUser } from '../lib/db.js'
 import { getCachedInsight, setCachedInsight, invalidateInsight } from '../lib/cache.js'
 import { generateSubscriptionInsight } from '../lib/ai.js'
+import { SUBSCRIPTION_REGISTRY } from '../lib/subscriptions-registry.js'
 
 const app = new Hono()
+
+const REGISTERED_MERCHANT_NAMES = new Set(
+  SUBSCRIPTION_REGISTRY.map((s) => s.name.toLowerCase())
+)
 
 app.get('/', async (c) => {
   const userId = c.req.header('x-user-id')
@@ -52,6 +57,32 @@ app.get('/:id', async (c) => {
   }
 
   return c.json({ subscription: sub, signals, insight })
+})
+
+// POST /subscriptions/purge-unregistered
+// One-shot cleanup: deletes rows whose merchant is no longer in the registry.
+// Used to clear historical noise (Opay, Temu, etc.) after detection was tightened.
+app.post('/purge-unregistered', async (c) => {
+  const userId = c.req.header('x-user-id')
+  if (!userId) return c.json({ error: 'Unauthorized' }, 401)
+
+  const dbUserId = await getOrCreateUser(userId)
+  const rows = await sql`
+    SELECT id, merchant FROM subscriptions WHERE user_id = ${dbUserId}
+  `
+
+  const stale = rows.filter(
+    (r: { merchant: string }) => !REGISTERED_MERCHANT_NAMES.has(r.merchant.toLowerCase())
+  )
+  if (stale.length === 0) return c.json({ deleted: 0, merchants: [] })
+
+  const ids = stale.map((r: { id: string }) => r.id)
+  await sql`DELETE FROM subscriptions WHERE id = ANY(${ids})`
+
+  return c.json({
+    deleted: stale.length,
+    merchants: stale.map((r: { merchant: string }) => r.merchant),
+  })
 })
 
 app.patch('/:id/status', async (c) => {

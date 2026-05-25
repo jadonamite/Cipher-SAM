@@ -11,7 +11,6 @@ import {
 } from '../lib/cache.js'
 import {
   lookupService,
-  KNOWN_BILLING_DOMAINS,
   REGISTRY_FROM_QUERY,
   type SubscriptionCategory,
 } from '../lib/subscriptions-registry.js'
@@ -61,115 +60,12 @@ export function normalizeMerchant(raw: string): string {
 // Email detection helpers
 // ---------------------------------------------------------------------------
 
-const SUB_SUBJECT_PATTERNS = [
-  // Generic payment/receipt patterns
-  /receipt from/i,
-  /invoice from/i,
-  /payment receipt/i,
-  /payment confirmed/i,
-  /payment processed/i,
-  /payment successful/i,
-  /successfully charged/i,
-  /billing confirmation/i,
-  /order confirmation/i,
-  /order receipt/i,
-  /purchase confirmation/i,
-  /transaction receipt/i,
-  /transaction successful/i,
-  /transaction complete/i,
-  // Subscription specific
-  /your .+ subscription/i,
-  /subscription (renewed|active|confirmed|receipt|reminder|invoice)/i,
-  /subscription to .+/i,
-  /auto.?renew/i,
-  /renewal (notice|confirmation|receipt)/i,
-  /renewal of .+/i,
-  /your .+ plan/i,
-  /your plan (has been|is)/i,
-  /plan (renewed|renewal|receipt|invoice)/i,
-  /membership (renewed|renewal|receipt|active|charge)/i,
-  /trial (ending|ended|expires|expired|ending soon)/i,
-  /trial period/i,
-  /free trial/i,
-  // Thank you patterns
-  /thanks? for (your )?(payment|subscription|purchase|order)/i,
-  /thank you for (your )?(payment|subscription|subscribing|purchase)/i,
-  /you've been (charged|billed)/i,
-  /we'?ve (charged|billed)/i,
-  /we charged your/i,
-  // Charge/debit patterns
-  /charged .+\$/i,
-  /charged .+₦/i,
-  /\$\d+ (charge|debit|billed)/i,
-  /₦[\d,]+ (charge|debit)/i,
-  // Service specific patterns
-  /your (netflix|spotify|apple|google|microsoft|amazon|adobe|slack|zoom|figma|notion|github|dropbox|paypal) (receipt|invoice|subscription|payment|membership|plan|charge)/i,
-  // Upcoming/renewal alerts
-  /upcoming (charge|renewal|payment|billing)/i,
-  /reminder.*(subscription|renewal|payment)/i,
-  /(subscription|renewal|payment).*reminder/i,
-  // Plan continuation
-  /your (access|service|account) (continues?|is active|renewed)/i,
-  /access to .+ (continues?|renewed)/i,
-]
-
-// KNOWN_BILLING_DOMAINS now imported from subscriptions-registry (auto-derived)
-
-// Subjects that indicate non-billing emails even from known billing domains
-const NEGATIVE_SUBJECT_PATTERNS = [
-  /deployment (failed|succeeded|cancelled|completed)/i,
-  /build (failed|succeeded|cancelled|error)/i,
-  /filling out.*form/i,
-  /form.*receipt/i,
-  /hackathon/i,
-  /security alert/i,
-  /new sign.?in/i,
-  /password (reset|changed)/i,
-  /verify your email/i,
-  /welcome to/i,
-  /account (created|confirmed|verified)/i,
-  /notification settings/i,
-  /unsubscribe/i,
-  /debit alert/i,
-  /debit notification/i,
-]
-
-// Banks and payment processors — they send debit alerts for any transaction, not subscriptions
-const BANK_DOMAINS = new Set([
-  'moniepoint.com', 'opay.com', 'kuda.com', 'piggyvest.com',
-  'cowrywise.com', 'providusbank.com', 'gtbank.com', 'zenithbank.com',
-  'accessbankplc.com', 'firstbanknigeria.com', 'sterling.ng',
-])
-
-export function isSubscriptionEmail(subject: string, sender: string): boolean {
-  // Hard reject bank transaction emails
-  const senderDomain = extractRootDomain(sender.toLowerCase())
-  const senderParts = senderDomain.split('.')
-  if (senderParts.length >= 2) {
-    const rootDomain = `${senderParts[senderParts.length - 2]}.${senderParts[senderParts.length - 1]}`
-    if (BANK_DOMAINS.has(rootDomain)) return false
-  }
-
-  // Hard reject non-billing subjects even from billing domains
-  if (NEGATIVE_SUBJECT_PATTERNS.some((p) => p.test(subject))) return false
-
-  // 1. Subject pattern match
-  if (SUB_SUBJECT_PATTERNS.some((p) => p.test(subject))) return true
-
-  // 2. Sender is a known billing domain — only accept if subject looks billing-adjacent
-  const senderLower = sender.toLowerCase()
-  const domain = extractRootDomain(senderLower)
-  const parts = domain.split('.')
-  if (parts.length >= 2) {
-    const rootDomain = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`
-    if (KNOWN_BILLING_DOMAINS.has(rootDomain)) {
-      // Require at least a weak billing signal in the subject
-      const billingHint = /receipt|invoice|subscription|billing|charge|payment|renewal|plan|membership|trial|order|debit/i
-      return billingHint.test(subject)
-    }
-  }
-
-  return false
+// Strict-whitelist detection. A message is only a candidate subscription if its
+// sender resolves to an entry in SUBSCRIPTION_REGISTRY. Everything else is
+// rejected — including banks, e-commerce, and look-alike billing domains.
+// Subject-pattern matching is gone; the registry is the only signal.
+export function isSubscriptionEmail(_subject: string, sender: string): boolean {
+  return lookupService(sender) !== null
 }
 
 // Multi-currency amount extraction
@@ -331,31 +227,10 @@ app.get('/callback', async (c) => {
 // POST /gmail/scan — main detection pipeline
 // ---------------------------------------------------------------------------
 
-const SUBJECT_QUERY = [
-  'subject:receipt',
-  'subject:invoice',
-  'subject:subscription',
-  'subject:billing',
-  'subject:renewal',
-  'subject:"payment confirmed"',
-  'subject:"payment receipt"',
-  'subject:"payment processed"',
-  'subject:"payment successful"',
-  'subject:"successfully charged"',
-  'subject:"auto-renewal"',
-  'subject:"order confirmation"',
-  'subject:"transaction receipt"',
-  'subject:"membership"',
-  'subject:"your plan"',
-  'subject:"trial ending"',
-  'subject:"thanks for subscribing"',
-  'subject:"thank you for your payment"',
-  'subject:"we charged"',
-  'subject:"you have been charged"',
-].join(' OR ')
-
-// Subjects + every known billing domain from the subscription registry
-const GMAIL_QUERY = `${SUBJECT_QUERY} OR ${REGISTRY_FROM_QUERY}`
+// Registry-only Gmail query. Detection is strict-whitelist (see
+// isSubscriptionEmail), so there's no point scanning subject-pattern matches —
+// they would all be rejected downstream anyway.
+const GMAIL_QUERY = REGISTRY_FROM_QUERY
 
 const MAX_RESULTS = 200
 const BATCH_SIZE = 15

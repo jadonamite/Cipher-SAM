@@ -15,7 +15,15 @@ import AgentActivity from '@/components/app/AgentActivity'
 import TopNav from '@/components/app/TopNav'
 import { useToast } from '@/components/providers/ToastProvider'
 import { normalizeSubscription } from '@/lib/normalize'
+import { aggregateByCurrency, formatAggregate, type CurrencyMap } from '@/lib/format'
 import Link from 'next/link'
+
+function monthlyOf(s: Subscription): number {
+  if (s.cadence === 'yearly') return s.amount / 12
+  if (s.cadence === 'weekly') return s.amount * 4.33
+  if (s.cadence === 'daily') return s.amount * 30
+  return s.amount
+}
 
 export default function Dashboard() {
   return (
@@ -26,21 +34,16 @@ export default function Dashboard() {
 }
 
 type SummaryStats = {
-  totalMonthly: number
+  byCurrency: CurrencyMap
   count: number
   highRisk: number
 }
 
 function calcStats(subs: Subscription[]): SummaryStats {
   const active = subs.filter((s) => s.status === 'active')
-  const totalMonthly = active.reduce((sum, s) => {
-    if (s.cadence === 'yearly') return sum + s.amount / 12
-    if (s.cadence === 'weekly') return sum + s.amount * 4.33
-    if (s.cadence === 'daily') return sum + s.amount * 30
-    return sum + s.amount
-  }, 0)
+  const byCurrency = aggregateByCurrency(active, monthlyOf, (s) => s.currency ?? 'USD')
   const highRisk = active.filter((s) => (s.confidence ?? 0) >= 60).length
-  return { totalMonthly, count: active.length, highRisk }
+  return { byCurrency, count: active.length, highRisk }
 }
 
 function DashboardInner() {
@@ -331,7 +334,7 @@ function DashboardInner() {
         />
 
         {/* Monthly bleed hero */}
-        {subs.length > 0 && <MonthlyBleed amount={stats.totalMonthly} />}
+        {subs.length > 0 && <MonthlyBleed byCurrency={stats.byCurrency} />}
 
         {/* Stats row */}
         {subs.length > 0 && (
@@ -344,7 +347,15 @@ function DashboardInner() {
             {[
               { label: 'Active Subscriptions', value: String(stats.count), alert: false },
               { label: 'High Risk',            value: String(stats.highRisk), alert: stats.highRisk > 0 },
-              { label: 'Yearly Projection',    value: `$${(stats.totalMonthly * 12).toFixed(0)}`, alert: false },
+              {
+                label: 'Yearly Projection',
+                value: formatAggregate(
+                  Object.fromEntries(
+                    Object.entries(stats.byCurrency).map(([c, v]) => [c, v * 12])
+                  )
+                ),
+                alert: false,
+              },
             ].map((stat) => (
               <div
                 key={stat.label}

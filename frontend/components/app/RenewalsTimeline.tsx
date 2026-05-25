@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { Subscription } from './SubscriptionRow'
+import { aggregateByCurrency, formatAggregate, formatMoney } from '@/lib/format'
 
 interface Renewal {
   sub: Subscription
@@ -44,7 +45,9 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
 
   if (renewals.length === 0) return null
 
-  const total = renewals.reduce((sum, r) => sum + r.sub.amount, 0)
+  const totalStr = formatAggregate(
+    aggregateByCurrency(renewals, (r) => r.sub.amount, (r) => r.sub.currency ?? 'USD')
+  )
 
   return (
     <motion.div
@@ -79,7 +82,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
               letterSpacing: '-0.02em',
             }}
           >
-            ${total.toFixed(2)}{' '}
+            {totalStr}{' '}
             <span style={{ color: '#525252', fontSize: '12px' }}>
               · {renewals.length}
             </span>
@@ -107,7 +110,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
                 fontSize: '12px',
               }}
             >
-              ${hovered.sub.amount.toFixed(2)} · {hovered.daysFromNow}d
+              {formatMoney(hovered.sub.amount, hovered.sub.currency)} · {hovered.daysFromNow}d
             </span>
           </div>
         )}

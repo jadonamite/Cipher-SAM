@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import TopNav from '@/components/app/TopNav'
 import { normalizeRec } from '@/lib/normalize'
+import { aggregateByCurrency, formatAggregate, formatMoney } from '@/lib/format'
 
 type Rec = {
   id: string
@@ -84,9 +85,7 @@ function monthlyEquiv(amount: number, cadence: string) {
   return amount
 }
 
-function formatAmount(amount: number, currency = 'USD') {
-  return currency === 'USD' ? `$${amount.toFixed(2)}` : `${amount} ${currency}`
-}
+const formatAmount = formatMoney
 
 function formatDate(iso: string | null) {
   if (!iso) return null
@@ -142,9 +141,14 @@ export default function RecommendationsPage() {
     }
   }
 
-  const totalSavings = recs
-    .filter((r) => r.action === 'cancel' || r.action === 'pause')
-    .reduce((sum, r) => sum + monthlyEquiv(r.amount, r.cadence), 0)
+  const savingsCandidates = recs.filter((r) => r.action === 'cancel' || r.action === 'pause')
+  const savingsByCurrency = aggregateByCurrency(
+    savingsCandidates,
+    (r) => monthlyEquiv(r.amount, r.cadence),
+    (r) => r.currency ?? 'USD',
+  )
+  const totalSavings = Object.values(savingsByCurrency).reduce((s, v) => s + v, 0)
+  const totalSavingsStr = formatAggregate(savingsByCurrency)
 
   if (!ready) return null
 
@@ -195,7 +199,7 @@ export default function RecommendationsPage() {
               Potential monthly savings
             </span>
             <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#E50914', fontSize: '20px', letterSpacing: '-0.02em' }}>
-              ${totalSavings.toFixed(2)}
+              {totalSavingsStr}
             </span>
           </motion.div>
         )}

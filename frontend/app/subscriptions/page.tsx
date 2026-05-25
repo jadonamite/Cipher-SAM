@@ -10,6 +10,7 @@ import { useToast } from '@/components/providers/ToastProvider'
 import Link from 'next/link'
 import TopNav from '@/components/app/TopNav'
 import { normalizeSubscription } from '@/lib/normalize'
+import { aggregateByCurrency, formatAggregate } from '@/lib/format'
 
 type Filter = 'all' | 'monthly' | 'yearly' | 'high-risk'
 type Sort = 'spend' | 'risk' | 'detected'
@@ -140,13 +141,19 @@ export default function SubscriptionsPage() {
   }, [subs, filter, sort])
 
   const groups = groupByCategory(filtered)
-  const totalMonthly = subs
-    .filter((s) => s.status === 'active')
-    .reduce((sum, s) => {
-      if (s.cadence === 'yearly') return sum + s.amount / 12
-      if (s.cadence === 'weekly') return sum + s.amount * 4.33
-      return sum + s.amount
-    }, 0)
+  const activeSubs = subs.filter((s) => s.status === 'active')
+  const totalMonthlyStr = formatAggregate(
+    aggregateByCurrency(
+      activeSubs,
+      (s) => {
+        if (s.cadence === 'yearly') return s.amount / 12
+        if (s.cadence === 'weekly') return s.amount * 4.33
+        if (s.cadence === 'daily') return s.amount * 30
+        return s.amount
+      },
+      (s) => s.currency ?? 'USD',
+    ),
+  )
 
   if (!ready) return null
 
@@ -205,7 +212,7 @@ export default function SubscriptionsPage() {
                 lineHeight: 1,
               }}
             >
-              ${totalMonthly.toFixed(2)}
+              {totalMonthlyStr}
             </span>
             <span
               style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '14px', marginBottom: '4px' }}
@@ -293,7 +300,7 @@ export default function SubscriptionsPage() {
                 >
                   {category}
                   <span style={{ color: '#3a3a3a', marginLeft: '8px' }}>
-                    ${items.reduce((s, i) => s + i.amount, 0).toFixed(2)}/mo
+                    {formatAggregate(aggregateByCurrency(items, (i) => i.amount, (i) => i.currency ?? 'USD'))}/mo
                   </span>
                 </span>
                 <div className="flex flex-col gap-1.5">
