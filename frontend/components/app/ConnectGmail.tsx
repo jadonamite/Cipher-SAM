@@ -8,13 +8,13 @@ interface ConnectGmailProps {
   compact?: boolean
 }
 
-export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
-  const { user } = usePrivy()
-
   function handleConnect() {
     if (!user?.id) return
     window.location.href = `/api/gmail/auth?user_id=${user.id}`
   }
+
+export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
+  const { user } = usePrivy()
 
   if (compact) {
     return (
