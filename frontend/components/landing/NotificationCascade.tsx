@@ -8,7 +8,7 @@ type Notification = {
   brand: string
   amount: number
   charged: string
-  unused: boolean
+  unused: boolean,
 }
 
 const NOTIFICATIONS: Notification[] = [
