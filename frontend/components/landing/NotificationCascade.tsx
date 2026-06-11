@@ -148,6 +148,7 @@ export default function NotificationCascade() {
                     opacity: isRemoved ? 0 : 1,
                     x: isRemoved ? 60 : 0,
                     rotate: tilt,
+                    // TODO: consider memoizing this value
                     scale: isFlagged && !isRemoved ? 1.01 : 1,
                   }}
                   exit={{ opacity: 0, x: 60 }}
