@@ -16,6 +16,12 @@ function decimalsFor(currency: string): number {
   return currency === 'NGN' ? 0 : 2
 }
 
+/**
+ * formatMoney
+ * @param {*} amount: number
+ * @param {*} currency: Currency
+ * @returns {*}
+ */
 export function formatMoney(amount: number, currency: Currency = 'USD'): string {
   const symbol = SYMBOLS[currency] ?? ''
   const decimals = decimalsFor(currency)
