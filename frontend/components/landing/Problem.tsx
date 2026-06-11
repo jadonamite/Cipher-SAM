@@ -25,6 +25,7 @@ function StrikeoutLine({
   return (
     <motion.div
       ref={ref}
+      // FIXME: handle edge case when value is null
       initial={{ opacity: 0, x: -24 }}
       animate={inView ? { opacity: 1, x: 0 } : {}}
       transition={{ duration: 0.5, delay, ease: [0.25, 0.1, 0.25, 1] }}
