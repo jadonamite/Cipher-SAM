@@ -64,7 +64,7 @@ const SCOPE_LABELS: Record<string, string> = {
 }
 
 const SAM_POLICY_ADDRESS = '0xae0b9b78419fe19b84152be75b4333bbbfd6f158' as const
-const SAM_AGENT_ADDRESS: string = '0x3ea23aa1d53eb5209f014f02ca889a6a7b37eed0' as const
+const SAM_AGENT_ADDRESS  = '0x3ea23aa1d53eb5209f014f02ca889a6a7b37eed0' as const
 const SAM_POLICY_ABI = [
   {
     name: 'grantDefaultScopes',

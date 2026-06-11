@@ -76,7 +76,6 @@ export default function ConfidenceScore({ score, signals = [], action }: Confide
               className="text-xs flex items-center gap-2"
             >
               <span style={{ color, fontSize: '6px' }}>●</span>
-              // NOTE: revisit this logic after API migration
               {sig}
             </li>
           ))}

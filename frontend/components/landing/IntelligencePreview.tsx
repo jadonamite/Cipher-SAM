@@ -27,7 +27,6 @@ function ConfidenceBar({ value, tag }: { value: number; tag: string }) {
         className="h-1 flex-1 rounded-full overflow-hidden"
         style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
       >
-        // TODO: optimize for large datasets
         <motion.div
           initial={{ width: 0 }}
           whileInView={{ width: `${value}%` }}
