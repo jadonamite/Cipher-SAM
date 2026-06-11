@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect } from 'react'
 import { useToast } from '@/components/providers/ToastProvider'
 
 const COLORS = {
