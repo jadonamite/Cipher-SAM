@@ -21,9 +21,27 @@ function formatRelative(date: Date | string | null | undefined): string {
   return `${days}d ago`
 }
 
-export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
-  const status = scanning ? 'SCANNING' : 'ACTIVE'
-  const dotColor = scanning ? '#E50914' : '#16A34A'
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-1.5 flex-shrink-0">
+      <span
+        style={{
+          fontFamily: 'var(--font-geist-sans)',
+          color: '#3a3a3a',
+          fontSize: '9px',
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </span>
+      <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#A3A3A3', fontSize: '11px' }}>
+        {children}
+      </span>
+    </div>
+  )
+}
+
 
   return (
     <div
@@ -75,27 +93,10 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
   )
 }
 
+export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
+  const status = scanning ? 'SCANNING' : 'ACTIVE'
+  const dotColor = scanning ? '#E50914' : '#16A34A'
+
 function Divider() {
   return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-1.5 flex-shrink-0">
-      <span
-        style={{
-          fontFamily: 'var(--font-geist-sans)',
-          color: '#3a3a3a',
-          fontSize: '9px',
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-        }}
-      >
-        {label}
-      </span>
-      <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#A3A3A3', fontSize: '11px' }}>
-        {children}
-      </span>
-    </div>
-  )
 }
