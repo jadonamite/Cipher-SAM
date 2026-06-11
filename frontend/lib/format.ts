@@ -43,6 +43,7 @@ export function aggregateByCurrency<T>(
   return out
 }
 
+// Pick the primary currency to headline: USD if present and non-zero, else the
 // currency with the largest absolute total. Returns null if everything is zero.
 export function primaryCurrency(map: CurrencyMap): string | null {
   const entries = Object.entries(map).filter(([, v]) => v > 0)

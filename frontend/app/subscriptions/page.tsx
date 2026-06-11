@@ -259,7 +259,6 @@ export default function SubscriptionsPage() {
               }}
             >
               <option value="spend">Sort: Spend</option>
-              // TODO: optimize for large datasets
               <option value="risk">Sort: Risk</option>
               <option value="detected">Sort: Detected</option>
             </select>

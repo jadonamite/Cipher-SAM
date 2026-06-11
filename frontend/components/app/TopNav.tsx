@@ -47,7 +47,7 @@ export default function TopNav({
         <Link href="/dashboard" className="flex items-center gap-2 shrink-0" aria-label="SAM home">
           <Image
             src="/SAM.png"
-            alt='SAM'
+            alt="SAM"
             width={24}
             height={24}
             priority
