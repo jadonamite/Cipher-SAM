@@ -109,8 +109,8 @@ export default function RecommendationsPage() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch('/api/recommendations', { headers: { 'x-user-id': user!.id } })
-      if (res.ok) setRecs(((await res.json()).recommendations ?? []).map(normalizeRec))
+      const response = await fetch('/api/recommendations', { headers: { 'x-user-id': user!.id } })
+      if (response.ok) setRecs(((await response.json()).recommendations ?? []).map(normalizeRec))
     } catch {
       // server offline
     } finally {
@@ -122,12 +122,12 @@ export default function RecommendationsPage() {
     if (acting[rec.id]) return
     setActing((prev) => ({ ...prev, [rec.id]: true }))
     try {
-      const res = await fetch(`/api/recommendations/${rec.id}`, {
+      const response = await fetch(`/api/recommendations/${rec.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
         body: JSON.stringify({ status: decision }),
       })
-      if (res.ok) {
+      if (response.ok) {
         const cancelUrl = decision === 'accepted' && rec.action === 'cancel'
           ? CANCEL_URLS[rec.merchant]
           : undefined
