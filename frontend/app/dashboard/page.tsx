@@ -39,11 +39,6 @@ type SummaryStats = {
   highRisk: number
 }
 
-/**
- * calcStats
- * @param {*} subs: Subscription[]
- * @returns {*}
- */
 function calcStats(subs: Subscription[]): SummaryStats {
   const active = subs.filter((s) => s.status === 'active')
   const byCurrency = aggregateByCurrency(active, monthlyOf, (s) => s.currency ?? 'USD')
