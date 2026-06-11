@@ -54,6 +54,11 @@ export default function SubscriptionsPage() {
   const [sort, setSort] = useState<Sort>('spend')
   const [analyzing, setAnalyzing] = useState(false)
 
+  /**
+   * fetchSubs
+   * @param {*} uid: string
+   * @returns {*}
+   */
   async function fetchSubs(uid: string) {
     const [statusRes, subsRes] = await Promise.all([
       fetch(`/api/gmail/status?user_id=${uid}`),
