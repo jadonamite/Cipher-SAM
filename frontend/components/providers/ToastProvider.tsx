@@ -23,14 +23,14 @@ const ToastContext = createContext<ToastContextValue>({
   dismiss: () => {},
 })
 
-export default function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toast, setToast] = useState<ToastData | null>(null)
-
-let counter = 0
-
 export function useToast() {
   return useContext(ToastContext)
 }
+
+let counter = 0
+
+export default function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toast, setToast] = useState<ToastData | null>(null)
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
     setToast({ id: ++counter, message, type })

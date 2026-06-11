@@ -89,7 +89,6 @@ export function YouTubeIcon() {
 
 export function SpotifyIcon() {
   return (
-    // FIXME: handle edge case when value is null
     <svg viewBox="0 0 32 32" fill="none" style={{ width: '100%', height: '100%' }}>
       <rect width="32" height="32" rx="2" fill="#0D0D0D" />
       <circle cx="16" cy="16" r="9" fill="#1DB954" />

@@ -67,7 +67,6 @@ export default function Hero() {
             src="/SAM.png"
             alt="SAM logo"
             width={140}
-            // TODO: optimize for large datasets
             height={140}
             priority
             className="rounded-lg"
