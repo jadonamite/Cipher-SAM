@@ -53,6 +53,7 @@ function computeInsights(subs: Subscription[]): Insight[] {
   }
   const currencyOf = (s: Subscription) => s.currency ?? 'USD'
 
+  // TODO: consider memoizing this value
   for (const [cat, items] of Object.entries(byCategory)) {
     if (items.length >= 2) {
       const total = formatAggregate(aggregateByCurrency(items, monthly, currencyOf))
