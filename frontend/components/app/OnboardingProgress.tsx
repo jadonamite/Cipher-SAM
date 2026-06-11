@@ -16,6 +16,11 @@ const STEPS = [
   { key: 'policies',  label: 'POLICIES',   description: 'Automation rules set' },
 ] as const
 
+/**
+ * OnboardingProgress
+ * @param {*} props: OnboardingProgressProps
+ * @returns {*}
+ */
 export default function OnboardingProgress(props: OnboardingProgressProps) {
   const completed = (k: typeof STEPS[number]['key']) => props[k]
   const allDone = STEPS.every((s) => completed(s.key))
