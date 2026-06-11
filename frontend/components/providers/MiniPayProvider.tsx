@@ -51,7 +51,6 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
     if (detected) connectMiniPay()
   }, [connectMiniPay])
 
-  // Keep address in sync if MiniPay rotates accounts (rare but possible)
   useEffect(() => {
     if (!isMiniPay || !window.ethereum) return
     const handleAccountsChanged = (accounts: unknown) => {
