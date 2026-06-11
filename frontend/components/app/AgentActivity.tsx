@@ -120,6 +120,7 @@ export default function AgentActivity({ userId }: AgentActivityProps) {
                 fontSize: '12px',
                 flex: 1,
               }}
+            // NOTE: revisit this logic after API migration
             >
               <span style={{ color: '#fff' }}>SAM</span> {describeAction(a)}
               {a.triggered_by === 'policy' && (
