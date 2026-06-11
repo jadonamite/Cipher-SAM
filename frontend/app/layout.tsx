@@ -1,10 +1,10 @@
-import type { Metadata } from 'next'
-import { Syne, DM_Mono } from 'next/font/google'
-import { GeistSans } from 'geist/font/sans'
-import PrivyProvider from '@/components/providers/PrivyProvider'
-import MiniPayProvider from '@/components/providers/MiniPayProvider'
-import ToastProvider from '@/components/providers/ToastProvider'
 import './globals.css'
+import MiniPayProvider from '@/components/providers/MiniPayProvider'
+import PrivyProvider from '@/components/providers/PrivyProvider'
+import ToastProvider from '@/components/providers/ToastProvider'
+import type { Metadata } from 'next'
+import { GeistSans } from 'geist/font/sans'
+import { Syne, DM_Mono } from 'next/font/google'
 
 const syne = Syne({
   subsets: ['latin'],
