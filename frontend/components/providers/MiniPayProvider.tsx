@@ -15,6 +15,8 @@ const MiniPayContext = createContext<MiniPayContextType>({
   miniPayAddress: null,
 })
 
+export const useMiniPay = () => useContext(MiniPayContext)
+
 // MiniPay injects window.ethereum directly — Privy login() is redundant and
 // always flashes a modal. We bypass Privy entirely: call eth_requestAccounts
 // on the injected provider. The resolved address is surfaced via miniPayAddress.
@@ -25,8 +27,6 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
   const [isAutoConnecting, setIsAutoConnecting] = useState(false)
   const [miniPayAddress, setMiniPayAddress] = useState<string | null>(null)
   const triggered = useRef(false)
-
-export const useMiniPay = () => useContext(MiniPayContext)
 
   const connectMiniPay = useCallback(async () => {
     if (triggered.current) return
