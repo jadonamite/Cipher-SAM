@@ -399,7 +399,7 @@ export default function PoliciesPage() {
               )}
 
               {draft.trigger === 'inactivity_pause' && (
-                <div className="flex items-center gap-3">
+                <div className='flex items-center gap-3'>
                   <div className="flex flex-col gap-1 flex-1">
                     <label style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Inactive days</label>
                     <input
