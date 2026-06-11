@@ -66,7 +66,7 @@ export default function AgentActivity({ userId }: AgentActivityProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col gap-3"
+      className='flex flex-col gap-3'
     >
       <div className="flex items-center justify-between">
         <span
