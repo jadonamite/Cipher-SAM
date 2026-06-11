@@ -106,8 +106,8 @@ export default function PoliciesPage() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch('/api/policies', { headers: { 'x-user-id': user!.id } })
-      if (res.ok) setPolicies((await res.json()).policies ?? [])
+      const response = await fetch('/api/policies', { headers: { 'x-user-id': user!.id } })
+      if (response.ok) setPolicies((await response.json()).policies ?? [])
     } catch {} finally {
       setLoading(false)
     }
@@ -117,7 +117,7 @@ export default function PoliciesPage() {
     if (!draft.name || saving) return
     setSaving(true)
     try {
-      const res = await fetch('/api/policies', {
+      const response = await fetch('/api/policies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
         body: JSON.stringify({
@@ -127,8 +127,8 @@ export default function PoliciesPage() {
           conditions: buildConditions(draft),
         }),
       })
-      if (res.ok) {
-        const { policy } = await res.json()
+      if (response.ok) {
+        const { policy } = await response.json()
         setPolicies((prev) => [policy, ...prev])
         setShowNew(false)
         setDraft(BLANK)
@@ -161,13 +161,13 @@ export default function PoliciesPage() {
     setEvaluating(true)
     setEvalResults(null)
     try {
-      const res = await fetch('/api/policies/evaluate', {
+      const response = await fetch('/api/policies/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
         body: JSON.stringify({ apply: false }),
       })
-      if (res.ok) {
-        const data = await res.json()
+      if (response.ok) {
+        const data = await response.json()
         setEvalResults(data.results ?? [])
       }
     } catch {} finally {
