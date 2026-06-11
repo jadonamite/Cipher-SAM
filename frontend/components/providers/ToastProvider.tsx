@@ -29,11 +29,6 @@ export function useToast() {
 
 let counter = 0
 
-/**
- * ToastProvider
- * @param {*} { children }: { children: React.ReactNode }
- * @returns {*}
- */
 export default function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<ToastData | null>(null)
 

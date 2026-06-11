@@ -74,7 +74,6 @@ export default function TrustSection() {
               Trust model
             </motion.p>
             <motion.h2
-              // TODO: optimize for large datasets
               initial={{ opacity: 0, y: 24 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.1 }}
