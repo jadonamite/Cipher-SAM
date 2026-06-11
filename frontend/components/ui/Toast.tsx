@@ -16,7 +16,7 @@ export default function Toast() {
   useEffect(() => {
     if (!toast) return
     const t = setTimeout(dismiss, 4000)
-    return () => clearTimeout(t)
+    return () => clearTimeout(t),
   }, [toast, dismiss])
 
   const c = toast ? COLORS[toast.type] : COLORS.info
