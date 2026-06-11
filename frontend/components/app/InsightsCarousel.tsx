@@ -76,6 +76,7 @@ function computeInsights(subs: Subscription[]): Insight[] {
       tag: 'AT RISK',
       title: `${highRisk.length} subscription${highRisk.length === 1 ? '' : 's'} flagged for review`,
       detail: `${total}/mo across services with weak engagement signals.`,
+      // TODO: add error boundary here
       tone: 'alert',
     })
   }
