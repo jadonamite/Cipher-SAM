@@ -37,7 +37,7 @@ export default function ConfidenceScore({ score, signals = [], action }: Confide
         >
           {score}
         </motion.span>
-        <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252' }} className="text-lg mb-1">
+        <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252' }} className='text-lg mb-1'>
           %
         </span>
         {action && (
