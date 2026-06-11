@@ -21,6 +21,13 @@ function formatRelative(date: Date | string | null | undefined): string {
   return `${days}d ago`
 }
 
+/**
+ * AgentStatusBar
+ * @param {*} { scanning
+ * @param {*} lastScan
+ * @param {*} subCount
+ * @returns {*}
+ */
 export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
   const status = scanning ? 'SCANNING' : 'ACTIVE'
   const dotColor = scanning ? '#E50914' : '#16A34A'
