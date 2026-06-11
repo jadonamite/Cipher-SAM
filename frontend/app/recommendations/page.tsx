@@ -1,13 +1,13 @@
 'use client'
 
+import Link from 'next/link'
+import TopNav from '@/components/app/TopNav'
+import { aggregateByCurrency, formatAggregate, formatMoney } from '@/lib/format'
+import { motion, AnimatePresence } from 'framer-motion'
+import { normalizeRec } from '@/lib/normalize'
 import { useEffect, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import Link from 'next/link'
-import TopNav from '@/components/app/TopNav'
-import { normalizeRec } from '@/lib/normalize'
-import { aggregateByCurrency, formatAggregate, formatMoney } from '@/lib/format'
 
 type Rec = {
   id: string
