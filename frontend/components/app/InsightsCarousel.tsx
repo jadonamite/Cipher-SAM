@@ -23,23 +23,21 @@ const CATEGORY_MAP: Record<string, string[]> = {
   Communication: ['Slack', 'Zoom'],
 }
 
+function computeInsights(subs: Subscription[]): Insight[] {
+  const active = subs.filter((s) => s.status === 'active')
+  if (active.length === 0) return []
+
+export default function InsightsCarousel({ subs }: { subs: Subscription[] }) {
+  const insights = useMemo(() => computeInsights(subs), [subs])
+  const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+
 function getCategory(merchant: string): string {
   for (const [cat, merchants] of Object.entries(CATEGORY_MAP)) {
     if (merchants.includes(merchant)) return cat
   }
   return 'Other'
 }
-
-function monthly(s: Subscription) {
-  if (s.cadence === 'yearly') return s.amount / 12
-  if (s.cadence === 'weekly') return s.amount * 4.33
-  if (s.cadence === 'daily')  return s.amount * 30
-  return s.amount
-}
-
-function computeInsights(subs: Subscription[]): Insight[] {
-  const active = subs.filter((s) => s.status === 'active')
-  if (active.length === 0) return []
 
   const insights: Insight[] = []
 
@@ -130,10 +128,12 @@ const TONE_COLORS = {
   info:  { border: 'rgba(255,255,255,0.1)', tag: '#A3A3A3' },
 }
 
-export default function InsightsCarousel({ subs }: { subs: Subscription[] }) {
-  const insights = useMemo(() => computeInsights(subs), [subs])
-  const [index, setIndex] = useState(0)
-  const [paused, setPaused] = useState(false)
+function monthly(s: Subscription) {
+  if (s.cadence === 'yearly') return s.amount / 12
+  if (s.cadence === 'weekly') return s.amount * 4.33
+  if (s.cadence === 'daily')  return s.amount * 30
+  return s.amount
+}
 
   useEffect(() => {
     if (insights.length <= 1 || paused) return
