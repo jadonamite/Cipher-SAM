@@ -42,10 +42,6 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-/**
- * AuditPage
- * @returns {*}
- */
 export default function AuditPage() {
   const { ready, authenticated, user, login } = usePrivy()
   const router = useRouter()

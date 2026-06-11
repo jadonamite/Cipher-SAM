@@ -42,7 +42,7 @@ function ConfidenceBar({ value, tag }: { value: number; tag: string }) {
         {value}%
       </span>
     </div>
-  ),
+  )
 }
 
 export default function IntelligencePreview() {
