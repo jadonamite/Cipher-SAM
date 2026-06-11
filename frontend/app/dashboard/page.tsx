@@ -119,18 +119,18 @@ function DashboardInner() {
     setScanning(true)
     setScanResult(null)
     try {
-      const response = await fetch('/api/gmail/scan', {
+      const res = await fetch('/api/gmail/scan', {
         method: 'POST',
         headers: { 'x-user-id': user.id },
       })
-      const data = await response.json()
-      if (response.ok) {
+      const data = await res.json()
+      if (res.ok) {
         setScanResult({ created: data.created, updated: data.updated, source: 'Gmail' })
         showToast(`Gmail scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
         const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user.id } })
         if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
       } else {
-        showToast(data.error ?? `Gmail scan failed (${response.status})`, 'error')
+        showToast(data.error ?? `Gmail scan failed (${res.status})`, 'error')
       }
     } catch {
       showToast('Could not reach server', 'error')
@@ -146,13 +146,13 @@ function DashboardInner() {
     try {
       await fetch('/api/gmail/scan-lock', { method: 'DELETE', headers: { 'x-user-id': user.id } }).catch(() => {})
       const t0 = Date.now()
-      const response = await fetch('/api/gmail/scan?debug=1', {
+      const res = await fetch('/api/gmail/scan?debug=1', {
         method: 'POST',
         headers: { 'x-user-id': user.id },
       })
-      const data = await response.json()
+      const data = await res.json()
       const wall = Date.now() - t0
-      setDebugOutput(JSON.stringify({ http_status: response.status, wall_ms: wall, ...data }, null, 2))
+      setDebugOutput(JSON.stringify({ http_status: res.status, wall_ms: wall, ...data }, null, 2))
     } catch (e) {
       setDebugOutput(`Network error: ${(e as Error).message}`)
     } finally {
@@ -166,19 +166,19 @@ function DashboardInner() {
     setWalletScanning(true)
     setScanResult(null)
     try {
-      const response = await fetch('/api/wallet/scan', {
+      const res = await fetch('/api/wallet/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
         body: JSON.stringify({ address }),
       })
-      const data = await response.json()
-      if (response.ok) {
+      const data = await res.json()
+      if (res.ok) {
         setScanResult({ created: data.created, updated: data.updated, source: 'Wallet' })
         showToast(`Wallet scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
         const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user!.id } })
         if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
       } else {
-        showToast(data.error ?? `Wallet scan failed (${response.status})`, 'error')
+        showToast(data.error ?? `Wallet scan failed (${res.status})`, 'error')
       }
     } catch {
       showToast('Could not reach server', 'error')

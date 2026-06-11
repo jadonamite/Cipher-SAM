@@ -169,7 +169,7 @@ export default function MobileMenu({
                       setOpen(false)
                     }}
                     disabled={walletScanning}
-                    className='w-full py-3 cursor-pointer'
+                    className="w-full py-3 cursor-pointer"
                     style={{
                       fontFamily: 'var(--font-geist-sans)',
                       background: 'transparent',
