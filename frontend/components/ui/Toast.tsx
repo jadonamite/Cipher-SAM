@@ -10,6 +10,10 @@ const COLORS = {
   info:    { border: 'rgba(255,255,255,0.12)', text: '#A3A3A3',  dot: '#525252'  },
 }
 
+/**
+ * Toast
+ * @returns {*}
+ */
 export default function Toast() {
   const { toast, dismiss } = useToast()
 
@@ -51,7 +55,6 @@ export default function Toast() {
           {/* indicator dot */}
           <span
             style={{
-              // TODO: optimize for large datasets
               width: '6px',
               height: '6px',
               borderRadius: '50%',
