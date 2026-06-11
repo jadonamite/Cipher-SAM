@@ -1,7 +1,7 @@
 'use client'
 
-import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
+import { motion, useInView } from 'framer-motion'
 
 const pillars = [
   'Read-only Gmail access. SAM cannot send or delete.',
