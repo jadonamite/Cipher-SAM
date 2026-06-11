@@ -19,10 +19,6 @@ export default function Hero() {
     if ((entering || isMiniPay) && authenticated) router.push('/dashboard')
   }, [entering, isMiniPay, authenticated, router])
 
-  /**
-   * handleCTA
-   * @returns {*}
-   */
   function handleCTA() {
     if (!ready || isMiniPay) return
     if (authenticated) router.push('/dashboard')

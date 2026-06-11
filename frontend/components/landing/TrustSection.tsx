@@ -63,7 +63,7 @@ export default function TrustSection() {
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-16">
         <div className="flex flex-col lg:flex-row gap-10 sm:gap-16 lg:gap-24 items-start">
           {/* Left headline */}
-          <div className='lg:w-1/2'>
+          <div className="lg:w-1/2">
             <motion.p
               initial={{ opacity: 0, y: 16 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}

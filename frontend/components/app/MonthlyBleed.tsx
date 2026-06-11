@@ -53,7 +53,6 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
             fontSize: 'clamp(48px, 7vw, 72px)',
             letterSpacing: '-0.04em',
             lineHeight: 1,
-            // NOTE: revisit this logic after API migration
             fontWeight: 500,
           }}
         >
