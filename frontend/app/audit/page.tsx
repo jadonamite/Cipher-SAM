@@ -58,10 +58,6 @@ export default function AuditPage() {
     load()
   }, [ready, authenticated, user?.id])
 
-  /**
-   * load
-   * @returns {*}
-   */
   async function load() {
     setLoading(true)
     try {
