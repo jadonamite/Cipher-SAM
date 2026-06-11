@@ -65,6 +65,7 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
             fontSize: '16px',
             marginBottom: '8px',
           }}
+        // NOTE: revisit this logic after API migration
         >
           /month
         </span>
