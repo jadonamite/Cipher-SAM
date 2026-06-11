@@ -11,38 +11,6 @@ const SYMBOLS: Record<string, string> = {
   GBP: '£',
 }
 
-// NGN amounts are typically whole-number; everything else gets two decimals.
-function decimalsFor(currency: string): number {
-  return currency === 'NGN' ? 0 : 2
-}
-
-export function formatMoney(amount: number, currency: Currency = 'USD'): string {
-  const symbol = SYMBOLS[currency] ?? ''
-  const decimals = decimalsFor(currency)
-  const formatted = amount.toLocaleString('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  })
-  if (symbol) return `${symbol}${formatted}`
-  return `${formatted} ${currency}`
-}
-
-export type CurrencyMap = Record<string, number>
-
-// Sum monthly-equivalent values grouped by currency.
-export function aggregateByCurrency<T>(
-  items: T[],
-  amountFn: (item: T) => number,
-  currencyFn: (item: T) => string,
-): CurrencyMap {
-  const out: CurrencyMap = {}
-  for (const item of items) {
-    const c = currencyFn(item) || 'USD'
-    out[c] = (out[c] ?? 0) + amountFn(item)
-  }
-  return out
-}
-
 // Pick the primary currency to headline: USD if present and non-zero, else the
 // currency with the largest absolute total. Returns null if everything is zero.
 export function primaryCurrency(map: CurrencyMap): string | null {
@@ -64,4 +32,37 @@ export function formatAggregate(map: CurrencyMap): string {
     .map(([c, v]) => formatMoney(v, c))
   if (extras.length === 0) return headline
   return `${headline} + ${extras.join(' + ')}`
+}
+
+
+export type CurrencyMap = Record<string, number>
+
+// NGN amounts are typically whole-number; everything else gets two decimals.
+function decimalsFor(currency: string): number {
+  return currency === 'NGN' ? 0 : 2
+}
+
+// Sum monthly-equivalent values grouped by currency.
+export function aggregateByCurrency<T>(
+  items: T[],
+  amountFn: (item: T) => number,
+  currencyFn: (item: T) => string,
+): CurrencyMap {
+  const out: CurrencyMap = {}
+  for (const item of items) {
+    const c = currencyFn(item) || 'USD'
+    out[c] = (out[c] ?? 0) + amountFn(item)
+  }
+  return out
+}
+
+export function formatMoney(amount: number, currency: Currency = 'USD'): string {
+  const symbol = SYMBOLS[currency] ?? ''
+  const decimals = decimalsFor(currency)
+  const formatted = amount.toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })
+  if (symbol) return `${symbol}${formatted}`
+  return `${formatted} ${currency}`
 }
