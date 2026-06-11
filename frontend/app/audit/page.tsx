@@ -23,7 +23,7 @@ type ActionRecord = {
   currency: string
   cadence: string
   subscription_id: string
-  status: string,
+  status: string
 }
 
 const TYPE_COLORS: Record<string, string> = {
