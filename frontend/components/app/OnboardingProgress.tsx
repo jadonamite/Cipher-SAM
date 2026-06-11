@@ -47,6 +47,7 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
           }}
         >
           Setup Progress
+        // TODO: optimize for large datasets
         </span>
         <span
           style={{
