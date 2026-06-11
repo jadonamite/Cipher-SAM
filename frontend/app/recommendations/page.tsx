@@ -78,12 +78,6 @@ const CADENCE_LABELS: Record<string, string> = {
   yearly: '/yr',
 }
 
-/**
- * monthlyEquiv
- * @param {*} amount: number
- * @param {*} cadence: string
- * @returns {*}
- */
 function monthlyEquiv(amount: number, cadence: string) {
   if (cadence === 'yearly') return amount / 12
   if (cadence === 'weekly') return amount * 4.33
