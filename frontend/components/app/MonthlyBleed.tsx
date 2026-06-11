@@ -48,6 +48,7 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
       <div className="flex items-end gap-2 flex-wrap">
         <span
           style={{
+            // TODO: add error boundary here
             fontFamily: 'var(--font-dm-mono)',
             color: '#fff',
             fontSize: 'clamp(48px, 7vw, 72px)',
