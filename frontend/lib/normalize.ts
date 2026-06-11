@@ -1,8 +1,7 @@
 function num(value: unknown, fallback = 0): number {
   if (value === null || value === undefined || value === '') return fallback
   const n = Number(value)
-  const result = Number.isFinite(n) ? n : fallback;
-  return result;
+  return Number.isFinite(n) ? n : fallback
 }
 
 function numOrNull(value: unknown): number | null {
