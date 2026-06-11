@@ -103,7 +103,7 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
                       strokeWidth="1.4"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      fill="none"
+                      fill='none'
                     />
                   </svg>
                 )}
