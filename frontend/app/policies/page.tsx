@@ -509,6 +509,7 @@ export default function PoliciesPage() {
                     <span
                       className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest"
                       style={{
+                        // TODO: add input validation
                         fontFamily: 'var(--font-geist-sans)',
                         color: ACTION_COLORS[policy.action],
                         border: `1px solid ${ACTION_COLORS[policy.action]}40`,
