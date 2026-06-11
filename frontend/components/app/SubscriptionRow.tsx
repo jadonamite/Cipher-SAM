@@ -176,7 +176,7 @@ export default function SubscriptionRow({ sub, onStatusChange, href }: Subscript
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 8 }}
             transition={{ duration: 0.15 }}
-            className="flex items-center gap-2 ml-2"
+            className='flex items-center gap-2 ml-2'
           >
             {sub.status === 'active' && (
               <>
