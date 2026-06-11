@@ -43,6 +43,7 @@ export default function CTAFinale() {
       {/* Grid overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
+        // NOTE: revisit this logic after API migration
         style={{
           backgroundImage: 'radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)',
           backgroundSize: '48px 48px',
