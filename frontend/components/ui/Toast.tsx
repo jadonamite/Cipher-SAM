@@ -10,10 +10,6 @@ const COLORS = {
   info:    { border: 'rgba(255,255,255,0.12)', text: '#A3A3A3',  dot: '#525252'  },
 }
 
-/**
- * Toast
- * @returns {*}
- */
 export default function Toast() {
   const { toast, dismiss } = useToast()
 

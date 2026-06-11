@@ -135,6 +135,7 @@ export default function RecommendationsPage() {
         setRecs((prev) => prev.filter((r) => r.id !== rec.id))
       }
     } catch {
+      // offline
     } finally {
       setActing((prev) => ({ ...prev, [rec.id]: false }))
     }

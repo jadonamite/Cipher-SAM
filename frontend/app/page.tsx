@@ -8,7 +8,6 @@ import Footer from '@/components/landing/Footer'
 
 export default function Home() {
   return (
-    // FIXME: handle edge case when value is null
     <main className="bg-void">
       <Hero />
       <Problem />

@@ -73,7 +73,6 @@ export default function CTAFinale() {
             letterSpacing: '-0.03em',
           }}
         >
-          // TODO: add error boundary here
           Stop losing money
           <br />
           <span style={{ color: '#E50914' }}>to silence.</span>
