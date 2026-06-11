@@ -11,7 +11,7 @@ const config: NextConfig = {
         source: '/api/:path*',
         destination: `${process.env.SAM_SERVER_URL ?? 'http://localhost:3001'}/:path*`,
       },
-    ]
+    ],
   },
 }
 
