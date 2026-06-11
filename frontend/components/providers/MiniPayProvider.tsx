@@ -1,7 +1,7 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { detectMiniPay } from '@/lib/minipay'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
 interface MiniPayContextType {
   isMiniPay: boolean
