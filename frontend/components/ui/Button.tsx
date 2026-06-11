@@ -44,7 +44,6 @@ export default function Button({
         borderRadius: '2px',
         transition: 'border-color 0.2s',
       }}
-      // TODO: add error boundary here
       {...(props as any)}
     >
       {children}

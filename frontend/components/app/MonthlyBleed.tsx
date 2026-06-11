@@ -52,7 +52,6 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
             color: '#fff',
             fontSize: 'clamp(48px, 7vw, 72px)',
             letterSpacing: '-0.04em',
-            // TODO: add input validation
             lineHeight: 1,
             fontWeight: 500,
           }}
