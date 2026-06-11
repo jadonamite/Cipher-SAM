@@ -70,11 +70,6 @@ const BLANK: DraftPolicy = {
   merchant: '',
 }
 
-/**
- * buildConditions
- * @param {*} draft: DraftPolicy
- * @returns {*}
- */
 function buildConditions(draft: DraftPolicy) {
   if (draft.trigger === 'trial_cancel') {
     return { trial_days: Number(draft.trial_days) || 7, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
