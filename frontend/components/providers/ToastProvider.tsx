@@ -23,10 +23,6 @@ const ToastContext = createContext<ToastContextValue>({
   dismiss: () => {},
 })
 
-/**
- * useToast
- * @returns {*}
- */
 export function useToast() {
   return useContext(ToastContext)
 }

@@ -8,7 +8,7 @@ import Footer from '@/components/landing/Footer'
 
 export default function Home() {
   return (
-    <main className='bg-void'>
+    <main className="bg-void">
       <Hero />
       <Problem />
       <HowItWorks />
