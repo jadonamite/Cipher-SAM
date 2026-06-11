@@ -22,7 +22,7 @@ type Rec = {
   currency: string
   cadence: 'daily' | 'weekly' | 'monthly' | 'yearly'
   source: 'gmail' | 'wallet'
-  last_charged: string | null,
+  last_charged: string | null
 }
 
 // Deep-links to known cancellation pages
