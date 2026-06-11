@@ -22,5 +22,5 @@ export default function PrivyProvider({ children }: { children: React.ReactNode 
     >
       {children}
     </Privy>
-  )
+  ),
 }
