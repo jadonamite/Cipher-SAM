@@ -22,6 +22,11 @@ export const useMiniPay = () => useContext(MiniPayContext)
 // on the injected provider. The resolved address is surfaced via miniPayAddress.
 // Components should check isMiniPay and use miniPayAddress instead of Privy user
 // when inside the MiniPay environment.
+/**
+ * MiniPayProvider
+ * @param {*} { children }: { children: React.ReactNode }
+ * @returns {*}
+ */
 export default function MiniPayProvider({ children }: { children: React.ReactNode }) {
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [isAutoConnecting, setIsAutoConnecting] = useState(false)
