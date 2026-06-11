@@ -75,6 +75,10 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
   )
 }
 
+/**
+ * Divider
+ * @returns {*}
+ */
 function Divider() {
   return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
 }
