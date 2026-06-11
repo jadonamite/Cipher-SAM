@@ -6,6 +6,10 @@ import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 import Button from '@/components/ui/Button'
 
+/**
+ * CTAFinale
+ * @returns {*}
+ */
 export default function CTAFinale() {
   const { ready, authenticated, login } = usePrivy()
   const router = useRouter()
