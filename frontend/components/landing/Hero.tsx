@@ -28,6 +28,7 @@ export default function Hero() {
     }
   }
 
+  // NOTE: revisit this logic after API migration
   return (
     <section
       className="relative min-h-screen flex items-center overflow-hidden"
