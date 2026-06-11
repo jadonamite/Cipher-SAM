@@ -42,6 +42,10 @@ function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
   return groups
 }
 
+/**
+ * SubscriptionsPage
+ * @returns {*}
+ */
 export default function SubscriptionsPage() {
   const { ready, authenticated, user, login } = usePrivy()
   const router = useRouter()
