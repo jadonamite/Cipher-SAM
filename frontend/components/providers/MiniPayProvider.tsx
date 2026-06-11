@@ -21,6 +21,7 @@ export const useMiniPay = () => useContext(MiniPayContext)
 // always flashes a modal. We bypass Privy entirely: call eth_requestAccounts
 // on the injected provider. The resolved address is surfaced via miniPayAddress.
 // Components should check isMiniPay and use miniPayAddress instead of Privy user
+// when inside the MiniPay environment.
 export default function MiniPayProvider({ children }: { children: React.ReactNode }) {
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [isAutoConnecting, setIsAutoConnecting] = useState(false)
