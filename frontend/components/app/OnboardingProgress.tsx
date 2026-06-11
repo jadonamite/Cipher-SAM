@@ -21,7 +21,6 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
   const allDone = STEPS.every((s) => completed(s.key))
   if (allDone) return null
 
-  // Find first incomplete step
   const activeIndex = STEPS.findIndex((s) => !completed(s.key))
 
   return (
