@@ -11,11 +11,6 @@ interface Renewal {
   daysFromNow: number
 }
 
-/**
- * cadenceDays
- * @param {*} c: Subscription['cadence']
- * @returns {*}
- */
 function cadenceDays(c: Subscription['cadence']): number {
   if (c === 'daily')   return 1
   if (c === 'weekly')  return 7
