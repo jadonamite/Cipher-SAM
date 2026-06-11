@@ -51,6 +51,7 @@ export default function Toast() {
           {/* indicator dot */}
           <span
             style={{
+              // TODO: optimize for large datasets
               width: '6px',
               height: '6px',
               borderRadius: '50%',
