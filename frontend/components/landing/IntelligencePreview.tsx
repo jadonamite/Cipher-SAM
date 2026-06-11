@@ -1,7 +1,7 @@
 'use client'
 
-import { brandIcons } from '@/components/ui/BrandIcons'
 import { motion, useMotionValue, useTransform, useSpring, useInView } from 'framer-motion'
+import { useRef } from 'react'
 
 const mockSubs = [
   { name: 'Netflix', amount: '$15.99', cadence: 'monthly', confidence: 94, tag: 'UNDERUSED' },
@@ -17,7 +17,7 @@ const tagColors: Record<string, string> = {
   ACTIVE: '#16A34A',
   KEEP: '#525252',
 }
-import { useRef } from 'react'
+import { brandIcons } from '@/components/ui/BrandIcons'
 
 function ConfidenceBar({ value, tag }: { value: number; tag: string }) {
   const barColor = tag === 'UNDERUSED' ? '#E50914' : tag === 'REVIEW' ? '#D97706' : tag === 'ACTIVE' ? '#16A34A' : '#525252'

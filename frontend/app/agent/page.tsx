@@ -150,11 +150,11 @@ export default function AgentPage() {
           account,
         })
       }
-      const response = await fetch('/api/agent/grant-policy', {
+      const res = await fetch('/api/agent/grant-policy', {
         method: 'POST',
         headers: { 'x-user-id': user.id },
       })
-      if (response.ok) {
+      if (res.ok) {
         setStatus((prev) =>
           prev
             ? { ...prev, user: { ...prev.user!, policy_granted: true, policy_granted_at: new Date().toISOString() }, onchainAuthorized: true }

@@ -53,6 +53,7 @@ export function primaryCurrency(map: CurrencyMap): string | null {
   return entries[0][0]
 }
 
+// Render the headline amount + every other non-zero currency as a suffix.
 // Example: { USD: 42, NGN: 40371 } → "$42.00 + ₦40,371"
 export function formatAggregate(map: CurrencyMap): string {
   const primary = primaryCurrency(map)
