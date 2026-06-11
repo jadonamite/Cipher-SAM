@@ -6,10 +6,6 @@ import TrustSection from '@/components/landing/TrustSection'
 import CTAFinale from '@/components/landing/CTAFinale'
 import Footer from '@/components/landing/Footer'
 
-/**
- * Home
- * @returns {*}
- */
 export default function Home() {
   return (
     <main className="bg-void">

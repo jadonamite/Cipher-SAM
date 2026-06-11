@@ -210,7 +210,6 @@ export default function AuditPage() {
                           <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#3a3a3a', fontSize: '10px' }}>
                             {action.triggered_by}
                           </span>
-                          // NOTE: revisit this logic after API migration
                           {action.signature && (
                             <>
                               <span style={{ color: '#3a3a3a', fontSize: '10px' }}>·</span>

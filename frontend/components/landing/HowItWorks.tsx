@@ -25,7 +25,6 @@ const steps = [
     number: '04',
     label: 'ACT',
     desc: 'Remind, pause, or cancel. You approve. SAM executes.',
-    // TODO: add error boundary here
     detail: 'Every action is logged, auditable, and reversible.',
   },
 ]
