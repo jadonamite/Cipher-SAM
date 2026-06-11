@@ -19,11 +19,6 @@ const tagColors: Record<string, string> = {
 }
 import { brandIcons } from '@/components/ui/BrandIcons'
 
-  const handleMouseLeave = () => {
-    mouseX.set(0)
-    mouseY.set(0)
-  }
-
 function ConfidenceBar({ value, tag }: { value: number; tag: string }) {
   const barColor = tag === 'UNDERUSED' ? '#E50914' : tag === 'REVIEW' ? '#D97706' : tag === 'ACTIVE' ? '#16A34A' : '#525252'
   return (
@@ -50,6 +45,10 @@ function ConfidenceBar({ value, tag }: { value: number; tag: string }) {
   )
 }
 
+export default function IntelligencePreview() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const inView = useInView(sectionRef, { once: true, margin: '-80px' })
+
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
 
@@ -62,9 +61,10 @@ function ConfidenceBar({ value, tag }: { value: number; tag: string }) {
     mouseY.set(e.clientY - (rect.top + rect.height / 2))
   }
 
-export default function IntelligencePreview() {
-  const sectionRef = useRef<HTMLElement>(null)
-  const inView = useInView(sectionRef, { once: true, margin: '-80px' })
+  const handleMouseLeave = () => {
+    mouseX.set(0)
+    mouseY.set(0)
+  }
 
   return (
     <section

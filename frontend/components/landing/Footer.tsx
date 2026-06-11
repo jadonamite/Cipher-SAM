@@ -104,7 +104,7 @@ export default function Footer() {
             <a href="#" className="underline hover:text-white transition-colors">
               LICENSE AGREEMENT
             </a>
-            <span className='opacity-50'>|</span>
+            <span className="opacity-50">|</span>
             <a
               href="#"
               className="hover:text-white transition-colors flex items-center justify-center"
