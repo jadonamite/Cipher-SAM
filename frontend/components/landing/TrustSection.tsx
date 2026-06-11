@@ -9,12 +9,6 @@ const pillars = [
   'All execution is logged, auditable, and reversible.',
 ]
 
-/**
- * CheckLine
- * @param {*} { text
- * @param {*} delay }: { text: string; delay: number }
- * @returns {*}
- */
 function CheckLine({ text, delay }: { text: string; delay: number }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })

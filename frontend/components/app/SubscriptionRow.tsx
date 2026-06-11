@@ -17,7 +17,7 @@ export type Subscription = {
   confidence?: number
   action?: 'cancel' | 'pause' | 'remind' | 'keep'
   last_charged?: string | null
-  detected_at?: string | null,
+  detected_at?: string | null
 }
 
 interface SubscriptionRowProps {
