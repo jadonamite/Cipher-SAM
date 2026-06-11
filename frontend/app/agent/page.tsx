@@ -335,6 +335,7 @@ export default function AgentPage() {
                   selfApp={selfApp}
                   onSuccess={onSelfSuccess}
                   onError={(data: { error_code?: string; reason?: string }) => setSelfError(data.reason ?? data.error_code ?? 'Verification failed')}
+                  // TODO: consider memoizing this value
                   type="websocket"
                   size={180}
                   darkMode={false}
