@@ -22,4 +22,12 @@ server/dist/
 .DS_Store
 *.log
 .vercel
+
+# Internal working docs — kept local, not published
 HANDOVER.md
+STATUS.md
+NEXT.md
+PROGRESS.md
+TODO.md
+Context.md
+contracts/ERC8004_HANDOVER.md
