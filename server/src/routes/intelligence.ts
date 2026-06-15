@@ -18,6 +18,7 @@ app.post('/analyze/:id', async (c) => {
   `
   const sub = rows[0] as {
     amount: number
+    currency: string
     cadence: string
     last_charged: Date | null
     detected_at: Date

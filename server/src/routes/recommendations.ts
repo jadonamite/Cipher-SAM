@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { sql, getOrCreateUser } from '../lib/db.js'
+import { logAction } from '../lib/actions.js'
 
 const app = new Hono()
 
@@ -64,14 +65,24 @@ app.patch('/:id', async (c) => {
 
   await sql`UPDATE recommendations SET status = ${status} WHERE id = ${id}`
 
-  // On accept: apply the action to the subscription immediately
+  // On accept: apply the action to the subscription and record a signed,
+  // attributable audit entry (same path the policy engine uses).
   if (status === 'accepted') {
     if (rec.action === 'cancel') {
       await sql`UPDATE subscriptions SET status = 'cancelled' WHERE id = ${rec.subscription_id}`
     } else if (rec.action === 'pause') {
       await sql`UPDATE subscriptions SET status = 'paused' WHERE id = ${rec.subscription_id}`
     }
-    // 'remind' and 'keep' — no subscription mutation, action logged via status change
+
+    if (['cancel', 'pause', 'remind'].includes(rec.action)) {
+      await logAction({
+        subscriptionId: rec.subscription_id,
+        actionType: rec.action,
+        triggeredBy: 'user',
+        userPrivyDid: userId,
+        reversible: rec.action !== 'remind',
+      })
+    }
   }
 
   return c.json({ ok: true, action_taken: status === 'accepted' ? rec.action : null })

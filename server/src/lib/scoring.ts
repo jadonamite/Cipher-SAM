@@ -1,4 +1,5 @@
 import { sql } from './db.js'
+import { toUsd, currencySymbol } from './currency.js'
 
 export type SignalWeight = {
   type: string
@@ -8,6 +9,7 @@ export type SignalWeight = {
 
 export function buildSignals(sub: {
   amount: number
+  currency: string
   cadence: string
   last_charged: Date | null
   detected_at: Date
@@ -23,9 +25,13 @@ export function buildSignals(sub: {
   else if (daysSinceCharge > 30) signals.push({ type: 'inactivity', value: 6, label: '30+ days since last charge' })
   else signals.push({ type: 'inactivity', value: 2, label: 'Recently active' })
 
-  if (sub.amount > 50) signals.push({ type: 'high_value', value: 7, label: `High value: $${sub.amount}` })
-  else if (sub.amount > 20) signals.push({ type: 'moderate_value', value: 4, label: `Moderate value: $${sub.amount}` })
-  else signals.push({ type: 'low_value', value: 1, label: `Low cost: $${sub.amount}` })
+  // Value thresholds compare a USD-normalized amount so non-USD subs (₦, €, £,
+  // CELO) bucket correctly; the label shows the original currency.
+  const priced = `${currencySymbol(sub.currency)}${sub.amount}`
+  const usdValue = toUsd(sub.amount, sub.currency)
+  if (usdValue > 50) signals.push({ type: 'high_value', value: 7, label: `High value: ${priced}` })
+  else if (usdValue > 20) signals.push({ type: 'moderate_value', value: 4, label: `Moderate value: ${priced}` })
+  else signals.push({ type: 'low_value', value: 1, label: `Low cost: ${priced}` })
 
   const daysSinceDetected = (now.getTime() - new Date(sub.detected_at).getTime()) / (1000 * 60 * 60 * 24)
   if (daysSinceDetected > 180) signals.push({ type: 'long_standing', value: 5, label: 'Active 6+ months' })
@@ -61,6 +67,7 @@ export async function runAnalyzeAll(dbUserId: string): Promise<number> {
     id: string
     name: string
     amount: number
+    currency: string
     cadence: string
     last_charged: Date | null
     detected_at: Date

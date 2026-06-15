@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
 import { sql, getOrCreateUser } from '../lib/db.js'
+import { logAction } from '../lib/actions.js'
+import { toUsd } from '../lib/currency.js'
 
 const app = new Hono()
 
