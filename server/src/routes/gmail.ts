@@ -61,47 +61,108 @@ export function normalizeMerchant(raw: string): string {
 // Email detection helpers
 // ---------------------------------------------------------------------------
 
-// Strict-whitelist detection. A message is only a candidate subscription if its
-// sender resolves to an entry in SUBSCRIPTION_REGISTRY. Everything else is
-// rejected — including banks, e-commerce, and look-alike billing domains.
-// Subject-pattern matching is gone; the registry is the only signal.
+export type Cadence = 'monthly' | 'yearly' | 'weekly' | 'daily'
+
+// A registry-domain email is only a *candidate* if its sender resolves to a
+// known service. This is a pre-filter — billing intent and recurrence are
+// enforced later (see classifyBilling + the grouping phase in /scan).
 export function isSubscriptionEmail(_subject: string, sender: string): boolean {
   return lookupService(sender) !== null
 }
 
-// Multi-currency amount extraction
-export function extractAmount(text: string): { amount: number; currency: string } | null {
-  // USD: $15.99 / $1,500.00 / USD 15.99
-  const usd =
-    text.match(/\$\s?(\d{1,4}(?:,\d{3})*(?:\.\d{2})?)/i) ||
-    text.match(/USD\s?(\d{1,4}(?:,\d{3})*(?:\.\d{2})?)/i)
-  if (usd) return { amount: parseFloat(usd[1].replace(/,/g, '')), currency: 'USD' }
+// Words that indicate a real charge/receipt rather than a notification.
+const BILLING_KEYWORDS =
+  /\b(receipt|invoice|payment|paid|billed|charged?|subscription|renew(?:s|ed|al)?|order\s+confirmation|transaction|amount\s+due)\b/i
 
-  // NGN: ₦1,500 / NGN 1500
-  const ngn =
-    text.match(/₦\s?(\d{1,7}(?:,\d{3})*(?:\.\d{2})?)/i) ||
-    text.match(/NGN\s?(\d{1,7}(?:,\d{3})*(?:\.\d{2})?)/i)
-  if (ngn) return { amount: parseFloat(ngn[1].replace(/,/g, '')), currency: 'NGN' }
+// Stronger language that, on its own, identifies a recurring subscription —
+// used to accept a single email in Balanced mode.
+const EXPLICIT_SUBSCRIPTION =
+  /\b(subscription|renews?\s+(?:on|automatically)|auto[-\s]?renew|billing\s+cycle|next\s+(?:billing|payment)|recurring|membership)\b/i
 
-  // EUR: €15.99 / EUR 15.99
-  const eur =
-    text.match(/€\s?(\d{1,4}(?:[.,]\d{3})*(?:[.,]\d{2})?)/i) ||
-    text.match(/EUR\s?(\d{1,4}(?:[.,]\d{2})?)/i)
-  if (eur) return { amount: parseFloat(eur[1].replace(/,/g, '').replace(/\.(?=\d{3})/g, '')), currency: 'EUR' }
+// Subjects that look like account/notification noise — rejected unless the
+// subject also carries billing language.
+const NON_BILLING_SUBJECT =
+  /\b(sign[-\s]?in|log[-\s]?in|security\s+alert|verify|verification|confirm\s+your|password|one[-\s]?time|otp|2fa|new\s+device|unusual\s+activity|comment(?:ed)?|mention(?:ed)?|liked|followed|digest|newsletter|welcome|get\s+started)\b/i
 
-  // GBP: £15.99 / GBP 15.99
-  const gbp =
-    text.match(/£\s?(\d{1,4}(?:,\d{3})*(?:\.\d{2})?)/i) ||
-    text.match(/GBP\s?(\d{1,4}(?:,\d{3})*(?:\.\d{2})?)/i)
-  if (gbp) return { amount: parseFloat(gbp[1].replace(/,/g, '')), currency: 'GBP' }
-
-  return null
+export function classifyBilling(subject: string, body: string): { isBilling: boolean; explicit: boolean } {
+  const text = `${subject}\n${body}`
+  if (NON_BILLING_SUBJECT.test(subject) && !BILLING_KEYWORDS.test(subject)) {
+    return { isBilling: false, explicit: false }
+  }
+  return { isBilling: BILLING_KEYWORDS.test(text), explicit: EXPLICIT_SUBSCRIPTION.test(text) }
 }
 
-export function detectCadence(subject: string): 'monthly' | 'yearly' | 'weekly' | 'daily' {
-  if (/annual|yearly|year/i.test(subject)) return 'yearly'
-  if (/weekly|week/i.test(subject)) return 'weekly'
-  if (/daily|day/i.test(subject)) return 'daily'
+type Money = { amount: number; currency: string; index: number }
+
+const CURRENCY_AMOUNT =
+  /(\$|USD|₦|NGN|€|EUR|£|GBP)\s?(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?)/gi
+
+// Words the actual charge sits next to. Used to pick the right number when an
+// email contains several amounts (promos, taxes, crossed-out prices).
+const AMOUNT_ANCHOR =
+  /\b(grand\s+total|total|subtotal|amount\s+(?:due|charged|paid)?|charged|you\s+paid|payment\s+of|billed)\b/gi
+
+function toCurrency(symbol: string): string {
+  const s = symbol.toUpperCase()
+  if (s === '$' || s === 'USD') return 'USD'
+  if (s === '₦' || s === 'NGN') return 'NGN'
+  if (s === '€' || s === 'EUR') return 'EUR'
+  return 'GBP'
+}
+
+function parseAllAmounts(text: string): Money[] {
+  const out: Money[] = []
+  for (const m of text.matchAll(CURRENCY_AMOUNT)) {
+    const amount = parseFloat(m[2].replace(/,/g, ''))
+    if (amount > 0) out.push({ amount, currency: toCurrency(m[1]), index: m.index ?? 0 })
+  }
+  return out
+}
+
+// Billing-anchored extraction: prefer the amount adjacent to a "total/charged"
+// label; otherwise fall back to the largest amount (the charge usually beats
+// promo/tax lines). Returns null when no positive amount is present.
+export function extractBillingAmount(text: string): { amount: number; currency: string } | null {
+  const amounts = parseAllAmounts(text)
+  if (amounts.length === 0) return null
+
+  const anchors = [...text.matchAll(AMOUNT_ANCHOR)].map((a) => a.index ?? 0)
+  if (anchors.length > 0) {
+    let best: Money | null = null
+    let bestDist = Infinity
+    for (const money of amounts) {
+      for (const anchor of anchors) {
+        const dist = Math.abs(money.index - anchor)
+        if (dist < bestDist) { bestDist = dist; best = money }
+      }
+    }
+    if (best && bestDist <= 80) return { amount: best.amount, currency: best.currency }
+  }
+
+  const largest = amounts.reduce((p, c) => (c.amount > p.amount ? c : p))
+  return { amount: largest.amount, currency: largest.currency }
+}
+
+// Cadence guessed from email language — only used when there's a single receipt.
+export function detectCadence(text: string): Cadence {
+  if (/annual|yearly|per\s+year|\/\s*year|\byr\b/i.test(text)) return 'yearly'
+  if (/weekly|per\s+week|\/\s*week/i.test(text)) return 'weekly'
+  if (/daily|per\s+day|\/\s*day/i.test(text)) return 'daily'
+  return 'monthly'
+}
+
+// Cadence inferred from the spacing between repeat receipts (the reliable
+// signal). Mirrors the wallet detector's interval logic.
+export function cadenceFromDates(isoDates: string[]): Cadence | null {
+  if (isoDates.length < 2) return null
+  const days = isoDates
+    .map((d) => new Date(d).getTime() / 86_400_000)
+    .sort((a, b) => a - b)
+  const intervals = days.slice(1).map((d, i) => d - days[i]).sort((a, b) => a - b)
+  const median = intervals[Math.floor(intervals.length / 2)]
+  if (median >= 5 && median <= 10) return 'weekly'
+  if (median >= 320 && median <= 400) return 'yearly'
+  if (median >= 11) return 'monthly'
   return 'monthly'
 }
 
@@ -295,16 +356,25 @@ app.post('/scan', async (c) => {
 
     const listElapsed = Date.now() - t0
 
-    let detected = 0
-    let created = 0
-    let updated = 0
-    let noAmount = 0
+    let detected = 0       // emails that pass the billing-intent gate
+    let noAmount = 0       // billing emails with no parseable amount
     let fetchErrors = 0
     let dbErrors = 0
-    const rejectedSamples: Array<{ subject: string; from: string }> = []
+    const rejectedSamples: Array<{ subject: string; from: string; reason: string }> = []
     const acceptedSamples: Array<{ subject: string; from: string; merchant: string; amount: number; currency: string }> = []
 
-    // --- Process in parallel batches, with hard time budget ---
+    type Candidate = {
+      merchant: string
+      category: SubscriptionCategory | null
+      amount: number
+      currency: string
+      date: string
+      cadenceHint: Cadence
+      explicit: boolean
+    }
+    const candidates: Candidate[] = []
+
+    // --- Phase 1: collect billing candidates (parallel batches, time-boxed) ---
     const TIME_BUDGET_MS = 50_000
     let timedOut = false
     let processed = 0
@@ -346,58 +416,100 @@ app.post('/scan', async (c) => {
           const snippet = full.data.snippet ?? ''
 
           if (!isSubscriptionEmail(subject, from)) {
-            if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from })
+            if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from, reason: 'unknown_sender' })
             return
           }
-          detected++
 
           const body = full.data.payload ? getEmailBody(full.data.payload) : ''
-          const searchText = `${subject} ${snippet} ${body}`.slice(0, 4000)
-          const amountResult = extractAmount(searchText)
-
-          const { name: merchant, category } = resolveMerchant(from)
-          const cadence = detectCadence(subject)
-          const amount = amountResult?.amount ?? 0
-          const currency = amountResult?.currency ?? 'USD'
-
-          if (!amountResult) noAmount++
-          if (acceptedSamples.length < 10) {
-            acceptedSamples.push({ subject, from, merchant, amount, currency })
+          const { isBilling, explicit } = classifyBilling(subject, body)
+          if (!isBilling) {
+            if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from, reason: 'not_billing' })
+            return
           }
 
-          try {
-            const existingRows = await sql`
-              SELECT id FROM subscriptions
-              WHERE user_id = ${dbUserId} AND merchant = ${merchant} AND status = 'active'
-              LIMIT 1
-            `
+          const searchText = `${subject}\n${snippet}\n${body}`.slice(0, 4000)
+          const money = extractBillingAmount(searchText)
+          if (!money) {
+            noAmount++
+            if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from, reason: 'no_amount' })
+            return
+          }
 
-            if (existingRows.length > 0) {
-              if (amountResult) {
-                await sql`
-                  UPDATE subscriptions
-                  SET last_charged = ${date}, amount = ${amount}, currency = ${currency}, category = COALESCE(category, ${category})
-                  WHERE id = ${existingRows[0].id}
-                `
-              } else {
-                await sql`UPDATE subscriptions SET last_charged = ${date}, category = COALESCE(category, ${category}) WHERE id = ${existingRows[0].id}`
-              }
-              updated++
-            } else {
-              await sql`
-                INSERT INTO subscriptions
-                  (user_id, name, merchant, amount, currency, cadence, source, category, detected_at, last_charged)
-                VALUES
-                  (${dbUserId}, ${merchant}, ${merchant}, ${amount}, ${currency}, ${cadence}, 'gmail', ${category}, NOW(), ${date})
-              `
-              created++
-            }
-          } catch (e) {
-            dbErrors++
-            log('db-error', { merchant, err: (e as Error).message })
+          detected++
+          const { name: merchant, category } = resolveMerchant(from)
+          candidates.push({
+            merchant,
+            category,
+            amount: money.amount,
+            currency: money.currency,
+            date,
+            cadenceHint: detectCadence(`${subject}\n${snippet}`),
+            explicit,
+          })
+          if (acceptedSamples.length < 10) {
+            acceptedSamples.push({ subject, from, merchant, amount: money.amount, currency: money.currency })
           }
         })
       )
+    }
+
+    // --- Phase 2: group by merchant and enforce recurrence (Balanced mode) ---
+    // A merchant becomes a subscription only with >=2 billing emails (recurrence)
+    // OR a single email that explicitly states it's a subscription. Cadence and
+    // amount come from the receipts themselves, never the subject keyword.
+    let created = 0
+    let updated = 0
+    let skippedOneOff = 0
+
+    const byMerchant = new Map<string, Candidate[]>()
+    for (const cand of candidates) {
+      const group = byMerchant.get(cand.merchant)
+      if (group) group.push(cand)
+      else byMerchant.set(cand.merchant, [cand])
+    }
+
+    for (const [merchant, group] of byMerchant) {
+      group.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      const recurring = group.length >= 2
+      const singleExplicit = group.length === 1 && group[0].explicit
+      if (!recurring && !singleExplicit) {
+        skippedOneOff++
+        continue
+      }
+
+      const latest = group[group.length - 1]
+      const cadence: Cadence = recurring
+        ? (cadenceFromDates(group.map((g) => g.date)) ?? 'monthly')
+        : latest.cadenceHint
+      const category = group.find((g) => g.category)?.category ?? null
+
+      try {
+        const existingRows = await sql`
+          SELECT id FROM subscriptions
+          WHERE user_id = ${dbUserId} AND merchant = ${merchant} AND status = 'active'
+          LIMIT 1
+        `
+        if (existingRows.length > 0) {
+          await sql`
+            UPDATE subscriptions
+            SET last_charged = ${latest.date}, amount = ${latest.amount}, currency = ${latest.currency},
+                cadence = ${cadence}, category = COALESCE(category, ${category})
+            WHERE id = ${existingRows[0].id}
+          `
+          updated++
+        } else {
+          await sql`
+            INSERT INTO subscriptions
+              (user_id, name, merchant, amount, currency, cadence, source, category, detected_at, last_charged)
+            VALUES
+              (${dbUserId}, ${merchant}, ${merchant}, ${latest.amount}, ${latest.currency}, ${cadence}, 'gmail', ${category}, NOW(), ${latest.date})
+          `
+          created++
+        }
+      } catch (e) {
+        dbErrors++
+        log('db-error', { merchant, err: (e as Error).message })
+      }
     }
 
     await releaseScanLock(userId)
@@ -412,14 +524,17 @@ app.post('/scan', async (c) => {
     }
 
     const elapsed = Date.now() - t0
-    log('done', { scanned: allMessages.length, processed, detected, created, updated, analyzed, noAmount, fetchErrors, dbErrors, timedOut, listElapsed, elapsed })
+    log('done', { scanned: allMessages.length, processed, detected, candidates: candidates.length, merchants: byMerchant.size, created, updated, skippedOneOff, analyzed, noAmount, fetchErrors, dbErrors, timedOut, listElapsed, elapsed })
 
     const response: Record<string, unknown> = {
       scanned: allMessages.length,
       processed,
       detected,
+      candidates: candidates.length,
+      merchants: byMerchant.size,
       created,
       updated,
+      skipped_one_off: skippedOneOff,
       analyzed,
       no_amount: noAmount,
       fetch_errors: fetchErrors,
@@ -469,12 +584,17 @@ app.post('/parse', async (c) => {
   }>()
 
   if (!isSubscriptionEmail(body.subject, body.sender)) {
-    return c.json({ detected: false })
+    return c.json({ detected: false, reason: 'unknown_sender' })
+  }
+
+  const { isBilling } = classifyBilling(body.subject, body.body_snippet)
+  if (!isBilling) {
+    return c.json({ detected: false, reason: 'not_billing' })
   }
 
   const { name: merchant, category } = resolveMerchant(body.sender)
-  const amountResult = extractAmount(`${body.subject} ${body.body_snippet}`)
-  const cadence = detectCadence(body.subject)
+  const amountResult = extractBillingAmount(`${body.subject}\n${body.body_snippet}`)
+  const cadence = detectCadence(`${body.subject}\n${body.body_snippet}`)
 
   const dbUserId = await getOrCreateUser(userId)
 
