@@ -129,7 +129,7 @@ app.post('/evaluate', async (c) => {
   const dbUserId = await getOrCreateUser(userId)
 
   type DBPolicy = { id: string; name: string; trigger: string; action: string; conditions: PolicyConditions }
-  type DBSub = { id: string; merchant: string; amount: number; cadence: string; status: string; source: string; last_charged: string | null; created_at: string }
+  type DBSub = { id: string; merchant: string; amount: number; currency: string; cadence: string; status: string; source: string; last_charged: string | null; created_at: string }
   type DBEvent = { policy_id: string; subscription_id: string }
 
   const policies = (await sql`
@@ -140,11 +140,14 @@ app.post('/evaluate', async (c) => {
     FROM subscriptions WHERE user_id = ${dbUserId} AND status = 'active'
   `) as DBSub[]
 
+  // Normalize every subscription to a USD monthly figure so spend across mixed
+  // currencies (₦, $, €, CELO …) aggregates to a comparable number.
   const monthlyTotal = subs.reduce((sum: number, s: DBSub) => {
-    if (s.cadence === 'yearly') return sum + s.amount / 12
-    if (s.cadence === 'weekly') return sum + s.amount * 4.33
-    if (s.cadence === 'daily') return sum + s.amount * 30
-    return sum + s.amount
+    const usd = toUsd(s.amount, s.currency)
+    if (s.cadence === 'yearly') return sum + usd / 12
+    if (s.cadence === 'weekly') return sum + usd * 4.33
+    if (s.cadence === 'daily') return sum + usd * 30
+    return sum + usd
   }, 0)
 
   const fired: Array<{
@@ -162,28 +165,31 @@ app.post('/evaluate', async (c) => {
     WHERE policy_id = ANY(${policies.map((p) => p.id)})
   `) as DBEvent[]
   const firedSet = new Set(alreadyFired.map((e) => `${e.policy_id}:${e.subscription_id}`))
+  // A policy has a single trigger type, so any prior event for a spend_alert
+  // policy means it already fired (it never has per-subscription events).
+  const firedPolicyIds = new Set(alreadyFired.map((e) => e.policy_id))
 
   for (const policy of policies) {
     const cond: PolicyConditions = policy.conditions ?? {}
 
     if (policy.trigger === 'spend_alert') {
-      const threshold = cond.spend_threshold ?? 0
-      if (monthlyTotal >= threshold) {
-        const key = `${policy.id}:global`
-        if (!firedSet.has(key)) {
-          fired.push({
-            policy_id: policy.id,
-            policy_name: policy.name,
-            trigger: policy.trigger,
-            action: policy.action,
-            subscription_id: null,
-            merchant: null,
-            reason: `Monthly spend $${monthlyTotal.toFixed(2)} exceeds threshold $${threshold}`,
-          })
-          if (apply) {
-            await sql`INSERT INTO policy_events (policy_id, subscription_id, action) VALUES (${policy.id}, ${subs[0]?.id ?? null}, ${policy.action}) ON CONFLICT DO NOTHING`
-            await sql`UPDATE policies SET last_triggered_at = NOW() WHERE id = ${policy.id}`
-          }
+      // Threshold is compared in USD; convert it from its stated currency.
+      const threshold = toUsd(cond.spend_threshold ?? 0, cond.currency ?? 'USD')
+      // policy_events.subscription_id is NOT NULL, so a global alert needs a
+      // representative subscription to anchor its event row.
+      if (subs.length > 0 && monthlyTotal >= threshold && !firedPolicyIds.has(policy.id)) {
+        fired.push({
+          policy_id: policy.id,
+          policy_name: policy.name,
+          trigger: policy.trigger,
+          action: policy.action,
+          subscription_id: null,
+          merchant: null,
+          reason: `Monthly spend $${monthlyTotal.toFixed(2)} exceeds threshold $${threshold.toFixed(2)}`,
+        })
+        if (apply) {
+          await sql`INSERT INTO policy_events (policy_id, subscription_id, action) VALUES (${policy.id}, ${subs[0].id}, ${policy.action}) ON CONFLICT DO NOTHING`
+          await sql`UPDATE policies SET last_triggered_at = NOW() WHERE id = ${policy.id}`
         }
       }
     }
@@ -211,10 +217,7 @@ app.post('/evaluate', async (c) => {
             const newStatus = policy.action === 'cancel' ? 'cancelled' : policy.action === 'pause' ? 'paused' : sub.status
             if (newStatus !== sub.status) {
               await sql`UPDATE subscriptions SET status = ${newStatus} WHERE id = ${sub.id}`
-              await sql`
-                INSERT INTO actions (subscription_id, type, triggered_by, reversible)
-                VALUES (${sub.id}, ${policy.action}, 'policy', true)
-              `
+              await logAction({ subscriptionId: sub.id, actionType: policy.action, triggeredBy: 'policy', userPrivyDid: userId, reversible: true })
             }
             await sql`INSERT INTO policy_events (policy_id, subscription_id, action) VALUES (${policy.id}, ${sub.id}, ${policy.action}) ON CONFLICT DO NOTHING`
             await sql`UPDATE policies SET last_triggered_at = NOW() WHERE id = ${policy.id}`
@@ -240,10 +243,7 @@ app.post('/evaluate', async (c) => {
             const newStatus = policy.action === 'cancel' ? 'cancelled' : 'paused'
             if (newStatus !== sub.status) {
               await sql`UPDATE subscriptions SET status = ${newStatus} WHERE id = ${sub.id}`
-              await sql`
-                INSERT INTO actions (subscription_id, type, triggered_by, reversible)
-                VALUES (${sub.id}, ${policy.action}, 'policy', true)
-              `
+              await logAction({ subscriptionId: sub.id, actionType: policy.action, triggeredBy: 'policy', userPrivyDid: userId, reversible: true })
             }
             await sql`INSERT INTO policy_events (policy_id, subscription_id, action) VALUES (${policy.id}, ${sub.id}, ${policy.action}) ON CONFLICT DO NOTHING`
             await sql`UPDATE policies SET last_triggered_at = NOW() WHERE id = ${policy.id}`

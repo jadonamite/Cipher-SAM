@@ -4,10 +4,10 @@ import {
   isAgentConfigured,
   getAgentAddress,
   getPolicyContract,
-  buildAttestation,
   checkOnchainAuthorization,
   SCOPES,
 } from '../lib/agent.js'
+import { logAction } from '../lib/actions.js'
 
 const app = new Hono()
 
@@ -70,18 +70,15 @@ app.post('/attest', async (c) => {
   `
   if (!sub) return c.json({ error: 'Not found' }, 404)
 
-  const { payload, signature } = await buildAttestation(subscription_id, action_type, userId)
+  const { action, attestation } = await logAction({
+    subscriptionId: subscription_id,
+    actionType: action_type,
+    triggeredBy: triggered_by,
+    userPrivyDid: userId,
+    reversible,
+  })
 
-  const [action] = await sql`
-    INSERT INTO actions
-      (subscription_id, type, triggered_by, executed_at, reversible, signature, agent_address, metadata)
-    VALUES
-      (${subscription_id}, ${action_type}, ${triggered_by}, NOW(), ${reversible},
-       ${signature}, ${getAgentAddress()}, ${JSON.stringify(payload)})
-    RETURNING id, signature, agent_address, executed_at
-  `
-
-  return c.json({ action, attestation: payload })
+  return c.json({ action, attestation })
 })
 
 // GET /agent/history — recent actions for a user
