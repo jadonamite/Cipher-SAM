@@ -1,4 +1,7 @@
-const CELOSCAN_API = 'https://api.celoscan.io/api'
+// Etherscan V2 unified API — one key works across all chains via `chainid`.
+// Celo = 42220. The standalone Celoscan API is deprecated.
+const ETHERSCAN_API = 'https://api.etherscan.io/v2/api'
+const CELO_CHAIN_ID = '42220'
 
 type CeloscanTx = {
   hash: string
@@ -81,10 +84,14 @@ function confidence(txCount: number, amountCV: number, intervalCV: number): numb
   return Math.min(score, 95)
 }
 
-async function celoscanFetch(params: Record<string, string>): Promise<unknown[]> {
-  const apiKey = process.env.CELOSCAN_API_KEY
-  const query = new URLSearchParams({ ...params, ...(apiKey ? { apikey: apiKey } : {}) })
-  const res = await fetch(`${CELOSCAN_API}?${query}`, { signal: AbortSignal.timeout(10_000) })
+async function etherscanFetch(params: Record<string, string>): Promise<unknown[]> {
+  const apiKey = process.env.ETHERSCAN_API_KEY ?? ''
+  const query = new URLSearchParams({
+    chainid: CELO_CHAIN_ID,
+    ...params,
+    ...(apiKey ? { apikey: apiKey } : {}),
+  })
+  const res = await fetch(`${ETHERSCAN_API}?${query}`, { signal: AbortSignal.timeout(10_000) })
   const data = (await res.json()) as { status: string; result: unknown[] }
   if (data.status !== '1' || !Array.isArray(data.result)) return []
   return data.result
@@ -94,7 +101,7 @@ export async function detectWalletSubscriptions(walletAddress: string): Promise<
   const address = walletAddress.toLowerCase()
 
   const [nativeTxs, tokenTxs] = await Promise.all([
-    celoscanFetch({
+    etherscanFetch({
       module: 'account',
       action: 'txlist',
       address,
@@ -104,7 +111,7 @@ export async function detectWalletSubscriptions(walletAddress: string): Promise<
       offset: '500',
       sort: 'asc',
     }) as Promise<CeloscanTx[]>,
-    celoscanFetch({
+    etherscanFetch({
       module: 'account',
       action: 'tokentx',
       address,
