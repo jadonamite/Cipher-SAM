@@ -23,6 +23,10 @@ server/dist/
 *.log
 .vercel
 
+# Local scratch / throwaway verification scripts — never committed
+_scratch*
+**/_scratch*
+
 # Internal working docs — kept local, not published
 HANDOVER.md
 STATUS.md
