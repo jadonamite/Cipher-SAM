@@ -228,7 +228,9 @@ export const SUBSCRIPTION_REGISTRY: SubscriptionService[] = [
   { name: 'Microsoft 365', domains: ['microsoft.com', 'office.com', 'office365.com'], category: 'office', aliases: ['office365', 'microsoft 365'] },
   { name: 'Google Workspace', domains: ['workspace.google.com'], category: 'office', aliases: ['google workspace'] },
   { name: 'Apple', domains: ['apple.com', 'email.apple.com', 'noreply.apple.com'], category: 'office' },
-  { name: 'Google', domains: ['google.com', 'accounts.google.com'], category: 'office' },
+  // NB: bare google.com / accounts.google.com are intentionally NOT listed — they
+  // are overwhelmingly non-billing (security alerts, sign-ins). Paid Google
+  // products are covered by Google One / Workspace / AI Pro entries above.
 
   // ── Fitness / Health ─────────────────────────────────────────────────────
   { name: 'Strava', domains: ['strava.com'], category: 'fitness' },
