@@ -8,11 +8,12 @@ import {
   storeGmailTokens,
   getGmailTokens,
   hasGmailConnected,
+  getGmailSync,
+  setGmailSync,
 } from '../lib/cache.js'
 import { runAnalyzeAll } from '../lib/scoring.js'
 import {
   lookupService,
-  REGISTRY_FROM_QUERY,
   type SubscriptionCategory,
 } from '../lib/subscriptions-registry.js'
 
@@ -62,13 +63,6 @@ export function normalizeMerchant(raw: string): string {
 // ---------------------------------------------------------------------------
 
 export type Cadence = 'monthly' | 'yearly' | 'weekly' | 'daily'
-
-// A registry-domain email is only a *candidate* if its sender resolves to a
-// known service. This is a pre-filter — billing intent and recurrence are
-// enforced later (see classifyBilling + the grouping phase in /scan).
-export function isSubscriptionEmail(_subject: string, sender: string): boolean {
-  return lookupService(sender) !== null
-}
 
 // Words that indicate a real charge/receipt rather than a notification.
 const BILLING_KEYWORDS =
@@ -289,10 +283,13 @@ app.get('/callback', async (c) => {
 // POST /gmail/scan — main detection pipeline
 // ---------------------------------------------------------------------------
 
-// Registry-only Gmail query. Detection is strict-whitelist (see
-// isSubscriptionEmail), so there's no point scanning subject-pattern matches —
-// they would all be rejected downstream anyway.
-const GMAIL_QUERY = REGISTRY_FROM_QUERY
+// Content-based candidate query. We pull anything that looks like a purchase or
+// billing email from ANY sender — Gmail's own `category:purchases` classifier
+// plus billing-language subjects — and let classifyBilling + recurrence grouping
+// decide downstream. The registry is no longer a gate; it only enriches naming
+// and category after detection, so subscriptions outside the registry are caught.
+const GMAIL_QUERY =
+  'category:purchases OR subject:(receipt OR invoice OR subscription OR renewal OR renews OR "payment received" OR billed OR "your plan" OR "order confirmation")'
 
 const MAX_RESULTS = 200
 const BATCH_SIZE = 15
@@ -334,27 +331,20 @@ app.post('/scan', async (c) => {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client })
 
-    // --- Paginated message fetch ---
-    const allMessages: gmail_v1.Schema$Message[] = []
-    let pageToken: string | undefined
-    let pages = 0
-    const queryWithScope = `${GMAIL_QUERY} newer_than:1y`
-
-    do {
-      const listRes = await gmail.users.messages.list({
-        userId: 'me',
-        q: queryWithScope,
-        maxResults: 100,
-        ...(pageToken ? { pageToken } : {}),
-      })
-      const msgs = listRes.data.messages ?? []
-      allMessages.push(...msgs)
-      pageToken = listRes.data.nextPageToken ?? undefined
-      pages++
-      log('list', { page: pages, got: msgs.length, total: allMessages.length, resultSizeEstimate: listRes.data.resultSizeEstimate })
-    } while (pageToken && allMessages.length < MAX_RESULTS)
-
-    const listElapsed = Date.now() - t0
+    // --- Incremental scan window ---
+    // First scan backfills 1 year; later scans only fetch mail `after:` the last
+    // completed run; a scan cut short by the time budget resumes from its saved
+    // pageToken instead of restarting. Reprocessing a page is safe — Phase 2
+    // upserts idempotently.
+    const sync = await getGmailSync(userId)
+    const scanStartedAt = Math.floor(t0 / 1000)
+    const resuming = !!(sync.resumeToken && sync.resumeQuery)
+    const query = resuming
+      ? sync.resumeQuery!
+      : sync.lastCompletedAt
+        ? `${GMAIL_QUERY} after:${sync.lastCompletedAt}`
+        : `${GMAIL_QUERY} newer_than:1y`
+    log('window', { resuming, lastCompletedAt: sync.lastCompletedAt ?? null, query_len: query.length })
 
     let detected = 0       // emails that pass the billing-intent gate
     let noAmount = 0       // billing emails with no parseable amount
@@ -374,84 +364,110 @@ app.post('/scan', async (c) => {
     }
     const candidates: Candidate[] = []
 
-    // --- Phase 1: collect billing candidates (parallel batches, time-boxed) ---
+    // --- Phase 1: interleaved list + fetch, time-boxed and resumable ---
     const TIME_BUDGET_MS = 50_000
     let timedOut = false
+    let exhausted = false
     let processed = 0
+    let scanned = 0
+    let pages = 0
+    // Token to (re)start from if this run is cut short.
+    let nextToken: string | undefined = resuming ? sync.resumeToken : undefined
+    let resumeAt: string | undefined = nextToken
 
-    for (let i = 0; i < allMessages.length; i += BATCH_SIZE) {
-      if (Date.now() - t0 > TIME_BUDGET_MS) {
-        timedOut = true
-        log('time-budget-exceeded', { processed, total: allMessages.length })
-        break
-      }
-      const batch = allMessages.slice(i, i + BATCH_SIZE)
+    do {
+      if (Date.now() - t0 > TIME_BUDGET_MS) { timedOut = true; break }
 
-      await Promise.all(
-        batch.map(async (msg) => {
-          if (!msg.id) return
-          processed++
+      const tokenForThisPage = nextToken
+      const listRes = await gmail.users.messages.list({
+        userId: 'me',
+        q: query,
+        maxResults: 100,
+        ...(tokenForThisPage ? { pageToken: tokenForThisPage } : {}),
+      })
+      const msgs = listRes.data.messages ?? []
+      nextToken = listRes.data.nextPageToken ?? undefined
+      pages++
+      scanned += msgs.length
+      log('list', { page: pages, got: msgs.length, scanned, hasNext: !!nextToken })
 
-          let full
-          try {
-            full = await gmail.users.messages.get({
-              userId: 'me',
-              id: msg.id,
-              format: 'full',
+      for (let i = 0; i < msgs.length; i += BATCH_SIZE) {
+        if (Date.now() - t0 > TIME_BUDGET_MS) {
+          timedOut = true
+          resumeAt = tokenForThisPage   // page unfinished — redo it next run
+          log('time-budget-exceeded', { processed, scanned })
+          break
+        }
+        const batch = msgs.slice(i, i + BATCH_SIZE)
+
+        await Promise.all(
+          batch.map(async (msg) => {
+            if (!msg.id) return
+            processed++
+
+            let full
+            try {
+              full = await gmail.users.messages.get({
+                userId: 'me',
+                id: msg.id,
+                format: 'full',
+              })
+            } catch (e) {
+              fetchErrors++
+              log('fetch-error', { id: msg.id, err: (e as Error).message })
+              return
+            }
+
+            const headers = full.data.payload?.headers ?? []
+            const subject = headers.find((h) => h.name === 'Subject')?.value ?? ''
+            const from = headers.find((h) => h.name === 'From')?.value ?? ''
+            const dateRaw = headers.find((h) => h.name === 'Date')?.value ?? ''
+            const parsedDate = dateRaw ? new Date(dateRaw) : null
+            const date = parsedDate && !isNaN(parsedDate.getTime())
+              ? parsedDate.toISOString()
+              : new Date().toISOString()
+            const snippet = full.data.snippet ?? ''
+
+            const body = full.data.payload ? getEmailBody(full.data.payload) : ''
+            const { isBilling, explicit } = classifyBilling(subject, body)
+            if (!isBilling) {
+              if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from, reason: 'not_billing' })
+              return
+            }
+
+            const searchText = `${subject}\n${snippet}\n${body}`.slice(0, 4000)
+            const money = extractBillingAmount(searchText)
+            if (!money) {
+              noAmount++
+              if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from, reason: 'no_amount' })
+              return
+            }
+
+            detected++
+            const { name: merchant, category } = resolveMerchant(from)
+            candidates.push({
+              merchant,
+              category,
+              amount: money.amount,
+              currency: money.currency,
+              date,
+              cadenceHint: detectCadence(`${subject}\n${snippet}`),
+              explicit,
             })
-          } catch (e) {
-            fetchErrors++
-            log('fetch-error', { id: msg.id, err: (e as Error).message })
-            return
-          }
-
-          const headers = full.data.payload?.headers ?? []
-          const subject = headers.find((h) => h.name === 'Subject')?.value ?? ''
-          const from = headers.find((h) => h.name === 'From')?.value ?? ''
-          const dateRaw = headers.find((h) => h.name === 'Date')?.value ?? ''
-          const parsedDate = dateRaw ? new Date(dateRaw) : null
-          const date = parsedDate && !isNaN(parsedDate.getTime())
-            ? parsedDate.toISOString()
-            : new Date().toISOString()
-          const snippet = full.data.snippet ?? ''
-
-          if (!isSubscriptionEmail(subject, from)) {
-            if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from, reason: 'unknown_sender' })
-            return
-          }
-
-          const body = full.data.payload ? getEmailBody(full.data.payload) : ''
-          const { isBilling, explicit } = classifyBilling(subject, body)
-          if (!isBilling) {
-            if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from, reason: 'not_billing' })
-            return
-          }
-
-          const searchText = `${subject}\n${snippet}\n${body}`.slice(0, 4000)
-          const money = extractBillingAmount(searchText)
-          if (!money) {
-            noAmount++
-            if (rejectedSamples.length < 10) rejectedSamples.push({ subject, from, reason: 'no_amount' })
-            return
-          }
-
-          detected++
-          const { name: merchant, category } = resolveMerchant(from)
-          candidates.push({
-            merchant,
-            category,
-            amount: money.amount,
-            currency: money.currency,
-            date,
-            cadenceHint: detectCadence(`${subject}\n${snippet}`),
-            explicit,
+            if (acceptedSamples.length < 10) {
+              acceptedSamples.push({ subject, from, merchant, amount: money.amount, currency: money.currency })
+            }
           })
-          if (acceptedSamples.length < 10) {
-            acceptedSamples.push({ subject, from, merchant, amount: money.amount, currency: money.currency })
-          }
-        })
-      )
-    }
+        )
+      }
+
+      if (timedOut) break
+      resumeAt = nextToken            // page fully processed — resume from next
+      if (!nextToken) { exhausted = true; break }
+    } while (processed < MAX_RESULTS)
+
+    if (!exhausted && !timedOut && nextToken) resumeAt = nextToken  // hit MAX_RESULTS cap
+    const listElapsed = Date.now() - t0
 
     // --- Phase 2: group by merchant and enforce recurrence (Balanced mode) ---
     // A merchant becomes a subscription only with >=2 billing emails (recurrence)
@@ -512,6 +528,20 @@ app.post('/scan', async (c) => {
       }
     }
 
+    // Persist incremental sync state. A fully-drained scan advances the
+    // high-water mark and clears any resume cursor; a cut-short scan keeps the
+    // old mark and saves where to resume.
+    const complete = exhausted && !timedOut
+    if (complete) {
+      await setGmailSync(userId, { lastCompletedAt: scanStartedAt })
+    } else {
+      await setGmailSync(userId, {
+        lastCompletedAt: sync.lastCompletedAt,
+        resumeToken: resumeAt,
+        resumeQuery: query,
+      })
+    }
+
     await releaseScanLock(userId)
 
     // Auto-score all subs now that detection is fresh — no AI calls, just DB writes.
@@ -524,10 +554,10 @@ app.post('/scan', async (c) => {
     }
 
     const elapsed = Date.now() - t0
-    log('done', { scanned: allMessages.length, processed, detected, candidates: candidates.length, merchants: byMerchant.size, created, updated, skippedOneOff, analyzed, noAmount, fetchErrors, dbErrors, timedOut, listElapsed, elapsed })
+    log('done', { scanned, processed, detected, candidates: candidates.length, merchants: byMerchant.size, created, updated, skippedOneOff, analyzed, noAmount, fetchErrors, dbErrors, timedOut, complete, resumed: resuming, listElapsed, elapsed })
 
     const response: Record<string, unknown> = {
-      scanned: allMessages.length,
+      scanned,
       processed,
       detected,
       candidates: candidates.length,
@@ -540,12 +570,15 @@ app.post('/scan', async (c) => {
       fetch_errors: fetchErrors,
       db_errors: dbErrors,
       timed_out: timedOut,
+      complete,
+      incremental: !!sync.lastCompletedAt && !resuming,
+      resumed: resuming,
       elapsed_ms: elapsed,
     }
     if (debug) {
       response.debug = {
-        query: queryWithScope,
-        query_len: queryWithScope.length,
+        query,
+        query_len: query.length,
         pages,
         list_elapsed_ms: listElapsed,
         rejected_samples: rejectedSamples,
@@ -582,10 +615,6 @@ app.post('/parse', async (c) => {
     body_snippet: string
     received_at: string
   }>()
-
-  if (!isSubscriptionEmail(body.subject, body.sender)) {
-    return c.json({ detected: false, reason: 'unknown_sender' })
-  }
 
   const { isBilling } = classifyBilling(body.subject, body.body_snippet)
   if (!isBilling) {

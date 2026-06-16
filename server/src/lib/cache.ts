@@ -14,6 +14,7 @@ const TTL = {
   scan: 60 * 2,
   wallet_scan: 60 * 2,
   gmail_token: 60 * 60 * 24 * 30,
+  gmail_sync: 60 * 60 * 24 * 180,
 }
 
 export async function getCachedInsight(subId: string): Promise<string | null> {
@@ -63,4 +64,29 @@ export async function getGmailTokens(userId: string): Promise<GmailTokens | null
 export async function hasGmailConnected(userId: string): Promise<boolean> {
   const tokens = await getGmailTokens(userId)
   return !!tokens?.refresh_token
+}
+
+// Incremental Gmail scan state. `lastCompletedAt` is the epoch-seconds
+// high-water mark of the last fully-drained scan; subsequent scans only fetch
+// mail `after:` it. `resumeToken`/`resumeQuery` hold a Gmail pageToken when a
+// scan was cut short by the time budget, so the next run continues instead of
+// restarting from the cap.
+export type GmailSyncState = {
+  lastCompletedAt?: number
+  resumeToken?: string
+  resumeQuery?: string
+}
+
+export async function getGmailSync(userId: string): Promise<GmailSyncState> {
+  const raw = await redis.get<string>(`gmail_sync:${userId}`)
+  if (!raw) return {}
+  try {
+    return typeof raw === 'string' ? JSON.parse(raw) : (raw as GmailSyncState)
+  } catch {
+    return {}
+  }
+}
+
+export async function setGmailSync(userId: string, state: GmailSyncState): Promise<void> {
+  await redis.set(`gmail_sync:${userId}`, JSON.stringify(state), { ex: TTL.gmail_sync })
 }
