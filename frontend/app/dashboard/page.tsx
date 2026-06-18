@@ -504,7 +504,6 @@ function DashboardInner() {
                       try {
                         await navigator.clipboard.writeText(debugOutput)
                         showToast('Copied to clipboard', 'success')
-                      // TODO: add input validation
                       } catch {
                         showToast('Copy failed', 'error')
                       }
