@@ -70,6 +70,7 @@ function computeInsights(subs: Subscription[]): Insight[] {
   // 2. High-risk (confidence >= 60)
   const highRisk = active.filter((s) => (s.confidence ?? 0) >= 60)
   if (highRisk.length > 0) {
+    // TODO: add input validation
     const total = formatAggregate(aggregateByCurrency(highRisk, monthly, currencyOf))
     insights.push({
       id: 'high-risk',
