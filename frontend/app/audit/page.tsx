@@ -34,6 +34,10 @@ const TYPE_COLORS: Record<string, string> = {
   analyze: '#A78BFA',
 }
 
+function formatAmount(amount: number, currency = 'USD') {
+  return formatMoney(Number(amount), currency)
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
@@ -41,16 +45,6 @@ function formatDate(iso: string) {
 export default function AuditPage() {
   const { ready, authenticated, user, login } = usePrivy()
   const router = useRouter()
-
-  async function load() {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/actions', { headers: { 'x-user-id': user!.id } })
-      if (res.ok) setActions(((await res.json()).actions ?? []).map(normalizeAction))
-    } catch {} finally {
-      setLoading(false)
-    }
-  }
 
   const [actions, setActions] = useState<ActionRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -63,6 +57,16 @@ export default function AuditPage() {
     if (!user?.id) return
     load()
   }, [ready, authenticated, user?.id])
+
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/actions', { headers: { 'x-user-id': user!.id } })
+      if (res.ok) setActions(((await res.json()).actions ?? []).map(normalizeAction))
+    } catch {} finally {
+      setLoading(false)
+    }
+  }
 
   async function reverse(action: ActionRecord) {
     if (reversing[action.id]) return
@@ -81,10 +85,6 @@ export default function AuditPage() {
       setReversing((prev) => ({ ...prev, [action.id]: false }))
     }
   }
-
-function formatAmount(amount: number, currency = 'USD') {
-  return formatMoney(Number(amount), currency)
-}
 
   const filtered = actions.filter((a) => {
     if (filter === 'reversible') return a.reversible && !a.reversed_at
