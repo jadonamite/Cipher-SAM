@@ -32,11 +32,6 @@ function getCategory(merchant: string): string {
   return 'Other'
 }
 
-/**
- * groupByCategory
- * @param {*} subs: Subscription[]
- * @returns {*}
- */
 function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
   const groups: Record<string, Subscription[]> = {}
   for (const sub of subs) {
