@@ -1,17 +1,18 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+'use client'
+
+import { motion, useInView } from 'framer-motion'
+import { useRef } from 'react'
 
 const pillars = [
   'Read-only Gmail access. SAM cannot send or delete.',
   'Every action requires your approval in Phase 1.',
   'All execution is logged, auditable, and reversible.',
-];
-
-const calculateDelay = (index: number) => 0.3 + index * 0.12;
+]
 
 function CheckLine({ text, delay }: { text: string; delay: number }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-40px' });
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-40px' })
+
   return (
     <motion.div
       ref={ref}
@@ -41,23 +42,24 @@ function CheckLine({ text, delay }: { text: string; delay: number }) {
         animate={inView ? { x: 0 } : {}}
         transition={{ duration: 0.4, delay: delay + 0.1 }}
         className="text-secondary"
-        style={{
-          fontFamily: 'var(--font-geist-sans)',
-          fontSize: '15px',
-          lineHeight: '1.6'
-        }}
+        style={{ fontFamily: 'var(--font-geist-sans)', fontSize: '15px', lineHeight: '1.6' }}
       >
         {text}
       </motion.p>
     </motion.div>
-  );
+  )
 }
 
 export default function TrustSection() {
-  const sectionRef = useRef(null);
-  const inView = useInView(sectionRef, { once: true, margin: '-80px' });
+  const sectionRef = useRef(null)
+  const inView = useInView(sectionRef, { once: true, margin: '-80px' })
+
   return (
-    <section ref={sectionRef} className="py-20 sm:py-32" style={{ backgroundColor: '#141414' }}>
+    <section
+      ref={sectionRef}
+      className="py-20 sm:py-32"
+      style={{ backgroundColor: '#141414' }}
+    >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-16">
         <div className="flex flex-col lg:flex-row gap-10 sm:gap-16 lg:gap-24 items-start">
           {/* Left headline */}
@@ -67,11 +69,7 @@ export default function TrustSection() {
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4 }}
               className="text-muted uppercase mb-4"
-              style={{
-                fontFamily: 'var(--font-dm-mono)',
-                fontSize: '10px',
-                letterSpacing: '0.16em'
-              }}
+              style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '10px', letterSpacing: '0.16em' }}
             >
               Trust model
             </motion.p>
@@ -83,36 +81,33 @@ export default function TrustSection() {
               style={{
                 fontFamily: 'var(--font-syne)',
                 fontSize: 'clamp(32px, 4vw, 52px)',
-                letterSpacing: '-0.03em'
+                letterSpacing: '-0.03em',
               }}
             >
               "SAM acts
               <br />
-              <span style={{ color: '#E50914' }}>when you say so.</span>
+              <span style={{ color: '#E50914' }}>when you say so."</span>
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 16 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="text-secondary mt-6"
-              style={{
-                fontFamily: 'var(--font-geist-sans)',
-                fontSize: '14px',
-                maxWidth: '340px',
-                lineHeight: '1.7'
-              }}
+              style={{ fontFamily: 'var(--font-geist-sans)', fontSize: '14px', maxWidth: '340px', lineHeight: '1.7' }}
             >
-              Progressive trust. SAM starts with visibility and earns execution rights through performance — never the other way around.
+              Progressive trust. SAM starts with visibility and earns execution rights
+              through performance — never the other way around.
             </motion.p>
           </div>
+
           {/* Right pillars */}
           <div className="flex-1">
             {pillars.map((text, i) => (
-              <CheckLine key={text} text={text} delay={calculateDelay(i)} />
+              <CheckLine key={text} text={text} delay={0.3 + i * 0.12} />
             ))}
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }

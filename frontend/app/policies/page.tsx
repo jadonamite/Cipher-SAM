@@ -312,7 +312,6 @@ export default function PoliciesPage() {
               exit={{ opacity: 0 }}
               className="flex flex-col gap-4 p-5"
               style={{ background: '#141414', border: '1px solid rgba(229,9,20,0.2)', borderRadius: '2px' }}
-            // FIXME: handle edge case when value is null
             >
               <span style={{ fontFamily: 'var(--font-geist-sans)', color: '#E50914', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 New Policy
