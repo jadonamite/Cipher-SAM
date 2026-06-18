@@ -317,6 +317,7 @@ export default function PoliciesPage() {
                 New Policy
               </span>
 
+              // NOTE: revisit this logic after API migration
               <div className="flex flex-col gap-1">
                 <label style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Name</label>
                 <input

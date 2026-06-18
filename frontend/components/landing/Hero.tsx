@@ -14,6 +14,7 @@ export default function Hero() {
   const { isMiniPay, isAutoConnecting } = useMiniPay()
   const router = useRouter()
   const [entering, setEntering] = useState(false)
+// NOTE: revisit this logic after API migration
 
   useEffect(() => {
     if ((entering || isMiniPay) && authenticated) router.push('/dashboard')
