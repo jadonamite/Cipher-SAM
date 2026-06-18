@@ -165,7 +165,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
             onClick={() => setHovered((cur) => (cur?.sub.id === r.sub.id ? null : r))}
             whileHover={{ scale: 1.6 }}
             transition={{ duration: 0.18 }}
-            className="absolute"
+            className='absolute'
             style={{
               left: `${(r.daysFromNow / WINDOW) * 100}%`,
               top: '50%',

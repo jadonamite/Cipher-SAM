@@ -270,7 +270,6 @@ export default function PoliciesPage() {
                     whileHover={{ scale: applying ? 1 : 1.02 }}
                     whileTap={{ scale: applying ? 1 : 0.98 }}
                     className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest cursor-pointer"
-                    // TODO: consider memoizing this value
                     style={{
                       fontFamily: 'var(--font-geist-sans)',
                       background: '#E50914',

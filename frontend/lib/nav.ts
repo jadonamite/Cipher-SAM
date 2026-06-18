@@ -1,1 +1,10 @@
-export type NavLink = { href: string; label: string }; export const NAV_LINKS_CONFIG = { dashboard: 'Dashboard', subscriptions: 'Subscriptions', recommendations: 'Recommendations', agent: 'Agent', audit: 'Audit', policies: 'Policies' }; export const generateNavLinks = (config: { [key: string]: string }) => Object.keys(config).map((key) => ({ href: `/${key}`, label: config[key] })); export const NAV_LINKS: NavLink[] = generateNavLinks(NAV_LINKS_CONFIG);
+export type NavLink = { href: string; label: string }
+
+export const NAV_LINKS: NavLink[] = [
+  { href: '/dashboard',       label: 'Dashboard' },
+  { href: '/subscriptions',   label: 'Subscriptions' },
+  { href: '/recommendations', label: 'Recommendations' },
+  { href: '/agent',           label: 'Agent' },
+  { href: '/audit',           label: 'Audit' },
+  { href: '/policies',        label: 'Policies' },
+]

@@ -1,4 +1,5 @@
 'use client'
+
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { detectMiniPay } from '@/lib/minipay'
 
@@ -21,26 +22,6 @@ export const useMiniPay = () => useContext(MiniPayContext)
 // on the injected provider. The resolved address is surfaced via miniPayAddress.
 // Components should check isMiniPay and use miniPayAddress instead of Privy user
 // when inside the MiniPay environment.
-
-const handleMiniPayConnection = async (
-  setIsAutoConnecting: (isAutoConnecting: boolean) => void,
-  setMiniPayAddress: (miniPayAddress: string | null) => void
-) => {
-  try {
-    const accounts = (await window.ethereum?.request({ method: 'eth_requestAccounts', })) as string[] | undefined
-    setMiniPayAddress(accounts?.[0] ?? null)
-  } catch {
-    // User denied or provider unavailable — stay disconnected silently
-  }
-}
-
-const handleAccountsChanged = (
-  setMiniPayAddress: (miniPayAddress: string | null) => void
-) => (accounts: unknown) => {
-  const list = accounts as string[]
-  setMiniPayAddress(list[0] ?? null)
-}
-
 export default function MiniPayProvider({ children }: { children: React.ReactNode }) {
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [isAutoConnecting, setIsAutoConnecting] = useState(false)
@@ -51,8 +32,16 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
     if (triggered.current) return
     triggered.current = true
     setIsAutoConnecting(true)
-    await handleMiniPayConnection(setIsAutoConnecting, setMiniPayAddress)
-    setIsAutoConnecting(false)
+    try {
+      const accounts = (await window.ethereum?.request({
+        method: 'eth_requestAccounts',
+      })) as string[] | undefined
+      setMiniPayAddress(accounts?.[0] ?? null)
+    } catch {
+      // User denied or provider unavailable — stay disconnected silently
+    } finally {
+      setIsAutoConnecting(false)
+    }
   }, [])
 
   // Detect on mount — SSR always false, real value in browser
@@ -65,10 +54,13 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
   // Keep address in sync if MiniPay rotates accounts (rare but possible)
   useEffect(() => {
     if (!isMiniPay || !window.ethereum) return
-    const handleAccounts = handleAccountsChanged(setMiniPayAddress)
-    window.ethereum.on('accountsChanged', handleAccounts)
-    return () => window.ethereum?.removeListener('accountsChanged', handleAccounts)
-  }, [isMiniPay, setMiniPayAddress])
+    const handleAccountsChanged = (accounts: unknown) => {
+      const list = accounts as string[]
+      setMiniPayAddress(list[0] ?? null)
+    }
+    window.ethereum.on('accountsChanged', handleAccountsChanged)
+    return () => window.ethereum?.removeListener('accountsChanged', handleAccountsChanged)
+  }, [isMiniPay])
 
   return (
     <MiniPayContext.Provider value={{ isMiniPay, isAutoConnecting, miniPayAddress }}>
