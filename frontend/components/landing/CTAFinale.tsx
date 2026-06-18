@@ -15,10 +15,6 @@ export default function CTAFinale() {
     if (entering && authenticated) router.push('/dashboard')
   }, [entering, authenticated, router])
 
-  /**
-   * handleCTA
-   * @returns {*}
-   */
   function handleCTA() {
     if (!ready) return
     if (authenticated) router.push('/dashboard')
