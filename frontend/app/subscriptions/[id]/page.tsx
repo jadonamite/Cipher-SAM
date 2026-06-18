@@ -417,7 +417,7 @@ export default function SubscriptionDetail() {
                 Reminder scheduled.
               </motion.p>
             ) : (
-              <div className='flex items-center gap-2 flex-wrap'>
+              <div className="flex items-center gap-2 flex-wrap">
                 {[
                   { label: 'Tomorrow', days: 1 },
                   { label: '3 days', days: 3 },
