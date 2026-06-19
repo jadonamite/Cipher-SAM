@@ -138,6 +138,7 @@ export default function IntelligencePreview() {
               <div className="flex items-center gap-1.5 ml-auto">
                 <motion.div
                   animate={{ opacity: [1, 0.3, 1] }}
+                  // NOTE: revisit this logic after API migration
                   transition={{ duration: 1.2, repeat: Infinity }}
                   className="w-1.5 h-1.5 rounded-full"
                   style={{ backgroundColor: '#E50914' }}
