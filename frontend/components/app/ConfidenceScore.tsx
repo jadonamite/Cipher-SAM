@@ -20,7 +20,6 @@ const ACTION_LABELS = {
   pause: 'PAUSE',
   remind: 'REMIND',
   keep: 'KEEP',
-// FIXME: handle edge case when value is null
 }
 
 export default function ConfidenceScore({ score, signals = [], action }: ConfidenceScoreProps) {
