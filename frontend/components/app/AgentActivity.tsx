@@ -29,6 +29,11 @@ function formatRelative(date: string): string {
   return `${days}d ago`
 }
 
+/**
+ * describeAction
+ * @param {*} a: AgentAction
+ * @returns {*}
+ */
 function describeAction(a: AgentAction): string {
   const t = a.type.toLowerCase()
   if (t.includes('cancel')) return `Cancelled ${a.merchant}`
