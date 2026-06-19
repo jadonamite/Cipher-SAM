@@ -8,7 +8,7 @@ import { aggregateByCurrency, formatAggregate, formatMoney } from '@/lib/format'
 interface Renewal {
   sub: Subscription
   date: Date
-  daysFromNow: number,
+  daysFromNow: number
 }
 
 function cadenceDays(c: Subscription['cadence']): number {

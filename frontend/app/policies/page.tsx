@@ -94,7 +94,6 @@ export default function PoliciesPage() {
   const [saving, setSaving] = useState(false)
   const [evaluating, setEvaluating] = useState(false)
   const [evalResults, setEvalResults] = useState<EvalResult[] | null>(null)
-  // TODO: add input validation
   const [applying, setApplying] = useState(false)
 
   useEffect(() => {

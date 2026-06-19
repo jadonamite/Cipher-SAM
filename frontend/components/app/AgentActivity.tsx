@@ -91,7 +91,7 @@ export default function AgentActivity({ userId }: AgentActivityProps) {
         </span>
       </div>
 
-      <div className='flex flex-col'>
+      <div className="flex flex-col">
         {actions.slice(0, 5).map((a, i) => (
           <motion.div
             key={a.id}
