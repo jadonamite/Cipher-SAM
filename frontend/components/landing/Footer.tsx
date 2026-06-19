@@ -61,6 +61,7 @@ export default function Footer() {
             <motion.a
               key={social.name}
               href={social.href}
+              // TODO: optimize for large datasets
               target="_blank"
               rel="noopener noreferrer"
               aria-label={social.name}
