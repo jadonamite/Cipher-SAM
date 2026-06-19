@@ -1,57 +1,53 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
-import CountUp from 'react-countup';
+'use client'
+
+import { motion, useInView } from 'framer-motion'
+import { useRef } from 'react'
+import CountUp from 'react-countup'
 
 const lines = [
   { text: "Netflix you haven't opened in 4 months.", price: '$15.99/mo' },
   { text: 'Figma Pro, even though you use the free tier.', price: '$15/mo' },
   { text: 'That productivity app from 2023.', price: '$8/mo' },
-];
+]
 
-const renderStrikeoutLine = ({ text, price, delay }: { text: string; price: string; delay: number }) => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
+function StrikeoutLine({
+  text,
+  price,
+  delay,
+}: {
+  text: string
+  price: string
+  delay: number
+}) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
 
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, x: -24 }}
       animate={inView ? { opacity: 1, x: 0 } : {}}
-      transition={{
-        duration: 0.5,
-        delay,
-        ease: [0.25, 0.1, 0.25, 1],
-      }}
+      transition={{ duration: 0.5, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className="flex items-baseline gap-3 py-4"
       style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
     >
       <span
         className="text-secondary"
-        style={{
-          fontFamily: 'var(--font-geist-sans)',
-          fontSize: '15px',
-        }}
+        style={{ fontFamily: 'var(--font-geist-sans)', fontSize: '15px' }}
       >
         {text}
       </span>
       <span className="relative inline-flex items-center shrink-0">
         <span
           className="text-secondary"
-          style={{
-            fontFamily: 'var(--font-dm-mono)',
-            fontSize: '14px',
-          }}
+          style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '14px' }}
         >
           {price}
         </span>
         <motion.span
           initial={{ scaleX: 0 }}
           animate={inView ? { scaleX: 1 } : {}}
-          transition={{
-            duration: 0.4,
-            delay: delay + 0.3,
-            ease: 'easeOut',
-          }}
+          transition={{ duration: 0.4, delay: delay + 0.3, ease: 'easeOut' }}
           className="absolute inset-x-0 top-1/2 -translate-y-1/2"
           style={{
             height: '1.5px',
@@ -61,12 +57,12 @@ const renderStrikeoutLine = ({ text, price, delay }: { text: string; price: stri
         />
       </span>
     </motion.div>
-  );
-};
+  )
+}
 
 export default function Problem() {
-  const sectionRef = useRef(null);
-  const inView = useInView(sectionRef, { once: true, margin: '-80px' });
+  const sectionRef = useRef(null)
+  const inView = useInView(sectionRef, { once: true, margin: '-80px' })
 
   return (
     <section
@@ -95,6 +91,7 @@ export default function Problem() {
               )}
             </div>
           </div>
+
           {/* Text side */}
           <div className="flex-1 pt-4 lg:pt-8">
             <motion.p
@@ -113,18 +110,20 @@ export default function Problem() {
               <br />
               Remembers 8.
             </motion.p>
+
             <div>
               {lines.map((line, i) => (
-                <>{renderStrikeoutLine({
-                  text: line.text,
-                  price: line.price,
-                  delay: 0.4 + i * 0.15,
-                })}</>
+                <StrikeoutLine
+                  key={line.price}
+                  text={line.text}
+                  price={line.price}
+                  delay={0.4 + i * 0.15}
+                />
               ))}
             </div>
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }
