@@ -279,6 +279,7 @@ export default function SubscriptionsPage() {
             </p>
           </div>
         ) : filter === 'all' ? (
+          // Grouped by category when showing all
           <div className="flex flex-col gap-8">
             {Object.entries(groups).map(([category, items]) => (
               <motion.div
