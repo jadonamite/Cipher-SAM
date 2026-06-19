@@ -1,5 +1,4 @@
 'use client'
-
 import { motion } from 'framer-motion'
 
 interface AgentStatusBarProps {
@@ -8,26 +7,29 @@ interface AgentStatusBarProps {
   subCount?: number
 }
 
-function formatRelative(date: Date | string | null | undefined): string {
-  if (!date) return 'never'
+function calculateTimeDiff(date: Date | string | null | undefined): number {
+  if (!date) return Infinity
   const d = typeof date === 'string' ? new Date(date) : date
-  const diff = Date.now() - d.getTime()
+  return Date.now() - d.getTime()
+}
+
+function formatRelative(date: Date | string | null | undefined): string {
+  const diff = calculateTimeDiff(date)
+  if (diff === Infinity) return 'never'
   const mins = Math.floor(diff / 60_000)
   if (mins < 1) return 'just now'
   if (mins < 60) return `${mins}m ago`
   const hrs = Math.floor(mins / 60)
   if (hrs < 24) return `${hrs}h ago`
   const days = Math.floor(hrs / 24)
-  return `${days}d ago`
+  return `${days}d ago'
 }
 
 export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
   const status = scanning ? 'SCANNING' : 'ACTIVE'
   const dotColor = scanning ? '#E50914' : '#16A34A'
-
   return (
-    <div
-      className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2.5 border-b overflow-x-auto whitespace-nowrap"
+    <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2.5 border-b overflow-x-auto whitespace-nowrap"
       style={{
         borderColor: 'rgba(255,255,255,0.04)',
         background: 'rgba(20,20,20,0.4)',
@@ -59,17 +61,11 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
           {status}
         </span>
       </div>
-
       <Divider />
-
       <Field label="SUBS">{subCount}</Field>
-
       <Divider />
-
       <Field label="LAST SCAN">{formatRelative(lastScan)}</Field>
-
       <Divider />
-
       <Field label="AGENT">SAM v0.1</Field>
     </div>
   )
@@ -93,7 +89,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       >
         {label}
       </span>
-      <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#A3A3A3', fontSize: '11px' }}>
+      <span
+        style={{
+          fontFamily: 'var(--font-dm-mono)',
+          color: '#A3A3A3',
+          fontSize: '11px'
+        }}
+      >
         {children}
       </span>
     </div>
