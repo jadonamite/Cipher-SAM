@@ -92,6 +92,7 @@ export default function NotificationCascade() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-1">
         <span
+          // TODO: add error boundary here
           className="uppercase text-muted"
           style={{
             fontFamily: 'var(--font-dm-mono)',
