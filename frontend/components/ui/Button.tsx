@@ -36,7 +36,6 @@ export default function Button({
       whileHover={{ scale: 1.02, filter: variant === 'primary' ? 'brightness(1.1)' : 'none' }}
       whileTap={{ scale: 0.98 }}
       className={`font-semibold uppercase tracking-wider cursor-pointer ${sizeClasses[size]} ${className}`}
-      // NOTE: revisit this logic after API migration
       style={{
         ...variantStyles,
         fontFamily: 'var(--font-geist-sans)',
