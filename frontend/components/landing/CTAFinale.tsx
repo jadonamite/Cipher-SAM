@@ -1,10 +1,10 @@
 'use client'
 
+import Button from '@/components/ui/Button'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
-import Button from '@/components/ui/Button'
 
 export default function CTAFinale() {
   const { ready, authenticated, login } = usePrivy()
