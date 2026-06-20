@@ -1,32 +1,43 @@
-'use client'
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Button from '@/components/ui/Button';
+import NotificationCascade from '@/components/landing/NotificationCascade';
+import { useMiniPay } from '@/components/providers/MiniPayProvider';
 
-import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import { usePrivy } from '@privy-io/react-auth'
-import { useRouter } from 'next/navigation'
-import Image from 'next/image'
-import Button from '@/components/ui/Button'
-import NotificationCascade from '@/components/landing/NotificationCascade'
-import { useMiniPay } from '@/components/providers/MiniPayProvider'
+const shouldRedirectToDashboard = (entering: boolean, isMiniPay: boolean, authenticated: boolean) => {
+  return (entering || isMiniPay) && authenticated;
+};
+
+const handleLoginOrRedirect = (
+  ready: boolean,
+  isMiniPay: boolean,
+  authenticated: boolean,
+  entering: boolean,
+  setEntering: (entering: boolean) => void,
+  login: () => void,
+  router: any
+) => {
+  if (!ready || isMiniPay) return;
+  if (authenticated) router.push('/dashboard');
+  else {
+    setEntering(true);
+    login();
+  }
+};
 
 export default function Hero() {
-  const { ready, authenticated, login } = usePrivy()
-  const { isMiniPay, isAutoConnecting } = useMiniPay()
-  const router = useRouter()
-  const [entering, setEntering] = useState(false)
+  const { ready, authenticated, login } = usePrivy();
+  const { isMiniPay, isAutoConnecting } = useMiniPay();
+  const router = useRouter();
+  const [entering, setEntering] = useState(false);
 
   useEffect(() => {
-    if ((entering || isMiniPay) && authenticated) router.push('/dashboard')
-  }, [entering, isMiniPay, authenticated, router])
-
-  function handleCTA() {
-    if (!ready || isMiniPay) return
-    if (authenticated) router.push('/dashboard')
-    else {
-      setEntering(true)
-      login()
-    }
-  }
+    if (shouldRedirectToDashboard(entering, isMiniPay, authenticated))
+      router.push('/dashboard');
+  }, [entering, isMiniPay, authenticated, router]);
 
   return (
     <section
@@ -37,12 +48,10 @@ export default function Hero() {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage:
-            'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
           backgroundSize: '48px 48px',
         }}
       />
-
       {/* Red ambient glow top-right */}
       <div
         className="absolute pointer-events-none"
@@ -55,7 +64,6 @@ export default function Hero() {
           filter: 'blur(40px)',
         }}
       />
-
       <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-16 py-16 sm:py-24">
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.92 }}
@@ -72,7 +80,6 @@ export default function Hero() {
             className="rounded-lg"
           />
         </motion.div>
-
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-10 lg:gap-16">
           {/* Left — 60% */}
           <div className="flex-1">
@@ -89,7 +96,6 @@ export default function Hero() {
             >
               Ciphergon / SAM
             </motion.p>
-
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -105,7 +111,6 @@ export default function Hero() {
               <br />
               <span style={{ color: '#E50914' }}>are bleeding you.</span>
             </motion.h1>
-
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -119,7 +124,6 @@ export default function Hero() {
             >
               $2,847 lost to forgotten subscriptions last year. On average.
             </motion.p>
-
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -128,16 +132,25 @@ export default function Hero() {
               {isMiniPay ? (
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
-                  <span style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '12px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-dm-mono)',
+                      fontSize: '12px',
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(255,255,255,0.4)',
+                    }}
+                  >
                     {isAutoConnecting ? 'Connecting MiniPay...' : 'Connected'}
                   </span>
                 </div>
               ) : (
-                <Button size="lg" onClick={handleCTA}>Connect &amp; Find Out</Button>
+                <Button size="lg" onClick={() => handleLoginOrRedirect(ready, isMiniPay, authenticated, entering, setEntering, login, router)}>
+                  Connect & Find Out
+                </Button>
               )}
             </motion.div>
           </div>
-
           {/* Right — 40% */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
@@ -149,7 +162,6 @@ export default function Hero() {
           </motion.div>
         </div>
       </div>
-
       {/* Scroll indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
         <motion.div
@@ -164,5 +176,5 @@ export default function Hero() {
         />
       </div>
     </section>
-  )
+  );
 }
