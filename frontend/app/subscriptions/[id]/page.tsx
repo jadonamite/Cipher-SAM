@@ -55,52 +55,6 @@ const STATUS_STYLES: Record<string, { color: string; border: string }> = {
 
 const formatAmount = formatMoney
 
-function formatDate(iso: string | null | undefined) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
-export default function SubscriptionDetail() {
-  const { id } = useParams<{ id: string }>()
-  const router = useRouter()
-  const { ready, authenticated, user } = usePrivy()
-
-  const [data, setData] = useState<DetailData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [statusChanging, setStatusChanging] = useState(false)
-  const [reminderSent, setReminderSent] = useState(false)
-  const [reminderSending, setReminderSending] = useState(false)
-  const [reminderError, setReminderError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!ready) return
-    if (!authenticated) { router.replace('/dashboard'); return }
-    if (!user?.id || !id) return
-    load()
-  }, [ready, authenticated, user?.id, id])
-
-  async function load() {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/subscriptions/${id}`, {
-        headers: { 'x-user-id': user!.id },
-      })
-      if (!res.ok) { router.replace('/subscriptions'); return }
-      const json = await res.json()
-      setData({
-        subscription: normalizeSubscription(json.subscription),
-        signals: json.signals ?? [],
-        insight: json.insight ?? null,
-        recommendation: json.subscription.recommendations?.[0] ?? null,
-      })
-    } catch {
-      // server offline
-    } finally {
-      setLoading(false)
-    }
-  }
-
   async function runAnalysis() {
     if (!user?.id || analyzing) return
     setAnalyzing(true)
@@ -135,6 +89,26 @@ export default function SubscriptionDetail() {
     }
   }
 
+function formatDate(iso: string | null | undefined) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+  const [data, setData] = useState<DetailData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [statusChanging, setStatusChanging] = useState(false)
+  const [reminderSent, setReminderSent] = useState(false)
+  const [reminderSending, setReminderSending] = useState(false)
+  const [reminderError, setReminderError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!ready) return
+    if (!authenticated) { router.replace('/dashboard'); return }
+    if (!user?.id || !id) return
+    load()
+  }, [ready, authenticated, user?.id, id])
+
   async function scheduleReminder(daysFromNow: number) {
     if (!user?.id || reminderSending) return
     setReminderSending(true)
@@ -166,6 +140,11 @@ export default function SubscriptionDetail() {
     }
   }
 
+export default function SubscriptionDetail() {
+  const { id } = useParams<{ id: string }>()
+  const router = useRouter()
+  const { ready, authenticated, user } = usePrivy()
+
   async function changeStatus(status: 'active' | 'paused' | 'cancelled') {
     if (!user?.id || statusChanging || !data) return
     setStatusChanging(true)
@@ -182,6 +161,27 @@ export default function SubscriptionDetail() {
       // offline
     } finally {
       setStatusChanging(false)
+    }
+  }
+
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/subscriptions/${id}`, {
+        headers: { 'x-user-id': user!.id },
+      })
+      if (!res.ok) { router.replace('/subscriptions'); return }
+      const json = await res.json()
+      setData({
+        subscription: normalizeSubscription(json.subscription),
+        signals: json.signals ?? [],
+        insight: json.insight ?? null,
+        recommendation: json.subscription.recommendations?.[0] ?? null,
+      })
+    } catch {
+      // server offline
+    } finally {
+      setLoading(false)
     }
   }
 
