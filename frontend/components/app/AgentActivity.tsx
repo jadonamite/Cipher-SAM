@@ -17,6 +17,11 @@ interface AgentActivityProps {
   userId: string | undefined
 }
 
+/**
+ * formatRelative
+ * @param {*} date: string
+ * @returns {*}
+ */
 function formatRelative(date: string): string {
   const d = new Date(date)
   const diff = Date.now() - d.getTime()
