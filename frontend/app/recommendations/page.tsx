@@ -87,6 +87,11 @@ function monthlyEquiv(amount: number, cadence: string) {
 
 const formatAmount = formatMoney
 
+/**
+ * formatDate
+ * @param {*} iso: string | null
+ * @returns {*}
+ */
 function formatDate(iso: string | null) {
   if (!iso) return null
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
