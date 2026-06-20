@@ -370,7 +370,7 @@ export default function SubscriptionDetail() {
                 Recommendation
               </span>
               <span
-                className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest"
+                className='px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest'
                 style={{
                   fontFamily: 'var(--font-geist-sans)',
                   color: ACTION_COLORS[action],
