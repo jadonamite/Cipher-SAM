@@ -50,6 +50,10 @@ function CheckLine({ text, delay }: { text: string; delay: number }) {
   )
 }
 
+/**
+ * TrustSection
+ * @returns {*}
+ */
 export default function TrustSection() {
   const sectionRef = useRef(null)
   const inView = useInView(sectionRef, { once: true, margin: '-80px' })
