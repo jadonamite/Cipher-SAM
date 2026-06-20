@@ -32,14 +32,7 @@ const getVariantStyles = (variant: ButtonProps['variant']) => {
 }
 
 const getFontSize = (size: ButtonProps['size']) => {
-  switch (size) {
-    case 'sm':
-      return '11px'
-    case 'lg':
-      return '13px'
-    default:
-      return '12px'
-  }
+  return size === 'sm' ? '11px' : size === 'lg' ? '13px' : '12px'
 }
 
 export default function Button({
