@@ -121,7 +121,6 @@ export default function TopNav({
         ) : null}
       </div>
 
-      // TODO: optimize for large datasets
       {/* Mobile */}
       <MobileMenu
         walletAddress={user?.wallet?.address}

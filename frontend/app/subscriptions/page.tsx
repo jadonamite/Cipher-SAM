@@ -25,54 +25,12 @@ const CATEGORY_MAP: Record<string, string[]> = {
   Communication: ['Slack', 'Zoom'],
 }
 
-  async function runAnalysis() {
-    if (!user?.id || analyzing) return
-    setAnalyzing(true)
-    try {
-      const res = await fetch('/api/intelligence/analyze-all', {
-        method: 'POST',
-        headers: { 'x-user-id': user.id },
-      })
-      if (res.ok) {
-        const { results } = await res.json()
-        setSubs((prev) =>
-          prev.map((s) => {
-            const r = results.find((x: any) => x.id === s.id)
-            return r ? { ...s, confidence: r.confidence == null ? undefined : Number(r.confidence), action: r.action } : s
-          })
-        )
-        showToast('Analysis complete', 'success')
-      } else {
-        showToast('Analysis failed', 'error')
-      }
-    } catch {
-      showToast('Could not reach server', 'error')
-    } finally {
-      setAnalyzing(false)
-    }
+function getCategory(merchant: string): string {
+  for (const [cat, merchants] of Object.entries(CATEGORY_MAP)) {
+    if (merchants.includes(merchant)) return cat
   }
-
-export default function SubscriptionsPage() {
-  const { ready, authenticated, user, login } = usePrivy()
-  const router = useRouter()
-  const { showToast } = useToast()
-
-  async function fetchSubs(uid: string) {
-    const [statusRes, subsRes] = await Promise.all([
-      fetch(`/api/gmail/status?user_id=${uid}`),
-      fetch('/api/subscriptions', { headers: { 'x-user-id': uid } }),
-    ])
-    const statusData = await statusRes.json()
-    setGmailConnected(statusData.connected ?? false)
-    if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
-  }
-
-  const [subs, setSubs] = useState<Subscription[]>([])
-  const [gmailConnected, setGmailConnected] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<Filter>('all')
-  const [sort, setSort] = useState<Sort>('spend')
-  const [analyzing, setAnalyzing] = useState(false)
+  return 'Other'
+}
 
 function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
   const groups: Record<string, Subscription[]> = {}
@@ -83,6 +41,28 @@ function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
   }
   return groups
 }
+
+export default function SubscriptionsPage() {
+  const { ready, authenticated, user, login } = usePrivy()
+  const router = useRouter()
+  const { showToast } = useToast()
+
+  const [subs, setSubs] = useState<Subscription[]>([])
+  const [gmailConnected, setGmailConnected] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<Filter>('all')
+  const [sort, setSort] = useState<Sort>('spend')
+  const [analyzing, setAnalyzing] = useState(false)
+
+  async function fetchSubs(uid: string) {
+    const [statusRes, subsRes] = await Promise.all([
+      fetch(`/api/gmail/status?user_id=${uid}`),
+      fetch('/api/subscriptions', { headers: { 'x-user-id': uid } }),
+    ])
+    const statusData = await statusRes.json()
+    setGmailConnected(statusData.connected ?? false)
+    if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
+  }
 
   useEffect(() => {
     if (!ready || !authenticated || !user?.id) return
@@ -118,12 +98,32 @@ function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
     }
   }
 
-function getCategory(merchant: string): string {
-  for (const [cat, merchants] of Object.entries(CATEGORY_MAP)) {
-    if (merchants.includes(merchant)) return cat
+  async function runAnalysis() {
+    if (!user?.id || analyzing) return
+    setAnalyzing(true)
+    try {
+      const res = await fetch('/api/intelligence/analyze-all', {
+        method: 'POST',
+        headers: { 'x-user-id': user.id },
+      })
+      if (res.ok) {
+        const { results } = await res.json()
+        setSubs((prev) =>
+          prev.map((s) => {
+            const r = results.find((x: any) => x.id === s.id)
+            return r ? { ...s, confidence: r.confidence == null ? undefined : Number(r.confidence), action: r.action } : s
+          })
+        )
+        showToast('Analysis complete', 'success')
+      } else {
+        showToast('Analysis failed', 'error')
+      }
+    } catch {
+      showToast('Could not reach server', 'error')
+    } finally {
+      setAnalyzing(false)
+    }
   }
-  return 'Other'
-}
 
   const filtered = useMemo(() => {
     let list = subs.filter((s) => s.status === 'active')
