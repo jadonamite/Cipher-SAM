@@ -255,7 +255,7 @@ export default function AgentPage() {
           <span style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             SAM Agent
           </span>
-          <div className="grid grid-cols-2 gap-4">
+          <div className='grid grid-cols-2 gap-4'>
             {[
               { label: 'Agent Address', value: <ShortAddress address={agent?.address ?? ''} /> },
               { label: 'Policy Contract', value: agent?.policyContract ? <ShortAddress address={agent.policyContract} /> : <span style={{ color: '#525252' }}>Not deployed</span> },
