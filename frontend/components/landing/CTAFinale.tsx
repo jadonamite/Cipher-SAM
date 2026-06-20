@@ -1,27 +1,30 @@
-'use client'
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
+import { useRouter } from 'next/navigation';
+import Button from '@/components/ui/Button';
 
-import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import { usePrivy } from '@privy-io/react-auth'
-import { useRouter } from 'next/navigation'
-import Button from '@/components/ui/Button'
+const handleLogin = (login, setEntering, router, authenticated) => {
+  if (authenticated) {
+    router.push('/dashboard');
+  } else {
+    setEntering(true);
+    login();
+  }
+};
 
 export default function CTAFinale() {
-  const { ready, authenticated, login } = usePrivy()
-  const router = useRouter()
-  const [entering, setEntering] = useState(false)
+  const { ready, authenticated, login } = usePrivy();
+  const router = useRouter();
+  const [entering, setEntering] = useState(false);
 
   useEffect(() => {
-    if (entering && authenticated) router.push('/dashboard')
-  }, [entering, authenticated, router])
+    if (entering && authenticated) router.push('/dashboard');
+  }, [entering, authenticated, router]);
 
   function handleCTA() {
-    if (!ready) return
-    if (authenticated) router.push('/dashboard')
-    else {
-      setEntering(true)
-      login()
-    }
+    if (!ready) return;
+    handleLogin(login, setEntering, router, authenticated);
   }
 
   return (
@@ -39,7 +42,6 @@ export default function CTAFinale() {
           filter: 'blur(60px)',
         }}
       />
-
       {/* Grid overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -48,7 +50,6 @@ export default function CTAFinale() {
           backgroundSize: '48px 48px',
         }}
       />
-
       <div className="relative z-10 text-center px-5 sm:px-8 max-w-3xl mx-auto">
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -56,11 +57,14 @@ export default function CTAFinale() {
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
           className="text-muted uppercase mb-6"
-          style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '10px', letterSpacing: '0.16em' }}
+          style={{
+            fontFamily: 'var(--font-dm-mono)',
+            fontSize: '10px',
+            letterSpacing: '0.16em',
+          }}
         >
           Ciphergon · Subscription Intelligence
         </motion.p>
-
         <motion.h2
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -77,7 +81,6 @@ export default function CTAFinale() {
           <br />
           <span style={{ color: '#E50914' }}>to silence.</span>
         </motion.h2>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -87,7 +90,6 @@ export default function CTAFinale() {
           <Button size="lg" onClick={handleCTA}>Get Early Access</Button>
         </motion.div>
       </div>
-
     </section>
-  )
+  );
 }

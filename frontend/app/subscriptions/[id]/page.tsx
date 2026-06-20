@@ -15,7 +15,7 @@ type Signal = {
   id: string
   type: string
   value: string
-  weight: number
+  weight: number,
 }
 
 type Recommendation = {
