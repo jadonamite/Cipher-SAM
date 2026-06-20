@@ -75,6 +75,7 @@ export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
           <br />
           Read-only access. SAM cannot send or delete emails.
         </p>
+      // TODO: add input validation
       </div>
 
       <div className="flex flex-col gap-2 w-full">
