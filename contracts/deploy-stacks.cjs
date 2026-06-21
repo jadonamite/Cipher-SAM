@@ -108,7 +108,7 @@ async function main() {
     network,
     client,
     fee:               50_000n,
-    clarityVersion:    ClarityVersion.Clarity2,   // Clarity 2 — epoch 3 compatible
+    clarityVersion:    ClarityVersion.Clarity3,   // Clarity 3 — epoch 3 / Nakamoto
     anchorMode:        AnchorMode.Any,
     postConditionMode: PostConditionMode.Deny,
   });

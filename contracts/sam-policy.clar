@@ -1,7 +1,7 @@
 ;; sam-policy.clar
 ;; SAM Policy -- Stacks Clarity port of SAMPolicy.sol v2.0.0
 ;; ERC-8004-inspired programmable agent permissions
-;; Chain: Stacks Mainnet  |  Clarity 2
+;; Chain: Stacks Mainnet  |  Clarity 3 (epoch 3 / Nakamoto)
 ;;
 ;; Each user grants an agent principal time-bounded, revocable execution scopes.
 ;; SAM's backend MUST pass (is-authorized ...) before any autonomous action.
@@ -11,7 +11,7 @@
 ;;   u1 = sam.cancel   u2 = sam.pause   u3 = sam.remind   u4 = sam.analyze
 ;;
 ;; Parity with SAMPolicy.sol v2.0.0:
-;;   - expiry u0 = permanent; non-zero expiry must be a future block-height
+;;   - expiry u0 = permanent; non-zero expiry must be a future stacks-block-height
 ;;   - on-chain scope registry with labels; authorize rejects unknown scopes
 ;;   - owner emergency pause -> is-authorized evaluates as denied while paused
 ;;   - two-step ownership transfer (transfer + accept)
@@ -49,9 +49,9 @@
 (define-data-var sam-agent      principal tx-sender)
 (define-data-var paused         bool false)
 
-;; user -> agent -> scope-id -> expiry block-height
+;; user -> agent -> scope-id -> expiry stacks-block-height
 ;;   u0             = permanent (no expiry)
-;;   any other uint = block-height at which permission expires (exclusive)
+;;   any other uint = stacks-block-height at which permission expires (exclusive)
 ;;   absent (none)  = not granted
 (define-map permissions
   { user: principal, agent: principal, scope: uint }
@@ -80,7 +80,7 @@
   (if (var-get paused)
     false
     (match (map-get? permissions { user: user, agent: agent, scope: scope })
-      expiry (if (is-eq expiry u0) true (< block-height expiry))
+      expiry (if (is-eq expiry u0) true (< stacks-block-height expiry))
       false
     )
   )
@@ -166,12 +166,12 @@
 ;; -- Public: grant ------------------------------------------------------------
 
 ;; Grant `agent` a single `scope`.
-;;   expiry = u0 -> permanent; expiry = N -> expires at block-height N (exclusive)
+;;   expiry = u0 -> permanent; expiry = N -> expires at stacks-block-height N (exclusive)
 (define-public (authorize (agent principal) (scope uint) (expiry uint))
   (begin
     (asserts! (not (var-get paused)) ERR-PAUSED)
     (asserts! (is-scope-registered scope) ERR-UNKNOWN-SCOPE)
-    (asserts! (or (is-eq expiry u0) (> expiry block-height)) ERR-EXPIRED-ON-ARRIVAL)
+    (asserts! (or (is-eq expiry u0) (> expiry stacks-block-height)) ERR-EXPIRED-ON-ARRIVAL)
     (map-set permissions { user: tx-sender, agent: agent, scope: scope } expiry)
     (print { event: "authorized", user: tx-sender, agent: agent, scope: scope, expiry: expiry })
     (ok true)
@@ -183,7 +183,7 @@
   (begin
     (asserts! (not (var-get paused)) ERR-PAUSED)
     (asserts! (> (len scopes) u0) ERR-EMPTY-LIST)
-    (asserts! (or (is-eq expiry u0) (> expiry block-height)) ERR-EXPIRED-ON-ARRIVAL)
+    (asserts! (or (is-eq expiry u0) (> expiry stacks-block-height)) ERR-EXPIRED-ON-ARRIVAL)
     (let ((res (fold auth-one scopes { agent: agent, expiry: expiry, ok: true })))
       (asserts! (get ok res) ERR-UNKNOWN-SCOPE)
       (ok true)
@@ -194,7 +194,7 @@
 (define-private (grant-defaults (agent principal) (expiry uint))
   (begin
     (asserts! (not (var-get paused)) ERR-PAUSED)
-    (asserts! (or (is-eq expiry u0) (> expiry block-height)) ERR-EXPIRED-ON-ARRIVAL)
+    (asserts! (or (is-eq expiry u0) (> expiry stacks-block-height)) ERR-EXPIRED-ON-ARRIVAL)
     (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-CANCEL }  expiry)
     (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-PAUSE }   expiry)
     (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-REMIND }  expiry)

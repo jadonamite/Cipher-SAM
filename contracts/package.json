@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "deploy": "node deploy.mjs"
+    "deploy": "node deploy.mjs",
+    "deploy:stacks": "node deploy-stacks.cjs"
   },
   "dependencies": {
+    "@stacks/network": "^7.0.0",
+    "@stacks/transactions": "^7.0.0",
     "solc": "0.8.20",
     "viem": "^2.0.0"
   }
