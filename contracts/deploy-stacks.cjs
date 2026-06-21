@@ -107,7 +107,7 @@ async function main() {
     senderKey,
     network,
     client,
-    fee:               50_000n,
+    fee:               300_000n,   // 0.3 STX — safe for an ~11KB contract deploy
     clarityVersion:    ClarityVersion.Clarity3,   // Clarity 3 — epoch 3 / Nakamoto
     anchorMode:        AnchorMode.Any,
     postConditionMode: PostConditionMode.Deny,
