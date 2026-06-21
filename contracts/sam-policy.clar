@@ -1,24 +1,39 @@
 ;; sam-policy.clar
-;; SAM Policy -- Stacks Clarity port of SAMPolicy.sol
+;; SAM Policy -- Stacks Clarity port of SAMPolicy.sol v2.0.0
 ;; ERC-8004-inspired programmable agent permissions
-;; Chain: Stacks Mainnet
+;; Chain: Stacks Mainnet  |  Clarity 2
 ;;
-;; Scope IDs (uint) mirror Solidity keccak256 semantics -- human-readable labels
-;; are documented in the simulation and frontend; the contract uses uint for type safety.
+;; Each user grants an agent principal time-bounded, revocable execution scopes.
+;; SAM's backend MUST pass (is-authorized ...) before any autonomous action.
+;;
+;; Scope IDs (uint) mirror the Solidity keccak256 scopes; human-readable labels
+;; live in the on-chain scope registry.
 ;;   u1 = sam.cancel   u2 = sam.pause   u3 = sam.remind   u4 = sam.analyze
 ;;
-;; Improvements over SAMPolicy.sol:
-;;   - expiry = u0 = permanent (no uint256.max sentinel trick needed)
-;;   - authorize rejects already-expired block heights (fixes silent bug in Solidity)
-;;   - revoke uses map-delete (no residual zero-sentinel)
-;;   - revoke-all emits one event covering all 4 scopes (fixes Solidity event gap)
-;;   - get-permission and get-all-default-scopes read-only getters added
-;;   - transfer-ownership added (missing from Solidity)
+;; Parity with SAMPolicy.sol v2.0.0:
+;;   - expiry u0 = permanent; non-zero expiry must be a future block-height
+;;   - on-chain scope registry with labels; authorize rejects unknown scopes
+;;   - owner emergency pause -> is-authorized evaluates as denied while paused
+;;   - two-step ownership transfer (transfer + accept)
+;;   - batch authorize / revoke
+;;   - grant-default-scopes (permanent) and grant-default-scopes-with-expiry
+;;   - rich read-only getters (per-scope status, registry enumeration)
+;;   - sam-agent is a decorative canonical reference (NOT enforced in authorize)
+
+;; -- Version ------------------------------------------------------------------
+
+(define-constant CONTRACT-VERSION "2.0.0")
 
 ;; -- Error codes --------------------------------------------------------------
 
 (define-constant ERR-NOT-OWNER          (err u401))
 (define-constant ERR-EXPIRED-ON-ARRIVAL (err u402))
+(define-constant ERR-PAUSED             (err u403))
+(define-constant ERR-UNKNOWN-SCOPE      (err u404))
+(define-constant ERR-NOT-PENDING-OWNER  (err u405))
+(define-constant ERR-SCOPE-EXISTS       (err u406))
+(define-constant ERR-EMPTY-LIST         (err u407))
+(define-constant ERR-REGISTRY-FULL      (err u408))
 
 ;; -- Scope ID constants -------------------------------------------------------
 
@@ -30,60 +45,132 @@
 ;; -- State --------------------------------------------------------------------
 
 (define-data-var contract-owner principal tx-sender)
+(define-data-var pending-owner  (optional principal) none)
 (define-data-var sam-agent      principal tx-sender)
+(define-data-var paused         bool false)
 
 ;; user -> agent -> scope-id -> expiry block-height
-;;   u0            = permanent (no expiry)
+;;   u0             = permanent (no expiry)
 ;;   any other uint = block-height at which permission expires (exclusive)
-;; absent (map-get? = none) = not granted
+;;   absent (none)  = not granted
 (define-map permissions
   { user: principal, agent: principal, scope: uint }
   uint
 )
 
+;; scope-id -> human-readable label
+(define-map scope-registry uint (string-ascii 64))
+
+;; enumerable list of registered scope ids
+(define-data-var registered-scope-ids (list 50 uint) (list))
+
+;; -- Registry bootstrap (runs at deploy) --------------------------------------
+
+(map-set scope-registry SCOPE-CANCEL  "sam.cancel")
+(map-set scope-registry SCOPE-PAUSE   "sam.pause")
+(map-set scope-registry SCOPE-REMIND  "sam.remind")
+(map-set scope-registry SCOPE-ANALYZE "sam.analyze")
+(var-set registered-scope-ids (list SCOPE-CANCEL SCOPE-PAUSE SCOPE-REMIND SCOPE-ANALYZE))
+
 ;; -- Read-only ----------------------------------------------------------------
 
+;; Whether `agent` may execute `scope` for `user` right now.
+;; Returns false while the contract is paused.
 (define-read-only (is-authorized (user principal) (agent principal) (scope uint))
-  (match (map-get? permissions { user: user, agent: agent, scope: scope })
-    expiry (if (is-eq expiry u0)
-              true
-              (< block-height expiry))
+  (if (var-get paused)
     false
+    (match (map-get? permissions { user: user, agent: agent, scope: scope })
+      expiry (if (is-eq expiry u0) true (< block-height expiry))
+      false
+    )
   )
 )
 
-;; Returns raw stored expiry: (some uint) = granted, none = not granted.
-;; u0 means permanent; any other value is the expiry block-height.
+;; Raw stored expiry: (some uint) = granted (u0 = permanent), none = not granted.
 (define-read-only (get-permission (user principal) (agent principal) (scope uint))
   (map-get? permissions { user: user, agent: agent, scope: scope })
 )
 
-;; Convenience: check all 4 default scopes at once.
+;; Full status of one scope for a (user, agent) pair.
+(define-read-only (get-scope-status (user principal) (agent principal) (scope uint))
+  (let ((stored (map-get? permissions { user: user, agent: agent, scope: scope })))
+    {
+      scope:   scope,
+      label:   (default-to "" (map-get? scope-registry scope)),
+      granted: (is-some stored),
+      expiry:  (default-to u0 stored),
+      active:  (is-authorized user agent scope),
+    }
+  )
+)
+
+;; Convenience: status of all 4 built-in scopes at once.
 (define-read-only (get-all-default-scopes (user principal) (agent principal))
   {
-    cancel:  (is-authorized user agent SCOPE-CANCEL),
-    pause:   (is-authorized user agent SCOPE-PAUSE),
-    remind:  (is-authorized user agent SCOPE-REMIND),
-    analyze: (is-authorized user agent SCOPE-ANALYZE),
+    cancel:  (get-scope-status user agent SCOPE-CANCEL),
+    pause:   (get-scope-status user agent SCOPE-PAUSE),
+    remind:  (get-scope-status user agent SCOPE-REMIND),
+    analyze: (get-scope-status user agent SCOPE-ANALYZE),
   }
 )
 
-(define-read-only (get-owner)
-  (var-get contract-owner)
+(define-read-only (is-scope-registered (scope uint))
+  (is-some (map-get? scope-registry scope))
 )
 
-(define-read-only (get-sam-agent)
-  (var-get sam-agent)
+(define-read-only (get-scope-label (scope uint))
+  (map-get? scope-registry scope)
 )
 
-;; -- Public -------------------------------------------------------------------
+(define-read-only (get-registered-scopes)
+  (var-get registered-scope-ids)
+)
 
-;; User grants an agent a specific scope.
-;;   expiry = u0  -> permanent
-;;   expiry = N   -> expires at block-height N (exclusive: block N itself is unauthorized)
-;; Reverts ERR-EXPIRED-ON-ARRIVAL if expiry is non-zero and already <= block-height.
+(define-read-only (get-registered-scope-count)
+  (len (var-get registered-scope-ids))
+)
+
+(define-read-only (get-owner)        (var-get contract-owner))
+(define-read-only (get-pending-owner) (var-get pending-owner))
+(define-read-only (get-sam-agent)    (var-get sam-agent))
+(define-read-only (is-paused)        (var-get paused))
+(define-read-only (get-version)      CONTRACT-VERSION)
+
+;; -- Internal helpers ---------------------------------------------------------
+
+;; fold accumulator: agent + expiry to apply; ok stays true while valid.
+(define-private (auth-one
+    (scope uint)
+    (acc { agent: principal, expiry: uint, ok: bool }))
+  (if (and (get ok acc) (is-scope-registered scope))
+    (begin
+      (map-set permissions
+        { user: tx-sender, agent: (get agent acc), scope: scope }
+        (get expiry acc))
+      (print { event: "authorized", user: tx-sender, agent: (get agent acc),
+               scope: scope, expiry: (get expiry acc) })
+      acc
+    )
+    (merge acc { ok: false })
+  )
+)
+
+(define-private (revoke-one (scope uint) (agent principal))
+  (begin
+    (map-delete permissions { user: tx-sender, agent: agent, scope: scope })
+    (print { event: "revoked", user: tx-sender, agent: agent, scope: scope })
+    agent
+  )
+)
+
+;; -- Public: grant ------------------------------------------------------------
+
+;; Grant `agent` a single `scope`.
+;;   expiry = u0 -> permanent; expiry = N -> expires at block-height N (exclusive)
 (define-public (authorize (agent principal) (scope uint) (expiry uint))
   (begin
+    (asserts! (not (var-get paused)) ERR-PAUSED)
+    (asserts! (is-scope-registered scope) ERR-UNKNOWN-SCOPE)
     (asserts! (or (is-eq expiry u0) (> expiry block-height)) ERR-EXPIRED-ON-ARRIVAL)
     (map-set permissions { user: tx-sender, agent: agent, scope: scope } expiry)
     (print { event: "authorized", user: tx-sender, agent: agent, scope: scope, expiry: expiry })
@@ -91,7 +178,44 @@
   )
 )
 
-;; User revokes a single scope. No-op if never granted.
+;; Grant `agent` multiple scopes sharing one `expiry`.
+(define-public (authorize-batch (agent principal) (scopes (list 20 uint)) (expiry uint))
+  (begin
+    (asserts! (not (var-get paused)) ERR-PAUSED)
+    (asserts! (> (len scopes) u0) ERR-EMPTY-LIST)
+    (asserts! (or (is-eq expiry u0) (> expiry block-height)) ERR-EXPIRED-ON-ARRIVAL)
+    (let ((res (fold auth-one scopes { agent: agent, expiry: expiry, ok: true })))
+      (asserts! (get ok res) ERR-UNKNOWN-SCOPE)
+      (ok true)
+    )
+  )
+)
+
+(define-private (grant-defaults (agent principal) (expiry uint))
+  (begin
+    (asserts! (not (var-get paused)) ERR-PAUSED)
+    (asserts! (or (is-eq expiry u0) (> expiry block-height)) ERR-EXPIRED-ON-ARRIVAL)
+    (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-CANCEL }  expiry)
+    (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-PAUSE }   expiry)
+    (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-REMIND }  expiry)
+    (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-ANALYZE } expiry)
+    (print { event: "granted-defaults", user: tx-sender, agent: agent, expiry: expiry })
+    (ok true)
+  )
+)
+
+;; Onboarding helper -- grant all built-in scopes permanently.
+(define-public (grant-default-scopes (agent principal))
+  (grant-defaults agent u0)
+)
+
+;; Grant all built-in scopes sharing one `expiry`.
+(define-public (grant-default-scopes-with-expiry (agent principal) (expiry uint))
+  (grant-defaults agent expiry)
+)
+
+;; -- Public: revoke (always allowed, even when paused) ------------------------
+
 (define-public (revoke (agent principal) (scope uint))
   (begin
     (map-delete permissions { user: tx-sender, agent: agent, scope: scope })
@@ -100,31 +224,40 @@
   )
 )
 
-;; Revoke all 4 standard SAM scopes at once.
+(define-public (revoke-batch (agent principal) (scopes (list 20 uint)))
+  (begin
+    (asserts! (> (len scopes) u0) ERR-EMPTY-LIST)
+    (fold revoke-one scopes agent)
+    (ok true)
+  )
+)
+
+;; Kill switch -- revoke every registered scope from `agent`.
 (define-public (revoke-all (agent principal))
   (begin
-    (map-delete permissions { user: tx-sender, agent: agent, scope: SCOPE-CANCEL })
-    (map-delete permissions { user: tx-sender, agent: agent, scope: SCOPE-PAUSE })
-    (map-delete permissions { user: tx-sender, agent: agent, scope: SCOPE-REMIND })
-    (map-delete permissions { user: tx-sender, agent: agent, scope: SCOPE-ANALYZE })
+    (fold revoke-one (var-get registered-scope-ids) agent)
     (print { event: "revoked-all", user: tx-sender, agent: agent })
     (ok true)
   )
 )
 
-;; Grant all 4 standard scopes permanently -- called during user onboarding.
-(define-public (grant-default-scopes (agent principal))
+;; -- Owner: administration ----------------------------------------------------
+
+;; Register a new custom scope id with a human-readable label.
+(define-public (register-scope (scope uint) (label (string-ascii 64)))
   (begin
-    (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-CANCEL }  u0)
-    (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-PAUSE }   u0)
-    (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-REMIND }  u0)
-    (map-set permissions { user: tx-sender, agent: agent, scope: SCOPE-ANALYZE } u0)
-    (print { event: "granted-defaults", user: tx-sender, agent: agent })
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (asserts! (not (is-scope-registered scope)) ERR-SCOPE-EXISTS)
+    (map-set scope-registry scope label)
+    (var-set registered-scope-ids
+      (unwrap! (as-max-len? (append (var-get registered-scope-ids) scope) u50)
+               ERR-REGISTRY-FULL))
+    (print { event: "scope-registered", scope: scope, label: label })
     (ok true)
   )
 )
 
-;; Owner: rotate the canonical SAM agent address.
+;; Rotate the canonical SAM agent address (decorative / off-chain reference).
 (define-public (update-agent (new-agent principal))
   (begin
     (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
@@ -134,12 +267,43 @@
   )
 )
 
-;; Owner: transfer contract ownership.
+;; Emergency: freeze all authorizations.
+(define-public (pause)
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (var-set paused true)
+    (print { event: "paused", by: tx-sender })
+    (ok true)
+  )
+)
+
+;; Lift the emergency freeze.
+(define-public (unpause)
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (var-set paused false)
+    (print { event: "unpaused", by: tx-sender })
+    (ok true)
+  )
+)
+
+;; Begin a two-step ownership transfer.
 (define-public (transfer-ownership (new-owner principal))
   (begin
     (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
-    (print { event: "ownership-transferred", old-owner: (var-get contract-owner), new-owner: new-owner })
-    (var-set contract-owner new-owner)
+    (var-set pending-owner (some new-owner))
+    (print { event: "ownership-transfer-started", old-owner: (var-get contract-owner), new-owner: new-owner })
+    (ok true)
+  )
+)
+
+;; Complete a two-step ownership transfer. Callable by the pending owner.
+(define-public (accept-ownership)
+  (begin
+    (asserts! (is-eq (some tx-sender) (var-get pending-owner)) ERR-NOT-PENDING-OWNER)
+    (print { event: "ownership-transferred", old-owner: (var-get contract-owner), new-owner: tx-sender })
+    (var-set contract-owner tx-sender)
+    (var-set pending-owner none)
     (ok true)
   )
 )
