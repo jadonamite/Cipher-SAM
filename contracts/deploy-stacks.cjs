@@ -32,7 +32,7 @@ const { STACKS_MAINNET, STACKS_TESTNET, clientFromNetwork } = require('@stacks/n
 const IS_TESTNET    = process.argv.includes('--testnet');
 const network       = IS_TESTNET ? STACKS_TESTNET : STACKS_MAINNET;
 const client        = clientFromNetwork(network);
-const CONTRACT_NAME = 'sam-policy';
+const CONTRACT_NAME = 'sam-policy-v2';
 const HIRO_API      = IS_TESTNET
   ? 'https://api.testnet.hiro.so'
   : 'https://api.mainnet.hiro.so';
@@ -40,14 +40,14 @@ const HIRO_API      = IS_TESTNET
 // ── Key loading ───────────────────────────────────────────────────────────────
 
 function loadKey() {
-  if (process.env.STACKS_MASTER_1_PRIVATE_KEY) {
-    return process.env.STACKS_MASTER_1_PRIVATE_KEY.trim();
+  if (process.env.STACKS_MASTER_2_PRIVATE_KEY) {
+    return process.env.STACKS_MASTER_2_PRIVATE_KEY.trim();
   }
   const envPath = resolve(__dirname, '../../Scripts/.env');
   if (!existsSync(envPath)) throw new Error(`No key in env and .env not found at ${envPath}`);
   const raw = readFileSync(envPath, 'utf-8');
-  const m   = raw.match(/^STACKS_MASTER_1_PRIVATE_KEY=(.+)$/m);
-  if (!m) throw new Error('STACKS_MASTER_1_PRIVATE_KEY not found in Scripts/.env');
+  const m   = raw.match(/^STACKS_MASTER_2_PRIVATE_KEY=(.+)$/m);
+  if (!m) throw new Error('STACKS_MASTER_2_PRIVATE_KEY not found in Scripts/.env');
   return m[1].trim();
 }
 
