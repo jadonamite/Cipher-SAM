@@ -1,4 +1,5 @@
 'use client'
+
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { Subscription } from './SubscriptionRow'
@@ -11,29 +12,29 @@ interface Renewal {
 }
 
 function cadenceDays(c: Subscription['cadence']): number {
-  if (c === 'daily') return 1
-  if (c === 'weekly') return 7
-  if (c === 'yearly') return 365
+  if (c === 'daily')   return 1
+  if (c === 'weekly')  return 7
+  if (c === 'yearly')  return 365
   return 30
-}
-
-function getNextRenewalDate(sub: Subscription): Date | null {
-  if (sub.status !== 'active' || !sub.last_charged) return null
-  const last = new Date(sub.last_charged)
-  return new Date(last.getTime() + cadenceDays(sub.cadence) * 86400_000)
 }
 
 function computeRenewals(subs: Subscription[], windowDays = 14): Renewal[] {
   const now = new Date()
   const out: Renewal[] = []
+
   for (const sub of subs) {
-    const next = getNextRenewalDate(sub)
-    if (!next) continue
+    if (sub.status !== 'active') continue
+    if (!sub.last_charged) continue
+
+    const last = new Date(sub.last_charged)
+    const next = new Date(last.getTime() + cadenceDays(sub.cadence) * 86400_000)
     const daysFromNow = Math.ceil((next.getTime() - now.getTime()) / 86400_000)
+
     if (daysFromNow >= 0 && daysFromNow <= windowDays) {
       out.push({ sub, date: next, daysFromNow })
     }
   }
+
   return out.sort((a, b) => a.daysFromNow - b.daysFromNow)
 }
 
@@ -41,10 +42,13 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
   const WINDOW = 14
   const renewals = useMemo(() => computeRenewals(subs, WINDOW), [subs])
   const [hovered, setHovered] = useState<Renewal | null>(null)
+
   if (renewals.length === 0) return null
+
   const totalStr = formatAggregate(
     aggregateByCurrency(renewals, (r) => r.sub.amount, (r) => r.sub.currency ?? 'USD')
   )
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -79,7 +83,9 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
             }}
           >
             {totalStr}{' '}
-            <span style={{ color: '#525252', fontSize: '12px' }}> · {renewals.length}</span>
+            <span style={{ color: '#525252', fontSize: '12px' }}>
+              · {renewals.length}
+            </span>
           </span>
         </div>
         {hovered && (
@@ -109,6 +115,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
           </div>
         )}
       </div>
+
       {/* timeline */}
       <div className="relative" style={{ height: '40px' }}>
         {/* baseline */}
@@ -120,6 +127,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
             background: 'rgba(255,255,255,0.06)',
           }}
         />
+
         {/* today marker */}
         <div
           className="absolute"
@@ -132,6 +140,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
             boxShadow: '0 0 6px rgba(229,9,20,0.6)',
           }}
         />
+
         {/* day ticks */}
         {Array.from({ length: WINDOW + 1 }).map((_, i) => (
           <div
@@ -146,6 +155,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
             }}
           />
         ))}
+
         {/* renewal dots */}
         {renewals.map((r) => (
           <motion.button
@@ -167,23 +177,31 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
               border: 'none',
               cursor: 'pointer',
               padding: 0,
-              boxShadow: r.daysFromNow <= 3 ? '0 0 12px rgba(229,9,20,0.5)' : '0 0 0 transparent',
+              boxShadow:
+                r.daysFromNow <= 3
+                  ? '0 0 12px rgba(229,9,20,0.5)'
+                  : '0 0 0 transparent',
             }}
             aria-label={`${r.sub.merchant} in ${r.daysFromNow} days`}
           />
         ))}
       </div>
+
       {/* axis labels */}
       <div className="flex justify-between" style={{ marginTop: '-8px' }}>
         {[0, 7, WINDOW].map((d) => (
-          <span key={d} style={{
-            fontFamily: 'var(--font-dm-mono)',
-            color: '#3a3a3a',
-            fontSize: '10px',
-          }}>
+          <span
+            key={d}
+            style={{
+              fontFamily: 'var(--font-dm-mono)',
+              color: '#3a3a3a',
+              fontSize: '10px',
+            }}
+          >
             {d === 0 ? 'today' : `+${d}d`}
           </span>
         ))}
       </div>
     </motion.div>
-  )}
+  )
+}
