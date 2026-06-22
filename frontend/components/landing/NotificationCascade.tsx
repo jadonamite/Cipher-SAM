@@ -43,7 +43,7 @@ export default function NotificationCascade() {
   const bleedDisplay = useTransform(bleedValue, (v) => `$${v.toFixed(2)}`)
 
   useEffect(() => {
-    let cancelled: boolean = false
+    let cancelled = false
     let timer: ReturnType<typeof setTimeout>
 
     const advance = (current: number) => {
