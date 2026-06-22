@@ -18,26 +18,11 @@ import { normalizeSubscription } from '@/lib/normalize'
 import { aggregateByCurrency, formatAggregate, type CurrencyMap } from '@/lib/format'
 import Link from 'next/link'
 
-function monthlyOf(s: Subscription): number {
-  if (s.cadence === 'yearly') return s.amount / 12
-  if (s.cadence === 'weekly') return s.amount * 4.33
-  if (s.cadence === 'daily') return s.amount * 30
-  return s.amount
-}
-
-export default function Dashboard() {
-  return (
-    <Suspense>
-      <DashboardInner />
-    </Suspense>
-  )
-}
-
-type SummaryStats = {
-  byCurrency: CurrencyMap
-  count: number
-  highRisk: number
-}
+function DashboardInner() {
+  const { ready, authenticated, user, login } = usePrivy()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { showToast } = useToast()
 
 function calcStats(subs: Subscription[]): SummaryStats {
   const active = subs.filter((s) => s.status === 'active')
@@ -46,22 +31,11 @@ function calcStats(subs: Subscription[]): SummaryStats {
   return { byCurrency, count: active.length, highRisk }
 }
 
-function DashboardInner() {
-  const { ready, authenticated, user, login } = usePrivy()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { showToast } = useToast()
-
-  const [gmailConnected, setGmailConnected] = useState(false)
-  const [subs, setSubs] = useState<Subscription[]>([])
-  const [hasPolicies, setHasPolicies] = useState(false)
-  const [scanning, setScanning] = useState(false)
-  const [walletScanning, setWalletScanning] = useState(false)
-  const [scanResult, setScanResult] = useState<{ created: number; updated: number; source: string } | null>(null)
-  const [lastScan, setLastScan] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [debugScanning, setDebugScanning] = useState(false)
-  const [debugOutput, setDebugOutput] = useState<string | null>(null)
+type SummaryStats = {
+  byCurrency: CurrencyMap
+  count: number
+  highRisk: number
+}
 
   async function fetchSubs(uid: string) {
     const [statusRes, subsRes, polRes] = await Promise.all([
@@ -86,6 +60,45 @@ function DashboardInner() {
     if (polRes.ok) {
       const pols = (await polRes.json()).policies ?? []
       setHasPolicies(pols.length > 0)
+    }
+  }
+
+function monthlyOf(s: Subscription): number {
+  if (s.cadence === 'yearly') return s.amount / 12
+  if (s.cadence === 'weekly') return s.amount * 4.33
+  if (s.cadence === 'daily') return s.amount * 30
+  return s.amount
+}
+
+  const [gmailConnected, setGmailConnected] = useState(false)
+  const [subs, setSubs] = useState<Subscription[]>([])
+  const [hasPolicies, setHasPolicies] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const [walletScanning, setWalletScanning] = useState(false)
+  const [scanResult, setScanResult] = useState<{ created: number; updated: number; source: string } | null>(null)
+  const [lastScan, setLastScan] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [debugScanning, setDebugScanning] = useState(false)
+  const [debugOutput, setDebugOutput] = useState<string | null>(null)
+
+  async function debugScan() {
+    if (!user?.id || debugScanning) return
+    setDebugScanning(true)
+    setDebugOutput('Running scan… (up to 60s)')
+    try {
+      await fetch('/api/gmail/scan-lock', { method: 'DELETE', headers: { 'x-user-id': user.id } }).catch(() => {})
+      const t0 = Date.now()
+      const res = await fetch('/api/gmail/scan?debug=1', {
+        method: 'POST',
+        headers: { 'x-user-id': user.id },
+      })
+      const data = await res.json()
+      const wall = Date.now() - t0
+      setDebugOutput(JSON.stringify({ http_status: res.status, wall_ms: wall, ...data }, null, 2))
+    } catch (e) {
+      setDebugOutput(`Network error: ${(e as Error).message}`)
+    } finally {
+      setDebugScanning(false)
     }
   }
 
@@ -114,51 +127,13 @@ function DashboardInner() {
     }
   }, [searchParams])
 
-  async function triggerScan() {
-    if (!user?.id || scanning) return
-    setScanning(true)
-    setScanResult(null)
-    try {
-      const res = await fetch('/api/gmail/scan', {
-        method: 'POST',
-        headers: { 'x-user-id': user.id },
-      })
-      const data = await res.json()
-      if (res.ok) {
-        setScanResult({ created: data.created, updated: data.updated, source: 'Gmail' })
-        showToast(`Gmail scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
-        const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user.id } })
-        if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
-      } else {
-        showToast(data.error ?? `Gmail scan failed (${res.status})`, 'error')
-      }
-    } catch {
-      showToast('Could not reach server', 'error')
-    } finally {
-      setScanning(false)
-    }
-  }
-
-  async function debugScan() {
-    if (!user?.id || debugScanning) return
-    setDebugScanning(true)
-    setDebugOutput('Running scan… (up to 60s)')
-    try {
-      await fetch('/api/gmail/scan-lock', { method: 'DELETE', headers: { 'x-user-id': user.id } }).catch(() => {})
-      const t0 = Date.now()
-      const res = await fetch('/api/gmail/scan?debug=1', {
-        method: 'POST',
-        headers: { 'x-user-id': user.id },
-      })
-      const data = await res.json()
-      const wall = Date.now() - t0
-      setDebugOutput(JSON.stringify({ http_status: res.status, wall_ms: wall, ...data }, null, 2))
-    } catch (e) {
-      setDebugOutput(`Network error: ${(e as Error).message}`)
-    } finally {
-      setDebugScanning(false)
-    }
-  }
+export default function Dashboard() {
+  return (
+    <Suspense>
+      <DashboardInner />
+    </Suspense>
+  )
+}
 
   async function triggerWalletScan() {
     const address = user?.wallet?.address
@@ -184,6 +159,31 @@ function DashboardInner() {
       showToast('Could not reach server', 'error')
     } finally {
       setWalletScanning(false)
+    }
+  }
+
+  async function triggerScan() {
+    if (!user?.id || scanning) return
+    setScanning(true)
+    setScanResult(null)
+    try {
+      const res = await fetch('/api/gmail/scan', {
+        method: 'POST',
+        headers: { 'x-user-id': user.id },
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setScanResult({ created: data.created, updated: data.updated, source: 'Gmail' })
+        showToast(`Gmail scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
+        const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user.id } })
+        if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
+      } else {
+        showToast(data.error ?? `Gmail scan failed (${res.status})`, 'error')
+      }
+    } catch {
+      showToast('Could not reach server', 'error')
+    } finally {
+      setScanning(false)
     }
   }
 
