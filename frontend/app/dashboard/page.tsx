@@ -139,6 +139,10 @@ function DashboardInner() {
     }
   }
 
+  /**
+   * debugScan
+   * @returns {*}
+   */
   async function debugScan() {
     if (!user?.id || debugScanning) return
     setDebugScanning(true)
