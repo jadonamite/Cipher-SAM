@@ -92,10 +92,6 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-/**
- * RecommendationsPage
- * @returns {*}
- */
 export default function RecommendationsPage() {
   const { ready, authenticated, user, login } = usePrivy()
   const router = useRouter()

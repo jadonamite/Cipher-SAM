@@ -1,4 +1,5 @@
 'use client'
+
 import { motion } from 'framer-motion'
 
 interface OnboardingProgressProps {
@@ -9,19 +10,19 @@ interface OnboardingProgressProps {
 }
 
 const STEPS = [
-  { key: 'wallet', label: 'WALLET', description: 'Identity connected' },
-  { key: 'gmail', label: 'GMAIL', description: 'Inbox access granted' },
+  { key: 'wallet',    label: 'WALLET',     description: 'Identity connected' },
+  { key: 'gmail',     label: 'GMAIL',      description: 'Inbox access granted' },
   { key: 'firstScan', label: 'FIRST SCAN', description: 'Subscriptions detected' },
-  { key: 'policies', label: 'POLICIES', description: 'Automation rules set' },
+  { key: 'policies',  label: 'POLICIES',   description: 'Automation rules set' },
 ] as const
 
-const getCompletedStatus = (props: OnboardingProgressProps, stepKey: typeof STEPS[number]['key']) => props[stepKey]
-const getActiveIndex = (props: OnboardingProgressProps) => STEPS.findIndex((s) => !getCompletedStatus(props, s.key))
-
 export default function OnboardingProgress(props: OnboardingProgressProps) {
-  const allDone = STEPS.every((s) => getCompletedStatus(props, s.key))
+  const completed = (k: typeof STEPS[number]['key']) => props[k]
+  const allDone = STEPS.every((s) => completed(s.key))
   if (allDone) return null
-  const activeIndex = getActiveIndex(props)
+
+  // Find first incomplete step
+  const activeIndex = STEPS.findIndex((s) => !completed(s.key))
 
   return (
     <motion.div
@@ -55,44 +56,31 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
             letterSpacing: '0.04em',
           }}
         >
-          {STEPS.filter((s) => getCompletedStatus(props, s.key)).length}/{STEPS.length}
+          {STEPS.filter((s) => completed(s.key)).length}/{STEPS.length}
         </span>
       </div>
+
       <div className="flex items-start justify-between gap-2 relative">
         {/* connector line */}
         <div
           className="absolute top-[7px] left-0 right-0 h-px"
           style={{ background: 'rgba(255,255,255,0.06)' }}
         />
+
         {STEPS.map((step, i) => {
-          const done = getCompletedStatus(props, step.key)
+          const done = completed(step.key)
           const active = !done && i === activeIndex
           const dotColor = done ? '#E50914' : active ? '#E50914' : '#2a2a2a'
+
           return (
-            <div
-              key={step.key}
-              className="flex flex-col items-center gap-2 relative flex-1 z-10"
-            >
+            <div key={step.key} className="flex flex-col items-center gap-2 relative flex-1 z-10">
               <motion.div
                 animate={
                   active
-                    ? {
-                        boxShadow: [
-                          '0 0 0 0 rgba(229,9,20,0.4)',
-                          '0 0 0 6px rgba(229,9,20,0)',
-                        ],
-                      }
+                    ? { boxShadow: ['0 0 0 0 rgba(229,9,20,0.4)', '0 0 0 6px rgba(229,9,20,0)'] }
                     : {}
                 }
-                transition={
-                  active
-                    ? {
-                        duration: 1.6,
-                        repeat: Infinity,
-                        ease: 'easeOut',
-                      }
-                    : {}
-                }
+                transition={active ? { duration: 1.6, repeat: Infinity, ease: 'easeOut' } : {}}
                 style={{
                   width: '14px',
                   height: '14px',
@@ -120,6 +108,7 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
                   </svg>
                 )}
               </motion.div>
+
               <div className="flex flex-col items-center gap-0.5 text-center">
                 <span
                   style={{
