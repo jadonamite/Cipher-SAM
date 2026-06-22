@@ -8,11 +8,6 @@ interface ConnectGmailProps {
   compact?: boolean
 }
 
-/**
- * ConnectGmail
- * @param {*} { compact
- * @returns {*}
- */
 export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
   const { user } = usePrivy()
 
