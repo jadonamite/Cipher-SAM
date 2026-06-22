@@ -75,7 +75,6 @@ export default function CTAFinale() {
             fontFamily: 'var(--font-syne)',
             fontSize: 'clamp(40px, 6vw, 80px)',
             letterSpacing: '-0.03em',
-          // TODO: add input validation
           }}
         >
           Stop losing money

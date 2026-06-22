@@ -1,1 +1,34 @@
-function num(value: unknown, fallback: number | null): number | null { const handleNullish = (value: unknown) => value === null || value === undefined || value === ''; if (handleNullish(value)) return fallback; const n = Number(value); return Number.isFinite(n) ? n : fallback; } function numOrNull(value: unknown): number | null { return num(value, null); } function numOrDefault(value: unknown, fallback = 0): number { return num(value, fallback); } export function normalizeSubscription<T extends Record<string, unknown>>(raw: T): T { return { ...raw, amount: numOrDefault(raw.amount), confidence: numOrNull(raw.confidence), } as T; } export function normalizeRec<T extends Record<string, unknown>>(raw: T): T { return { ...raw, amount: numOrDefault(raw.amount), confidence: numOrDefault(raw.confidence), } as T; } export function normalizeAction<T extends Record<string, unknown>>(raw: T): T { return { ...raw, amount: numOrDefault(raw.amount), } as T; }
+function num(value: unknown, fallback = 0): number {
+  if (value === null || value === undefined || value === '') return fallback
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function numOrNull(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null
+  const n = Number(value)
+  return Number.isFinite(n) ? n : null
+}
+
+export function normalizeSubscription<T extends Record<string, unknown>>(raw: T): T {
+  return {
+    ...raw,
+    amount: num(raw.amount),
+    confidence: numOrNull(raw.confidence),
+  } as T
+}
+
+export function normalizeRec<T extends Record<string, unknown>>(raw: T): T {
+  return {
+    ...raw,
+    amount: num(raw.amount),
+    confidence: num(raw.confidence),
+  } as T
+}
+
+export function normalizeAction<T extends Record<string, unknown>>(raw: T): T {
+  return {
+    ...raw,
+    amount: num(raw.amount),
+  } as T
+}
