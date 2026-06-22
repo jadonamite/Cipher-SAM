@@ -1,11 +1,11 @@
 'use client'
 
+import Link from 'next/link'
+import TopNav from '@/components/app/TopNav'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import Link from 'next/link'
-import TopNav from '@/components/app/TopNav'
 
 type PolicyTrigger = 'trial_cancel' | 'spend_alert' | 'inactivity_pause'
 type PolicyAction = 'cancel' | 'pause' | 'remind' | 'alert'
