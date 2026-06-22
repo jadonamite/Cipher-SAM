@@ -38,6 +38,11 @@ function computeRenewals(subs: Subscription[], windowDays = 14): Renewal[] {
   return out.sort((a, b) => a.daysFromNow - b.daysFromNow)
 }
 
+/**
+ * RenewalsTimeline
+ * @param {*} { subs }: { subs: Subscription[] }
+ * @returns {*}
+ */
 export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
   const WINDOW = 14
   const renewals = useMemo(() => computeRenewals(subs, WINDOW), [subs])
