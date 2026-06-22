@@ -81,6 +81,7 @@ function computeInsights(subs: Subscription[]): Insight[] {
   }
 
   // 3. Top spend category — pick by the largest single-currency bucket so the
+  // percentage stays meaningful even when totals span multiple currencies.
   const catTotals = Object.entries(byCategory).map(([cat, items]) => {
     const map = aggregateByCurrency(items, monthly, currencyOf)
     const peak = Math.max(0, ...Object.values(map))
