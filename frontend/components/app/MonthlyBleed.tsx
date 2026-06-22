@@ -8,12 +8,6 @@ interface MonthlyBleedProps {
   byCurrency: CurrencyMap
 }
 
-/**
- * useCountUp
- * @param {*} target: number
- * @param {*} duration
- * @returns {*}
- */
 function useCountUp(target: number, duration = 1200) {
   const [value, setValue] = useState(0)
 
