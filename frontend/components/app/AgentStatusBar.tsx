@@ -1,4 +1,5 @@
 'use client'
+
 import { motion } from 'framer-motion'
 
 interface AgentStatusBarProps {
@@ -17,78 +18,13 @@ function formatRelative(date: Date | string | null | undefined): string {
   const hrs = Math.floor(mins / 60)
   if (hrs < 24) return `${hrs}h ago`
   const days = Math.floor(hrs / 24)
-  return `${days}d ago'
-}
-
-const StatusDot = ({ scanning }: { scanning: boolean }) => {
-  const dotColor = scanning ? '#E50914' : '#16A34A'
-  return (
-    <motion.span
-      animate={scanning ? { opacity: [1, 0.3, 1] } : { opacity: 1 }}
-      transition={scanning ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' } : {}}
-      style={{
-        display: 'inline-block',
-        width: '6px',
-        height: '6px',
-        borderRadius: '50%',
-        background: dotColor,
-        boxShadow: `0 0 8px ${dotColor}`,
-      }}
-    />
-  )
-}
-
-const StatusText = ({ scanning, status }: { scanning: boolean; status: string }) => {
-  return (
-    <span
-      style={{
-        fontFamily: 'var(--font-dm-mono)',
-        color: scanning ? '#E50914' : '#A3A3A3',
-        fontSize: '10px',
-        letterSpacing: '0.18em',
-      }}
-    >
-      {status}
-    </span>
-  )
-}
-
-const FieldLabel = ({ label }: { label: string }) => {
-  return (
-    <span
-      style={{
-        fontFamily: 'var(--font-geist-sans)',
-        color: '#3a3a3a',
-        fontSize: '9px',
-        letterSpacing: '0.14em',
-        textTransform: 'uppercase',
-      }}
-    >
-      {label}
-    </span>
-  )
-}
-
-const FieldValue = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <span
-      style={{
-        fontFamily: 'var(--font-dm-mono)',
-        color: '#A3A3A3',
-        fontSize: '11px',
-      }}
-    >
-      {children}
-    </span>
-  )
-}
-
-const Divider = () => {
-  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
+  return `${days}d ago`
 }
 
 export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
   const status = scanning ? 'SCANNING' : 'ACTIVE'
+  const dotColor = scanning ? '#E50914' : '#16A34A'
+
   return (
     <div
       className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2.5 border-b overflow-x-auto whitespace-nowrap"
@@ -100,24 +36,66 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
     >
       {/* Status dot */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        <StatusDot scanning={scanning} />
-        <StatusText scanning={scanning} status={status} />
+        <motion.span
+          animate={scanning ? { opacity: [1, 0.3, 1] } : { opacity: 1 }}
+          transition={scanning ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' } : {}}
+          style={{
+            display: 'inline-block',
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: dotColor,
+            boxShadow: `0 0 8px ${dotColor}`,
+          }}
+        />
+        <span
+          style={{
+            fontFamily: 'var(--font-dm-mono)',
+            color: scanning ? '#E50914' : '#A3A3A3',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+          }}
+        >
+          {status}
+        </span>
       </div>
+
       <Divider />
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        <FieldLabel label="SUBS" />
-        <FieldValue>{subCount}</FieldValue>
-      </div>
+
+      <Field label="SUBS">{subCount}</Field>
+
       <Divider />
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        <FieldLabel label="LAST SCAN" />
-        <FieldValue>{formatRelative(lastScan)}</FieldValue>
-      </div>
+
+      <Field label="LAST SCAN">{formatRelative(lastScan)}</Field>
+
       <Divider />
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        <FieldLabel label="AGENT" />
-        <FieldValue>SAM v0.1</FieldValue>
-      </div>
+
+      <Field label="AGENT">SAM v0.1</Field>
+    </div>
+  )
+}
+
+function Divider() {
+  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-1.5 flex-shrink-0">
+      <span
+        style={{
+          fontFamily: 'var(--font-geist-sans)',
+          color: '#3a3a3a',
+          fontSize: '9px',
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </span>
+      <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#A3A3A3', fontSize: '11px' }}>
+        {children}
+      </span>
     </div>
   )
 }

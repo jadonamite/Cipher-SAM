@@ -187,7 +187,7 @@ export default function SubscriptionDetail() {
 
   if (!ready || loading) {
     return (
-      <main className='min-h-screen bg-void flex items-center justify-center'>
+      <main className="min-h-screen bg-void flex items-center justify-center">
         <div className="w-1 h-1 bg-sam-red rounded-full animate-pulse" />
       </main>
     )

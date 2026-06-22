@@ -167,8 +167,8 @@ export default function PoliciesPage() {
         body: JSON.stringify({ apply: false }),
       })
       if (res.ok) {
-        const payload = await res.json()
-        setEvalResults(payload.results ?? [])
+        const data = await res.json()
+        setEvalResults(data.results ?? [])
       }
     } catch {} finally {
       setEvaluating(false)
