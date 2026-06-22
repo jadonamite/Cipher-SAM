@@ -9,10 +9,6 @@ import Button from '@/components/ui/Button'
 import NotificationCascade from '@/components/landing/NotificationCascade'
 import { useMiniPay } from '@/components/providers/MiniPayProvider'
 
-/**
- * Hero
- * @returns {*}
- */
 export default function Hero() {
   const { ready, authenticated, login } = usePrivy()
   const { isMiniPay, isAutoConnecting } = useMiniPay()
