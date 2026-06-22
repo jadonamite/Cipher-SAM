@@ -258,7 +258,7 @@ export default function SubscriptionsPage() {
                 cursor: 'pointer',
               }}
             >
-              <option value="spend">Sort: Spend</option>
+              <option value='spend'>Sort: Spend</option>
               <option value="risk">Sort: Risk</option>
               <option value="detected">Sort: Detected</option>
             </select>
