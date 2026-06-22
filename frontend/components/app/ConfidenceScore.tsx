@@ -1,5 +1,4 @@
 'use client'
-
 import { motion } from 'framer-motion'
 
 interface ConfidenceScoreProps {
@@ -22,9 +21,15 @@ const ACTION_LABELS = {
   keep: 'KEEP',
 }
 
-export default function ConfidenceScore({ score, signals = [], action }: ConfidenceScoreProps) {
-  const color = action ? ACTION_COLORS[action] : score >= 70 ? '#E50914' : score >= 40 ? '#D97706' : '#16A34A'
+const getColor = (score: number, action?: 'cancel' | 'pause' | 'remind' | 'keep') => {
+  if (action) return ACTION_COLORS[action]
+  if (score >= 70) return '#E50914'
+  if (score >= 40) return '#D97706'
+  return '#16A34A'
+}
 
+export default function ConfidenceScore({ score, signals = [], action }: ConfidenceScoreProps) {
+  const color = getColor(score, action)
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-end gap-2">
@@ -32,12 +37,22 @@ export default function ConfidenceScore({ score, signals = [], action }: Confide
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          style={{ fontFamily: 'var(--font-dm-mono)', color, lineHeight: 1 }}
+          style={{
+            fontFamily: 'var(--font-dm-mono)',
+            color,
+            lineHeight: 1,
+          }}
           className="text-6xl font-bold"
         >
           {score}
         </motion.span>
-        <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252' }} className="text-lg mb-1">
+        <span
+          style={{
+            fontFamily: 'var(--font-dm-mono)',
+            color: '#525252',
+          }}
+          className="text-lg mb-1"
+        >
           %
         </span>
         {action && (
@@ -54,7 +69,6 @@ export default function ConfidenceScore({ score, signals = [], action }: Confide
           </span>
         )}
       </div>
-
       {/* Progress bar */}
       <div className="h-px w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
         <motion.div
@@ -65,16 +79,11 @@ export default function ConfidenceScore({ score, signals = [], action }: Confide
           style={{ background: color }}
         />
       </div>
-
       {/* Signal list */}
       {signals.length > 0 && (
         <ul className="flex flex-col gap-1">
           {signals.slice(0, 3).map((sig, i) => (
-            <li
-              key={i}
-              style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252' }}
-              className="text-xs flex items-center gap-2"
-            >
+            <li key={i} style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252' }} className="text-xs flex items-center gap-2">
               <span style={{ color, fontSize: '6px' }}>●</span>
               {sig}
             </li>
