@@ -129,6 +129,7 @@ export default function SubscriptionDetail() {
         )
       }
     } catch {
+      // offline
     } finally {
       setAnalyzing(false)
     }

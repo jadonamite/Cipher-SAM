@@ -1,4 +1,5 @@
-`use client'
+'use client'
+
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import CountUp from 'react-countup'
@@ -9,11 +10,18 @@ const lines = [
   { text: 'That productivity app from 2023.', price: '$8/mo' },
 ]
 
-const calculateDelay = (index: number) => 0.4 + index * 0.15
-
-const StrikeoutLine = ({ text, price, delay }: { text: string; price: string; delay: number }) => {
+function StrikeoutLine({
+  text,
+  price,
+  delay,
+}: {
+  text: string
+  price: string
+  delay: number
+}) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
+
   return (
     <motion.div
       ref={ref}
@@ -55,6 +63,7 @@ const StrikeoutLine = ({ text, price, delay }: { text: string; price: string; de
 export default function Problem() {
   const sectionRef = useRef(null)
   const inView = useInView(sectionRef, { once: true, margin: '-80px' })
+
   return (
     <section
       ref={sectionRef}
@@ -82,6 +91,7 @@ export default function Problem() {
               )}
             </div>
           </div>
+
           {/* Text side */}
           <div className="flex-1 pt-4 lg:pt-8">
             <motion.p
@@ -100,13 +110,14 @@ export default function Problem() {
               <br />
               Remembers 8.
             </motion.p>
+
             <div>
               {lines.map((line, i) => (
                 <StrikeoutLine
                   key={line.price}
                   text={line.text}
                   price={line.price}
-                  delay={calculateDelay(i)}
+                  delay={0.4 + i * 0.15}
                 />
               ))}
             </div>
