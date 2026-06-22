@@ -59,7 +59,7 @@ export default function HowItWorks() {
             pin: true,
             anticipatePin: 1,
           },
-        })
+        }),
       }, section)
     }
 
