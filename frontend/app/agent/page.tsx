@@ -184,7 +184,6 @@ export default function AgentPage() {
   async function onSelfSuccess() {
     setSelfSuccess(true)
     setSelfError(null)
-    // Mark verified in our DB
     try {
       await fetch('/api/self/verify', {
         method: 'POST',
