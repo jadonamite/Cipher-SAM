@@ -69,7 +69,6 @@ export default function NotificationCascade() {
     let target = 0
     if (phase === 0 || phase === 9) target = 0
     else if (phase <= 5) {
-      // Sum of appeared notifications
       target = NOTIFICATIONS.slice(0, phase).reduce((s, n) => s + n.amount, 0)
     } else if (phase === 6) target = TOTAL_BLEED
     else if (phase === 7 || phase === 8) target = CLEAN_BLEED
