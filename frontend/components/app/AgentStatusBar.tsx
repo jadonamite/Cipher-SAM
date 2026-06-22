@@ -7,7 +7,7 @@ interface AgentStatusBarProps {
   subCount?: number
 }
 
-const getRelativeTime = (date: Date | string | null | undefined): string => {
+function formatRelative(date: Date | string | null | undefined): string {
   if (!date) return 'never'
   const d = typeof date === 'string' ? new Date(date) : date
   const diff = Date.now() - d.getTime()
@@ -20,30 +20,75 @@ const getRelativeTime = (date: Date | string | null | undefined): string => {
   return `${days}d ago'
 }
 
-const getStatusDot = (scanning: boolean) => ({
-  animate: scanning ? { opacity: [1, 0.3, 1] } : { opacity: 1 },
-  transition: scanning ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' } : {},
-  style: {
-    display: 'inline-block',
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    background: scanning ? '#E50914' : '#16A34A',
-    boxShadow: `0 0 8px ${scanning ? '#E50914' : '#16A34A'}`,
-  },
-})
+const StatusDot = ({ scanning }: { scanning: boolean }) => {
+  const dotColor = scanning ? '#E50914' : '#16A34A'
+  return (
+    <motion.span
+      animate={scanning ? { opacity: [1, 0.3, 1] } : { opacity: 1 }}
+      transition={scanning ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut' } : {}}
+      style={{
+        display: 'inline-block',
+        width: '6px',
+        height: '6px',
+        borderRadius: '50%',
+        background: dotColor,
+        boxShadow: `0 0 8px ${dotColor}`,
+      }}
+    />
+  )
+}
 
-const getStatusText = (scanning: boolean) => ({
-  style: {
-    fontFamily: 'var(--font-dm-mono)',
-    color: scanning ? '#E50914' : '#A3A3A3',
-    fontSize: '10px',
-    letterSpacing: '0.18em',
-  },
-  children: scanning ? 'SCANNING' : 'ACTIVE',
-})
+const StatusText = ({ scanning, status }: { scanning: boolean; status: string }) => {
+  return (
+    <span
+      style={{
+        fontFamily: 'var(--font-dm-mono)',
+        color: scanning ? '#E50914' : '#A3A3A3',
+        fontSize: '10px',
+        letterSpacing: '0.18em',
+      }}
+    >
+      {status}
+    </span>
+  )
+}
+
+const FieldLabel = ({ label }: { label: string }) => {
+  return (
+    <span
+      style={{
+        fontFamily: 'var(--font-geist-sans)',
+        color: '#3a3a3a',
+        fontSize: '9px',
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+      }}
+    >
+      {label}
+    </span>
+  )
+}
+
+const FieldValue = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <span
+      style={{
+        fontFamily: 'var(--font-dm-mono)',
+        color: '#A3A3A3',
+        fontSize: '11px',
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
+const Divider = () => {
+  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
+}
 
 export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
+  const status = scanning ? 'SCANNING' : 'ACTIVE'
   return (
     <div
       className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2.5 border-b overflow-x-auto whitespace-nowrap"
@@ -55,40 +100,24 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
     >
       {/* Status dot */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        <motion.span {...getStatusDot(scanning)} />
-        <span {...getStatusText(scanning)} />
+        <StatusDot scanning={scanning} />
+        <StatusText scanning={scanning} status={status} />
       </div>
       <Divider />
-      <Field label="SUBS">{subCount}</Field>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <FieldLabel label="SUBS" />
+        <FieldValue>{subCount}</FieldValue>
+      </div>
       <Divider />
-      <Field label="LAST SCAN">{getRelativeTime(lastScan)}</Field>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <FieldLabel label="LAST SCAN" />
+        <FieldValue>{formatRelative(lastScan)}</FieldValue>
+      </div>
       <Divider />
-      <Field label="AGENT">SAM v0.1</Field>
-    </div>
-  )
-}
-
-function Divider() {
-  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-1.5 flex-shrink-0">
-      <span
-        style={{
-          fontFamily: 'var(--font-geist-sans)',
-          color: '#3a3a3a',
-          fontSize: '9px',
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-        }}
-      >
-        {label}
-      </span>
-      <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#A3A3A3', fontSize: '11px' }}>
-        {children}
-      </span>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <FieldLabel label="AGENT" />
+        <FieldValue>SAM v0.1</FieldValue>
+      </div>
     </div>
   )
 }
