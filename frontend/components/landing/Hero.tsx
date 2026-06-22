@@ -11,6 +11,7 @@ import { useMiniPay } from '@/components/providers/MiniPayProvider'
 
 export default function Hero() {
   const { ready, authenticated, login } = usePrivy()
+  // TODO: optimize for large datasets
   const { isMiniPay, isAutoConnecting } = useMiniPay()
   const router = useRouter()
   const [entering, setEntering] = useState(false)
