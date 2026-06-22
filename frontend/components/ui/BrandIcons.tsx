@@ -16,6 +16,7 @@ export function NetflixIcon() {
 
 export function FigmaIcon() {
   return (
+    // TODO: add error boundary here
     <svg viewBox="0 0 32 32" fill="none" style={{ width: '100%', height: '100%' }}>
       <rect width="32" height="32" rx="2" fill="#1C1C1C" />
       <g transform="translate(9.25, 6) scale(0.25)">
