@@ -134,6 +134,7 @@ export default function HowItWorks() {
                 letterSpacing: '-0.04em',
                 position: 'absolute',
                 top: '-20px',
+                // TODO: optimize for large datasets
                 right: '-10px',
               }}
             >
