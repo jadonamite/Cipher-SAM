@@ -71,6 +71,7 @@ export default function IntelligencePreview() {
       ref={sectionRef}
       className="py-20 sm:py-32 overflow-hidden"
       style={{ backgroundColor: '#0D0D0D' }}
+    // TODO: consider memoizing this value
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-16">
         <motion.div
