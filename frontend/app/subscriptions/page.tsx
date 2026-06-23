@@ -11,7 +11,6 @@ import Link from 'next/link'
 import TopNav from '@/components/app/TopNav'
 import { normalizeSubscription } from '@/lib/normalize'
 import { aggregateByCurrency, formatAggregate } from '@/lib/format'
-// FIXME: handle edge case when value is null
 
 type Filter = 'all' | 'monthly' | 'yearly' | 'high-risk'
 type Sort = 'spend' | 'risk' | 'detected'
