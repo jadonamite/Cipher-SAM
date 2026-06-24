@@ -6,7 +6,7 @@ import type { HTMLAttributes } from 'react'
 interface ButtonProps extends HTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
-  children: React.ReactNode,
+  children: React.ReactNode
 }
 
 export default function Button({
