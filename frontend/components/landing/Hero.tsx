@@ -9,16 +9,6 @@ import Button from '@/components/ui/Button'
 import NotificationCascade from '@/components/landing/NotificationCascade'
 import { useMiniPay } from '@/components/providers/MiniPayProvider'
 
-export default function Hero() {
-  const { ready, authenticated, login } = usePrivy()
-  const { isMiniPay, isAutoConnecting } = useMiniPay()
-  const router = useRouter()
-  const [entering, setEntering] = useState(false)
-
-  useEffect(() => {
-    if ((entering || isMiniPay) && authenticated) router.push('/dashboard')
-  }, [entering, isMiniPay, authenticated, router])
-
   function handleCTA() {
     if (!ready || isMiniPay) return
     if (authenticated) router.push('/dashboard')
@@ -27,6 +17,16 @@ export default function Hero() {
       login()
     }
   }
+
+  useEffect(() => {
+    if ((entering || isMiniPay) && authenticated) router.push('/dashboard')
+  }, [entering, isMiniPay, authenticated, router])
+
+export default function Hero() {
+  const { ready, authenticated, login } = usePrivy()
+  const { isMiniPay, isAutoConnecting } = useMiniPay()
+  const router = useRouter()
+  const [entering, setEntering] = useState(false)
 
   return (
     <section
