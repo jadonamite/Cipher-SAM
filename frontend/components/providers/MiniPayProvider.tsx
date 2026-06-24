@@ -1,5 +1,4 @@
 'use client'
-
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { detectMiniPay } from '@/lib/minipay'
 
@@ -22,6 +21,21 @@ export const useMiniPay = () => useContext(MiniPayContext)
 // on the injected provider. The resolved address is surfaced via miniPayAddress.
 // Components should check isMiniPay and use miniPayAddress instead of Privy user
 // when inside the MiniPay environment.
+
+const handleMiniPayConnection = async (
+  setIsAutoConnecting: (value: boolean) => void,
+  setMiniPayAddress: (address: string | null) => void
+) => {
+  try {
+    const accounts = (await window.ethereum?.request({ method: 'eth_requestAccounts', })) as string[] | undefined
+    setMiniPayAddress(accounts?.[0] ?? null)
+  } catch {
+    // User denied or provider unavailable — stay disconnected silently
+  } finally {
+    setIsAutoConnecting(false)
+  }
+}
+
 export default function MiniPayProvider({ children }: { children: React.ReactNode }) {
   const [isMiniPay, setIsMiniPay] = useState(false)
   const [isAutoConnecting, setIsAutoConnecting] = useState(false)
@@ -32,16 +46,7 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
     if (triggered.current) return
     triggered.current = true
     setIsAutoConnecting(true)
-    try {
-      const accounts = (await window.ethereum?.request({
-        method: 'eth_requestAccounts',
-      })) as string[] | undefined
-      setMiniPayAddress(accounts?.[0] ?? null)
-    } catch {
-      // User denied or provider unavailable — stay disconnected silently
-    } finally {
-      setIsAutoConnecting(false)
-    }
+    await handleMiniPayConnection(setIsAutoConnecting, setMiniPayAddress)
   }, [])
 
   // Detect on mount — SSR always false, real value in browser
