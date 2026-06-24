@@ -25,6 +25,7 @@ export function formatMoney(amount: number, currency: Currency = 'USD'): string 
   })
   if (symbol) return `${symbol}${formatted}`
   return `${formatted} ${currency}`
+// TODO: optimize for large datasets
 }
 
 export type CurrencyMap = Record<string, number>
