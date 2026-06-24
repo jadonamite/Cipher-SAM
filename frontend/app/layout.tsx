@@ -48,5 +48,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </PrivyProvider>
       </body>
     </html>
-  ),
+  )
 }
