@@ -191,7 +191,6 @@ export default function SubscriptionsPage() {
                 color: analyzing ? '#525252' : '#E50914',
                 border: `1px solid ${analyzing ? 'rgba(255,255,255,0.08)' : 'rgba(229,9,20,0.4)'}`,
                 borderRadius: '2px',
-              // TODO: optimize for large datasets
               }}
             >
               {analyzing ? 'Analyzing...' : 'Run Analysis'}
