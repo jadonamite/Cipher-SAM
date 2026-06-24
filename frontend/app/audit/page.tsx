@@ -34,9 +34,29 @@ const TYPE_COLORS: Record<string, string> = {
   analyze: '#A78BFA',
 }
 
+function formatAmount(amount: number, currency = 'USD') {
+  return formatMoney(Number(amount), currency)
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 export default function AuditPage() {
   const { ready, authenticated, user, login } = usePrivy()
   const router = useRouter()
+
+  const [actions, setActions] = useState<ActionRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [reversing, setReversing] = useState<Record<string, boolean>>({})
+  const [filter, setFilter] = useState<'all' | 'reversible' | 'reversed'>('all')
+
+  useEffect(() => {
+    if (!ready) return
+    if (!authenticated) { router.replace('/dashboard'); return }
+    if (!user?.id) return
+    load()
+  }, [ready, authenticated, user?.id])
 
   async function load() {
     setLoading(true)
@@ -65,26 +85,6 @@ export default function AuditPage() {
       setReversing((prev) => ({ ...prev, [action.id]: false }))
     }
   }
-
-  const [actions, setActions] = useState<ActionRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [reversing, setReversing] = useState<Record<string, boolean>>({})
-  const [filter, setFilter] = useState<'all' | 'reversible' | 'reversed'>('all')
-
-  useEffect(() => {
-    if (!ready) return
-    if (!authenticated) { router.replace('/dashboard'); return }
-    if (!user?.id) return
-    load()
-  }, [ready, authenticated, user?.id])
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
-function formatAmount(amount: number, currency = 'USD') {
-  return formatMoney(Number(amount), currency)
-}
 
   const filtered = actions.filter((a) => {
     if (filter === 'reversible') return a.reversible && !a.reversed_at
