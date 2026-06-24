@@ -70,6 +70,49 @@ const BLANK: DraftPolicy = {
   merchant: '',
 }
 
+function buildConditions(draft: DraftPolicy) {
+  if (draft.trigger === 'trial_cancel') {
+    return { trial_days: Number(draft.trial_days) || 7, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
+  }
+  if (draft.trigger === 'spend_alert') {
+    return { spend_threshold: Number(draft.spend_threshold) || 100, currency: 'USD' }
+  }
+  if (draft.trigger === 'inactivity_pause') {
+    return { inactive_days: Number(draft.inactive_days) || 30, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
+  }
+  return {}
+}
+
+export default function PoliciesPage() {
+  const { ready, authenticated, user, login } = usePrivy()
+  const router = useRouter()
+
+  const [policies, setPolicies] = useState<Policy[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showNew, setShowNew] = useState(false)
+  const [draft, setDraft] = useState<DraftPolicy>(BLANK)
+  const [saving, setSaving] = useState(false)
+  const [evaluating, setEvaluating] = useState(false)
+  const [evalResults, setEvalResults] = useState<EvalResult[] | null>(null)
+  const [applying, setApplying] = useState(false)
+
+  useEffect(() => {
+    if (!ready) return
+    if (!authenticated) { router.replace('/dashboard'); return }
+    if (!user?.id) return
+    load()
+  }, [ready, authenticated, user?.id])
+
+  async function load() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/policies', { headers: { 'x-user-id': user!.id } })
+      if (res.ok) setPolicies((await res.json()).policies ?? [])
+    } catch {} finally {
+      setLoading(false)
+    }
+  }
+
   async function createPolicy() {
     if (!draft.name || saving) return
     setSaving(true)
@@ -95,51 +138,6 @@ const BLANK: DraftPolicy = {
     }
   }
 
-  async function applyPolicies() {
-    if (applying || !evalResults) return
-    setApplying(true)
-    try {
-      await fetch('/api/policies/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
-        body: JSON.stringify({ apply: true }),
-      })
-      setEvalResults(null)
-      await load()
-    } catch {} finally {
-      setApplying(false)
-    }
-  }
-
-  const [policies, setPolicies] = useState<Policy[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showNew, setShowNew] = useState(false)
-  const [draft, setDraft] = useState<DraftPolicy>(BLANK)
-  const [saving, setSaving] = useState(false)
-  const [evaluating, setEvaluating] = useState(false)
-  const [evalResults, setEvalResults] = useState<EvalResult[] | null>(null)
-  const [applying, setApplying] = useState(false)
-
-  useEffect(() => {
-    if (!ready) return
-    if (!authenticated) { router.replace('/dashboard'); return }
-    if (!user?.id) return
-    load()
-  }, [ready, authenticated, user?.id])
-
-function buildConditions(draft: DraftPolicy) {
-  if (draft.trigger === 'trial_cancel') {
-    return { trial_days: Number(draft.trial_days) || 7, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
-  }
-  if (draft.trigger === 'spend_alert') {
-    return { spend_threshold: Number(draft.spend_threshold) || 100, currency: 'USD' }
-  }
-  if (draft.trigger === 'inactivity_pause') {
-    return { inactive_days: Number(draft.inactive_days) || 30, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
-  }
-  return {}
-}
-
   async function togglePolicy(id: string, enabled: boolean) {
     setPolicies((prev) => prev.map((p) => p.id === id ? { ...p, enabled } : p))
     try {
@@ -150,10 +148,6 @@ function buildConditions(draft: DraftPolicy) {
       })
     } catch {}
   }
-
-export default function PoliciesPage() {
-  const { ready, authenticated, user, login } = usePrivy()
-  const router = useRouter()
 
   async function deletePolicy(id: string) {
     setPolicies((prev) => prev.filter((p) => p.id !== id))
@@ -181,13 +175,19 @@ export default function PoliciesPage() {
     }
   }
 
-  async function load() {
-    setLoading(true)
+  async function applyPolicies() {
+    if (applying || !evalResults) return
+    setApplying(true)
     try {
-      const res = await fetch('/api/policies', { headers: { 'x-user-id': user!.id } })
-      if (res.ok) setPolicies((await res.json()).policies ?? [])
+      await fetch('/api/policies/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
+        body: JSON.stringify({ apply: true }),
+      })
+      setEvalResults(null)
+      await load()
     } catch {} finally {
-      setLoading(false)
+      setApplying(false)
     }
   }
 
