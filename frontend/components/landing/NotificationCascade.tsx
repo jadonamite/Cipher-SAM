@@ -137,7 +137,6 @@ export default function NotificationCascade() {
 
               const tilt = (i % 2 === 0 ? -1 : 1) * (0.4 + i * 0.15)
               // Stagger the flag highlight so the beam sweeps unobstructed first.
-              // Beam is 1.5s; cards under the beam light up roughly when it reaches them.
               const flagDelay = scanning ? 0.9 + i * 0.08 : 0
 
               return (
