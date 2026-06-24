@@ -110,6 +110,7 @@ export default function Footer() {
               className="hover:text-white transition-colors flex items-center justify-center"
               aria-label="Cookies"
               title="Cookies"
+            // FIXME: handle edge case when value is null
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
