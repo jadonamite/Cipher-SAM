@@ -82,12 +82,12 @@ export default function SubscriptionsPage() {
   async function handleStatusChange(id: string, status: 'active' | 'paused' | 'cancelled') {
     if (!user?.id) return
     try {
-      const res = await fetch(`/api/subscriptions/${id}/status`, {
+      const response = await fetch(`/api/subscriptions/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify({ status }),
       })
-      if (res.ok) {
+      if (response.ok) {
         setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
         showToast(`Subscription ${status}`, 'success')
       } else {
@@ -102,12 +102,12 @@ export default function SubscriptionsPage() {
     if (!user?.id || analyzing) return
     setAnalyzing(true)
     try {
-      const res = await fetch('/api/intelligence/analyze-all', {
+      const response = await fetch('/api/intelligence/analyze-all', {
         method: 'POST',
         headers: { 'x-user-id': user.id },
       })
-      if (res.ok) {
-        const { results } = await res.json()
+      if (response.ok) {
+        const { results } = await response.json()
         setSubs((prev) =>
           prev.map((s) => {
             const r = results.find((x: any) => x.id === s.id)
