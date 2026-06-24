@@ -8,13 +8,6 @@ interface MonthlyBleedProps {
   byCurrency: CurrencyMap
 }
 
-function useCountUp(target: number, duration = 1200) {
-  const [value, setValue] = useState(0)
-
-  useEffect(() => {
-    let frame: number
-    const start = performance.now()
-
     function tick(now: number) {
       const elapsed = now - start
       const progress = Math.min(elapsed / duration, 1)
@@ -22,6 +15,13 @@ function useCountUp(target: number, duration = 1200) {
       setValue(target * eased)
       if (progress < 1) frame = requestAnimationFrame(tick)
     }
+
+  useEffect(() => {
+    let frame: number
+    const start = performance.now()
+
+function useCountUp(target: number, duration = 1200) {
+  const [value, setValue] = useState(0)
 
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
