@@ -83,11 +83,11 @@ export default function SubscriptionDetail() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch(`/api/subscriptions/${id}`, {
+      const response = await fetch(`/api/subscriptions/${id}`, {
         headers: { 'x-user-id': user!.id },
       })
-      if (!res.ok) { router.replace('/subscriptions'); return }
-      const json = await res.json()
+      if (!response.ok) { router.replace('/subscriptions'); return }
+      const json = await response.json()
       setData({
         subscription: normalizeSubscription(json.subscription),
         signals: json.signals ?? [],
@@ -105,12 +105,12 @@ export default function SubscriptionDetail() {
     if (!user?.id || analyzing) return
     setAnalyzing(true)
     try {
-      const res = await fetch(`/api/intelligence/analyze/${id}`, {
+      const response = await fetch(`/api/intelligence/analyze/${id}`, {
         method: 'POST',
         headers: { 'x-user-id': user.id },
       })
-      if (res.ok) {
-        const json = await res.json()
+      if (response.ok) {
+        const json = await response.json()
         setData((prev) =>
           prev
             ? {
@@ -142,7 +142,7 @@ export default function SubscriptionDetail() {
     const remindAt = new Date(Date.now() + daysFromNow * 86_400_000).toISOString()
     const email = user.email?.address ?? user.google?.email ?? null
     try {
-      const res = await fetch('/api/reminders', {
+      const response = await fetch('/api/reminders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify({
@@ -152,11 +152,11 @@ export default function SubscriptionDetail() {
           user_email: email,
         }),
       })
-      if (res.ok) {
+      if (response.ok) {
         setReminderSent(true)
         setTimeout(() => setReminderSent(false), 4000)
       } else {
-        const body = await res.json()
+        const body = await response.json()
         setReminderError(body.error ?? 'Failed to set reminder')
       }
     } catch {
@@ -170,12 +170,12 @@ export default function SubscriptionDetail() {
     if (!user?.id || statusChanging || !data) return
     setStatusChanging(true)
     try {
-      const res = await fetch(`/api/subscriptions/${id}/status`, {
+      const response = await fetch(`/api/subscriptions/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
         body: JSON.stringify({ status }),
       })
-      if (res.ok) {
+      if (response.ok) {
         setData((prev) => prev ? { ...prev, subscription: { ...prev.subscription, status } } : prev)
       }
     } catch {
