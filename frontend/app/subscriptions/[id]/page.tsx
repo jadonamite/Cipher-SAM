@@ -263,7 +263,7 @@ export default function SubscriptionDetail() {
                 {CADENCE_LABELS[sub.cadence]}
               </span>
             </div>
-            <div className="flex items-center gap-3 mt-1 flex-wrap">
+            <div className='flex items-center gap-3 mt-1 flex-wrap'>
               <span
                 className="px-2 py-0.5 text-[10px] uppercase tracking-widest"
                 style={{
