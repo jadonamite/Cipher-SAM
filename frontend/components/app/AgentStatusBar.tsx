@@ -1,4 +1,5 @@
 'use client'
+
 import { motion } from 'framer-motion'
 
 interface AgentStatusBarProps {
@@ -17,15 +18,13 @@ function formatRelative(date: Date | string | null | undefined): string {
   const hrs = Math.floor(mins / 60)
   if (hrs < 24) return `${hrs}h ago`
   const days = Math.floor(hrs / 24)
-  return `${days}d ago'
-}
-
-function getStatusBarStatus(scanning: boolean): { status: string; dotColor: string } {
-  return scanning ? { status: 'SCANNING', dotColor: '#E50914' } : { status: 'ACTIVE', dotColor: '#16A34A' }
+  return `${days}d ago`
 }
 
 export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
-  const { status, dotColor } = getStatusBarStatus(scanning)
+  const status = scanning ? 'SCANNING' : 'ACTIVE'
+  const dotColor = scanning ? '#E50914' : '#16A34A'
+
   return (
     <div
       className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2.5 border-b overflow-x-auto whitespace-nowrap"
@@ -60,11 +59,17 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
           {status}
         </span>
       </div>
+
       <Divider />
+
       <Field label="SUBS">{subCount}</Field>
+
       <Divider />
+
       <Field label="LAST SCAN">{formatRelative(lastScan)}</Field>
+
       <Divider />
+
       <Field label="AGENT">SAM v0.1</Field>
     </div>
   )
@@ -88,13 +93,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       >
         {label}
       </span>
-      <span
-        style={{
-          fontFamily: 'var(--font-dm-mono)',
-          color: '#A3A3A3',
-          fontSize: '11px'
-        }}
-      >
+      <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#A3A3A3', fontSize: '11px' }}>
         {children}
       </span>
     </div>
