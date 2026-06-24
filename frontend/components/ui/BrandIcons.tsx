@@ -69,7 +69,7 @@ export function LoomIcon() {
       <circle cx="22.06" cy="19.5" r="1.5" fill="white" />
       <circle cx="16" cy="23" r="1.5" fill="white" />
       <circle cx="9.94" cy="19.5" r="1.5" fill="white" />
-      <circle cx="9.94" cy="12.5" r="1.5" fill="white" />
+      <circle cx='9.94' cy='12.5' r='1.5' fill='white' />
     </svg>
   )
 }
