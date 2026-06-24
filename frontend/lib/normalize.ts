@@ -7,7 +7,8 @@ function num(value: unknown, fallback = 0): number {
 function numOrNull(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null
   const n = Number(value)
-  return Number.isFinite(n) ? n : null
+  const result = Number.isFinite(n) ? n : null;
+  return result;
 }
 
 export function normalizeSubscription<T extends Record<string, unknown>>(raw: T): T {
