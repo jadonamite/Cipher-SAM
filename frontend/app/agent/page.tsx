@@ -75,59 +75,14 @@ const SAM_POLICY_ABI = [
   },
 ] as const
 
-function ShortAddress({ address }: { address: string }) {
-  if (!address || address === '0x0000000000000000000000000000000000000000') {
-    return <span style={{ color: '#525252' }}>Not configured</span>
-  }
-  return (
-    <span style={{ fontFamily: 'var(--font-dm-mono)' }}>
-      {address.slice(0, 6)}…{address.slice(-4)}
-    </span>
-  )
-}
-
-function StatusDot({ ok }: { ok: boolean }) {
-  return (
-    <span
-      className="inline-block w-1.5 h-1.5 rounded-full"
-      style={{ background: ok ? '#16A34A' : '#525252', flexShrink: 0 }}
-    />
-  )
-}
-
-export default function AgentPage() {
-  const { ready, authenticated, user, login } = usePrivy()
-  const { wallets } = useWallets()
-  const router = useRouter()
-
-  const [status, setStatus] = useState<AgentStatus | null>(null)
-  const [history, setHistory] = useState<ActionRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [granting, setGranting] = useState(false)
-  const [selfSuccess, setSelfSuccess] = useState(false)
-  const [selfError, setSelfError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!ready) return
-    if (!authenticated) { router.replace('/dashboard'); return }
+  async function revokePolicy() {
     if (!user?.id) return
-    load()
-  }, [ready, authenticated, user?.id])
-
-  async function load() {
-    setLoading(true)
     try {
-      const [statusRes, historyRes] = await Promise.all([
-        fetch('/api/agent/status', { headers: { 'x-user-id': user!.id } }),
-        fetch('/api/agent/history', { headers: { 'x-user-id': user!.id } }),
-      ])
-      if (statusRes.ok) setStatus(await statusRes.json())
-      if (historyRes.ok) setHistory((await historyRes.json()).actions ?? [])
-    } catch {
-      // server offline
-    } finally {
-      setLoading(false)
-    }
+      await fetch('/api/agent/revoke-policy', { method: 'POST', headers: { 'x-user-id': user.id } })
+      setStatus((prev) =>
+        prev ? { ...prev, user: { ...prev.user!, policy_granted: false } } : prev
+      )
+    } catch {}
   }
 
   async function grantPolicy() {
@@ -166,6 +121,52 @@ export default function AgentPage() {
     }
   }
 
+export default function AgentPage() {
+  const { ready, authenticated, user, login } = usePrivy()
+  const { wallets } = useWallets()
+  const router = useRouter()
+
+  const [status, setStatus] = useState<AgentStatus | null>(null)
+  const [history, setHistory] = useState<ActionRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [granting, setGranting] = useState(false)
+  const [selfSuccess, setSelfSuccess] = useState(false)
+  const [selfError, setSelfError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!ready) return
+    if (!authenticated) { router.replace('/dashboard'); return }
+    if (!user?.id) return
+    load()
+  }, [ready, authenticated, user?.id])
+
+  async function load() {
+    setLoading(true)
+    try {
+      const [statusRes, historyRes] = await Promise.all([
+        fetch('/api/agent/status', { headers: { 'x-user-id': user!.id } }),
+        fetch('/api/agent/history', { headers: { 'x-user-id': user!.id } }),
+      ])
+      if (statusRes.ok) setStatus(await statusRes.json())
+      if (historyRes.ok) setHistory((await historyRes.json()).actions ?? [])
+    } catch {
+      // server offline
+    } finally {
+      setLoading(false)
+    }
+  }
+
+function ShortAddress({ address }: { address: string }) {
+  if (!address || address === '0x0000000000000000000000000000000000000000') {
+    return <span style={{ color: '#525252' }}>Not configured</span>
+  }
+  return (
+    <span style={{ fontFamily: 'var(--font-dm-mono)' }}>
+      {address.slice(0, 6)}…{address.slice(-4)}
+    </span>
+  )
+}
+
   // Build SelfApp config — memoised so it doesn't regenerate on every render
   const selfApp = useMemo(() => {
     if (!user?.id) return null
@@ -197,16 +198,14 @@ export default function AgentPage() {
     } catch {}
   }
 
-  async function revokePolicy() {
-    if (!user?.id) return
-    try {
-      await fetch('/api/agent/revoke-policy', { method: 'POST', headers: { 'x-user-id': user.id } })
-      setStatus((prev) =>
-        prev ? { ...prev, user: { ...prev.user!, policy_granted: false } } : prev
-      )
-    } catch {}
-  }
-
+function StatusDot({ ok }: { ok: boolean }) {
+  return (
+    <span
+      className="inline-block w-1.5 h-1.5 rounded-full"
+      style={{ background: ok ? '#16A34A' : '#525252', flexShrink: 0 }}
+    />
+  )
+}
 
   if (!ready || loading) {
     return (
