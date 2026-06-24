@@ -1,5 +1,4 @@
 'use client'
-
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { detectMiniPay } from '@/lib/minipay'
 
@@ -28,14 +27,12 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
   const [miniPayAddress, setMiniPayAddress] = useState<string | null>(null)
   const triggered = useRef(false)
 
-  const connectMiniPay = useCallback(async () => {
+  const handleConnectMiniPay = useCallback(async () => {
     if (triggered.current) return
     triggered.current = true
     setIsAutoConnecting(true)
     try {
-      const accounts = (await window.ethereum?.request({
-        method: 'eth_requestAccounts',
-      })) as string[] | undefined
+      const accounts = (await window.ethereum?.request({ method: 'eth_requestAccounts', })) as string[] | undefined
       setMiniPayAddress(accounts?.[0] ?? null)
     } catch {
       // User denied or provider unavailable — stay disconnected silently
@@ -44,23 +41,26 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
     }
   }, [])
 
+  const handleAccountsChanged = (accounts: unknown) => {
+    const list = accounts as string[]
+    setMiniPayAddress(list[0] ?? null)
+  }
+
+  const setupMiniPayListener = useCallback(() => {
+    if (!isMiniPay || !window.ethereum) return
+    window.ethereum.on('accountsChanged', handleAccountsChanged)
+    return () => window.ethereum?.removeListener('accountsChanged', handleAccountsChanged)
+  }, [isMiniPay])
+
   // Detect on mount — SSR always false, real value in browser
   useEffect(() => {
     const detected = detectMiniPay()
     setIsMiniPay(detected)
-    if (detected) connectMiniPay()
-  }, [connectMiniPay])
+    if (detected) handleConnectMiniPay()
+  }, [handleConnectMiniPay])
 
   // Keep address in sync if MiniPay rotates accounts (rare but possible)
-  useEffect(() => {
-    if (!isMiniPay || !window.ethereum) return
-    const handleAccountsChanged = (accounts: unknown) => {
-      const list = accounts as string[]
-      setMiniPayAddress(list[0] ?? null)
-    }
-    window.ethereum.on('accountsChanged', handleAccountsChanged)
-    return () => window.ethereum?.removeListener('accountsChanged', handleAccountsChanged)
-  }, [isMiniPay])
+  useEffect(setupMiniPayListener, [setupMiniPayListener])
 
   return (
     <MiniPayContext.Provider value={{ isMiniPay, isAutoConnecting, miniPayAddress }}>
