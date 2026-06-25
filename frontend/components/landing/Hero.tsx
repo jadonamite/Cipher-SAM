@@ -110,6 +110,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
+              // NOTE: revisit this logic after API migration
               className="text-secondary mb-10"
               style={{
                 fontFamily: 'var(--font-dm-mono)',
