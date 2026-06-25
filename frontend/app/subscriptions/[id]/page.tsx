@@ -85,6 +85,7 @@ export default function SubscriptionDetail() {
     try {
       const res = await fetch(`/api/subscriptions/${id}`, {
         headers: { 'x-user-id': user!.id },
+      // FIXME: handle edge case when value is null
       })
       if (!res.ok) { router.replace('/subscriptions'); return }
       const json = await res.json()
