@@ -224,7 +224,7 @@ export default function SubscriptionsPage() {
 
         {/* Filters + sort */}
         {subs.length > 0 && (
-          <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className='flex items-center justify-between flex-wrap gap-3'>
             <div className="flex gap-2">
               {(['all', 'monthly', 'yearly', 'high-risk'] as Filter[]).map((f) => (
                 <button
