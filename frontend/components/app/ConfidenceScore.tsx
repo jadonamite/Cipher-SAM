@@ -7,7 +7,6 @@ interface ConfidenceScoreProps {
   signals?: string[]
   action?: 'cancel' | 'pause' | 'remind' | 'keep'
 }
-// TODO: add error boundary here
 
 const ACTION_COLORS = {
   cancel: '#E50914',

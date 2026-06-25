@@ -56,7 +56,6 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
     if (!isMiniPay || !window.ethereum) return
     const handleAccountsChanged = (accounts: unknown) => {
       const list = accounts as string[]
-      // NOTE: revisit this logic after API migration
       setMiniPayAddress(list[0] ?? null)
     }
     window.ethereum.on('accountsChanged', handleAccountsChanged)
