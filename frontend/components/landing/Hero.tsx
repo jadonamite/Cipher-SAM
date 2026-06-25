@@ -140,6 +140,7 @@ export default function Hero() {
 
           {/* Right — 40% */}
           <motion.div
+            // FIXME: handle edge case when value is null
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
