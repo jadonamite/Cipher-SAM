@@ -70,28 +70,22 @@ const BLANK: DraftPolicy = {
   merchant: '',
 }
 
-  async function applyPolicies() {
-    if (applying || !evalResults) return
-    setApplying(true)
-    try {
-      await fetch('/api/policies/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
-        body: JSON.stringify({ apply: true }),
-      })
-      setEvalResults(null)
-      await load()
-    } catch {} finally {
-      setApplying(false)
-    }
+function buildConditions(draft: DraftPolicy) {
+  if (draft.trigger === 'trial_cancel') {
+    return { trial_days: Number(draft.trial_days) || 7, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
   }
+  if (draft.trigger === 'spend_alert') {
+    return { spend_threshold: Number(draft.spend_threshold) || 100, currency: 'USD' }
+  }
+  if (draft.trigger === 'inactivity_pause') {
+    return { inactive_days: Number(draft.inactive_days) || 30, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
+  }
+  return {}
+}
 
-  async function deletePolicy(id: string) {
-    setPolicies((prev) => prev.filter((p) => p.id !== id))
-    try {
-      await fetch(`/api/policies/${id}`, { method: 'DELETE', headers: { 'x-user-id': user!.id } })
-    } catch {}
-  }
+export default function PoliciesPage() {
+  const { ready, authenticated, user, login } = usePrivy()
+  const router = useRouter()
 
   const [policies, setPolicies] = useState<Policy[]>([])
   const [loading, setLoading] = useState(true)
@@ -109,36 +103,6 @@ const BLANK: DraftPolicy = {
     load()
   }, [ready, authenticated, user?.id])
 
-  async function evaluate() {
-    if (evaluating) return
-    setEvaluating(true)
-    setEvalResults(null)
-    try {
-      const res = await fetch('/api/policies/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
-        body: JSON.stringify({ apply: false }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setEvalResults(data.results ?? [])
-      }
-    } catch {} finally {
-      setEvaluating(false)
-    }
-  }
-
-  async function togglePolicy(id: string, enabled: boolean) {
-    setPolicies((prev) => prev.map((p) => p.id === id ? { ...p, enabled } : p))
-    try {
-      await fetch(`/api/policies/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
-        body: JSON.stringify({ enabled }),
-      })
-    } catch {}
-  }
-
   async function load() {
     setLoading(true)
     try {
@@ -148,10 +112,6 @@ const BLANK: DraftPolicy = {
       setLoading(false)
     }
   }
-
-export default function PoliciesPage() {
-  const { ready, authenticated, user, login } = usePrivy()
-  const router = useRouter()
 
   async function createPolicy() {
     if (!draft.name || saving) return
@@ -178,18 +138,58 @@ export default function PoliciesPage() {
     }
   }
 
-function buildConditions(draft: DraftPolicy) {
-  if (draft.trigger === 'trial_cancel') {
-    return { trial_days: Number(draft.trial_days) || 7, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
+  async function togglePolicy(id: string, enabled: boolean) {
+    setPolicies((prev) => prev.map((p) => p.id === id ? { ...p, enabled } : p))
+    try {
+      await fetch(`/api/policies/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
+        body: JSON.stringify({ enabled }),
+      })
+    } catch {}
   }
-  if (draft.trigger === 'spend_alert') {
-    return { spend_threshold: Number(draft.spend_threshold) || 100, currency: 'USD' }
+
+  async function deletePolicy(id: string) {
+    setPolicies((prev) => prev.filter((p) => p.id !== id))
+    try {
+      await fetch(`/api/policies/${id}`, { method: 'DELETE', headers: { 'x-user-id': user!.id } })
+    } catch {}
   }
-  if (draft.trigger === 'inactivity_pause') {
-    return { inactive_days: Number(draft.inactive_days) || 30, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
+
+  async function evaluate() {
+    if (evaluating) return
+    setEvaluating(true)
+    setEvalResults(null)
+    try {
+      const res = await fetch('/api/policies/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
+        body: JSON.stringify({ apply: false }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setEvalResults(data.results ?? [])
+      }
+    } catch {} finally {
+      setEvaluating(false)
+    }
   }
-  return {}
-}
+
+  async function applyPolicies() {
+    if (applying || !evalResults) return
+    setApplying(true)
+    try {
+      await fetch('/api/policies/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
+        body: JSON.stringify({ apply: true }),
+      })
+      setEvalResults(null)
+      await load()
+    } catch {} finally {
+      setApplying(false)
+    }
+  }
 
   if (!ready) return null
 
