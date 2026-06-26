@@ -100,6 +100,7 @@ export default function SubscriptionRow({ sub, onStatusChange, href }: Subscript
       />
 
       {/* Merchant avatar */}
+      // TODO: add error boundary here
       <MerchantAvatar name={sub.merchant} />
 
       {/* Name + cadence */}
