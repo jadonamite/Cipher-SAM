@@ -37,7 +37,6 @@ function StrikeoutLine({
       >
         {text}
       </span>
-      // TODO: add error boundary here
       <span className="relative inline-flex items-center shrink-0">
         <span
           className="text-secondary"
