@@ -39,7 +39,7 @@ function computeRenewals(subs: Subscription[], windowDays = 14): Renewal[] {
 }
 
 export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
-  const WINDOW: number = 14
+  const WINDOW = 14
   const renewals = useMemo(() => computeRenewals(subs, WINDOW), [subs])
   const [hovered, setHovered] = useState<Renewal | null>(null)
 

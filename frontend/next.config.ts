@@ -1,7 +1,5 @@
 import type { NextConfig } from 'next'
 
-const getSAMServerURL = () => process.env.SAM_SERVER_URL ?? 'http://localhost:3001'
-
 const config: NextConfig = {
   experimental: {
     optimizePackageImports: ['framer-motion'],
@@ -11,7 +9,7 @@ const config: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${getSAMServerURL()}/:path*`,
+        destination: `${process.env.SAM_SERVER_URL ?? 'http://localhost:3001'}/:path*`,
       },
     ]
   },
