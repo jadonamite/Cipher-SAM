@@ -55,6 +55,31 @@ const STATUS_STYLES: Record<string, { color: string; border: string }> = {
 
 const formatAmount = formatMoney
 
+function formatDate(iso: string | null | undefined) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+export default function SubscriptionDetail() {
+  const { id } = useParams<{ id: string }>()
+  const router = useRouter()
+  const { ready, authenticated, user } = usePrivy()
+
+  const [data, setData] = useState<DetailData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [statusChanging, setStatusChanging] = useState(false)
+  const [reminderSent, setReminderSent] = useState(false)
+  const [reminderSending, setReminderSending] = useState(false)
+  const [reminderError, setReminderError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!ready) return
+    if (!authenticated) { router.replace('/dashboard'); return }
+    if (!user?.id || !id) return
+    load()
+  }, [ready, authenticated, user?.id, id])
+
   async function load() {
     setLoading(true)
     try {
@@ -76,25 +101,39 @@ const formatAmount = formatMoney
     }
   }
 
-export default function SubscriptionDetail() {
-  const { id } = useParams<{ id: string }>()
-  const router = useRouter()
-  const { ready, authenticated, user } = usePrivy()
-
-  const [data, setData] = useState<DetailData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [statusChanging, setStatusChanging] = useState(false)
-  const [reminderSent, setReminderSent] = useState(false)
-  const [reminderSending, setReminderSending] = useState(false)
-  const [reminderError, setReminderError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!ready) return
-    if (!authenticated) { router.replace('/dashboard'); return }
-    if (!user?.id || !id) return
-    load()
-  }, [ready, authenticated, user?.id, id])
+  async function runAnalysis() {
+    if (!user?.id || analyzing) return
+    setAnalyzing(true)
+    try {
+      const res = await fetch(`/api/intelligence/analyze/${id}`, {
+        method: 'POST',
+        headers: { 'x-user-id': user.id },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setData((prev) =>
+          prev
+            ? {
+                ...prev,
+                signals: json.signals?.map((s: { type: string; label: string; value: number }) => ({
+                  id: s.type,
+                  type: s.type,
+                  value: s.label,
+                  weight: s.value,
+                })) ?? prev.signals,
+                insight: json.insight ?? prev.insight,
+                recommendation: json.recommendation ?? prev.recommendation,
+                subscription: { ...prev.subscription, confidence: json.confidence, action: json.action },
+              }
+            : prev
+        )
+      }
+    } catch {
+      // offline
+    } finally {
+      setAnalyzing(false)
+    }
+  }
 
   async function scheduleReminder(daysFromNow: number) {
     if (!user?.id || reminderSending) return
@@ -145,45 +184,6 @@ export default function SubscriptionDetail() {
       setStatusChanging(false)
     }
   }
-
-  async function runAnalysis() {
-    if (!user?.id || analyzing) return
-    setAnalyzing(true)
-    try {
-      const res = await fetch(`/api/intelligence/analyze/${id}`, {
-        method: 'POST',
-        headers: { 'x-user-id': user.id },
-      })
-      if (res.ok) {
-        const json = await res.json()
-        setData((prev) =>
-          prev
-            ? {
-                ...prev,
-                signals: json.signals?.map((s: { type: string; label: string; value: number }) => ({
-                  id: s.type,
-                  type: s.type,
-                  value: s.label,
-                  weight: s.value,
-                })) ?? prev.signals,
-                insight: json.insight ?? prev.insight,
-                recommendation: json.recommendation ?? prev.recommendation,
-                subscription: { ...prev.subscription, confidence: json.confidence, action: json.action },
-              }
-            : prev
-        )
-      }
-    } catch {
-      // offline
-    } finally {
-      setAnalyzing(false)
-    }
-  }
-
-function formatDate(iso: string | null | undefined) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
 
   if (!ready || loading) {
     return (
