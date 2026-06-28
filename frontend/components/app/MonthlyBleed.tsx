@@ -1,45 +1,42 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { formatMoney, primaryCurrency, type CurrencyMap } from '@/lib/format';
+'use client'
+
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { formatMoney, primaryCurrency, type CurrencyMap } from '@/lib/format'
 
 interface MonthlyBleedProps {
-  byCurrency: CurrencyMap;
+  byCurrency: CurrencyMap
 }
 
 function useCountUp(target: number, duration = 1200) {
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(0)
+
   useEffect(() => {
-    let frame: number;
-    const start = performance.now();
+    let frame: number
+    const start = performance.now()
+
     function tick(now: number) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(target * eased);
-      if (progress < 1) frame = requestAnimationFrame(tick);
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(target * eased)
+      if (progress < 1) frame = requestAnimationFrame(tick)
     }
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [target, duration]);
-  return value;
+
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [target, duration])
+
+  return value
 }
 
-const getPrimaryAndExtras = (byCurrency: CurrencyMap) => {
-  const primary = primaryCurrency(byCurrency) ?? 'USD';
-  const primaryAmount = byCurrency[primary] ?? 0;
-  const extras = Object.entries(byCurrency).filter(([c, v]) => c !== primary && v > 0);
-  return { primary, primaryAmount, extras };
-};
-
-const formatCurrencyAmounts = (primaryAmount: number, extras: [string, number][], primary: string) => {
-  const display = useCountUp(primaryAmount);
-  const yearlyPrimary = primaryAmount * 12;
-  return { display, yearlyPrimary, extras: extras.map(([c, v]) => formatMoney(v, c)).join(' + ') };
-};
-
 export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
-  const { primary, primaryAmount, extras } = getPrimaryAndExtras(byCurrency);
-  const { display, yearlyPrimary, extras: formattedExtras } = formatCurrencyAmounts(primaryAmount, extras, primary);
+  const primary = primaryCurrency(byCurrency) ?? 'USD'
+  const primaryAmount = byCurrency[primary] ?? 0
+  const display = useCountUp(primaryAmount)
+
+  const extras = Object.entries(byCurrency).filter(([c, v]) => c !== primary && v > 0)
+  const yearlyPrimary = primaryAmount * 12
 
   return (
     <motion.div
@@ -81,7 +78,7 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
             marginTop: '4px',
           }}
         >
-          + {formattedExtras} /month
+          + {extras.map(([c, v]) => formatMoney(v, c)).join(' + ')} /month
         </span>
       )}
       <span
@@ -95,9 +92,9 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
         You'll spend{' '}
         <span style={{ color: '#E50914', fontFamily: 'var(--font-dm-mono)' }}>
           {formatMoney(yearlyPrimary, primary)}
-        </span>
-        {' '} this year if nothing changes.
+        </span>{' '}
+        this year if nothing changes.
       </span>
     </motion.div>
-  );
+  )
 }

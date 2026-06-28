@@ -10,7 +10,7 @@ interface Insight {
   tag: string
   title: string
   detail: string
-  tone: 'warn' | 'info' | 'alert'
+  tone: 'warn' | 'info' | 'alert',
 }
 
 const CATEGORY_MAP: Record<string, string[]> = {
