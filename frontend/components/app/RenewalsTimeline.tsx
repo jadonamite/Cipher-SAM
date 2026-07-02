@@ -188,7 +188,7 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
       </div>
 
       {/* axis labels */}
-      <div className='flex justify-between' style={{ marginTop: '-8px' }}>
+      <div className="flex justify-between" style={{ marginTop: '-8px' }}>
         {[0, 7, WINDOW].map((d) => (
           <span
             key={d}
