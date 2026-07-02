@@ -40,6 +40,11 @@ const CADENCE_LABELS: Record<string, string> = {
   yearly: '/yr',
 }
 
+/**
+ * MerchantAvatar
+ * @param {*} { name }: { name: string }
+ * @returns {*}
+ */
 function MerchantAvatar({ name }: { name: string }) {
   return (
     <div
