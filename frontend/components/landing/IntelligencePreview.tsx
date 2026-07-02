@@ -222,7 +222,7 @@ export default function IntelligencePreview() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1.5">
+                      <div className='flex items-center gap-2 mb-1.5'>
                         <span
                           className="text-white text-sm font-medium"
                           style={{ fontFamily: 'var(--font-geist-sans)' }}
