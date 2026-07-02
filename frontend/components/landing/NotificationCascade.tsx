@@ -242,7 +242,7 @@ export default function NotificationCascade() {
 
       {/* Bleed counter */}
       <div
-        className='mt-5 rounded-sm px-4 py-3 flex items-end justify-between'
+        className="mt-5 rounded-sm px-4 py-3 flex items-end justify-between"
         style={{
           backgroundColor: '#0F0F0F',
           border: '1px solid rgba(255,255,255,0.04)',
