@@ -66,7 +66,7 @@ export default function NotificationCascade() {
 
   // Drive bleed counter via motion value (smooth tween, no React re-render per frame)
   useEffect(() => {
-    let target = 0
+    let target: number = 0
     if (phase === 0 || phase === 9) target = 0
     else if (phase <= 5) {
       // Sum of appeared notifications
