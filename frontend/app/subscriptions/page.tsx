@@ -32,28 +32,6 @@ function getCategory(merchant: string): string {
   return 'Other'
 }
 
-function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
-  const groups: Record<string, Subscription[]> = {}
-  for (const sub of subs) {
-    const cat = getCategory(sub.merchant)
-    if (!groups[cat]) groups[cat] = []
-    groups[cat].push(sub)
-  }
-  return groups
-}
-
-export default function SubscriptionsPage() {
-  const { ready, authenticated, user, login } = usePrivy()
-  const router = useRouter()
-  const { showToast } = useToast()
-
-  const [subs, setSubs] = useState<Subscription[]>([])
-  const [gmailConnected, setGmailConnected] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<Filter>('all')
-  const [sort, setSort] = useState<Sort>('spend')
-  const [analyzing, setAnalyzing] = useState(false)
-
   async function fetchSubs(uid: string) {
     const [statusRes, subsRes] = await Promise.all([
       fetch(`/api/gmail/status?user_id=${uid}`),
@@ -63,21 +41,6 @@ export default function SubscriptionsPage() {
     setGmailConnected(statusData.connected ?? false)
     if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
   }
-
-  useEffect(() => {
-    if (!ready || !authenticated || !user?.id) return
-    setLoading(true)
-    fetchSubs(user.id).catch(() => {}).finally(() => setLoading(false))
-  }, [ready, authenticated, user?.id])
-
-  // Poll every 30s while tab is visible
-  useEffect(() => {
-    if (!authenticated || !user?.id) return
-    const id = setInterval(() => {
-      if (document.visibilityState === 'visible') fetchSubs(user!.id).catch(() => {})
-    }, 30_000)
-    return () => clearInterval(id)
-  }, [authenticated, user?.id])
 
   async function handleStatusChange(id: string, status: 'active' | 'paused' | 'cancelled') {
     if (!user?.id) return
@@ -97,6 +60,33 @@ export default function SubscriptionsPage() {
       showToast('Could not reach server', 'error')
     }
   }
+
+  const [subs, setSubs] = useState<Subscription[]>([])
+  const [gmailConnected, setGmailConnected] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<Filter>('all')
+  const [sort, setSort] = useState<Sort>('spend')
+  const [analyzing, setAnalyzing] = useState(false)
+
+export default function SubscriptionsPage() {
+  const { ready, authenticated, user, login } = usePrivy()
+  const router = useRouter()
+  const { showToast } = useToast()
+
+  useEffect(() => {
+    if (!ready || !authenticated || !user?.id) return
+    setLoading(true)
+    fetchSubs(user.id).catch(() => {}).finally(() => setLoading(false))
+  }, [ready, authenticated, user?.id])
+
+  // Poll every 30s while tab is visible
+  useEffect(() => {
+    if (!authenticated || !user?.id) return
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchSubs(user!.id).catch(() => {})
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [authenticated, user?.id])
 
   async function runAnalysis() {
     if (!user?.id || analyzing) return
@@ -124,6 +114,16 @@ export default function SubscriptionsPage() {
       setAnalyzing(false)
     }
   }
+
+function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
+  const groups: Record<string, Subscription[]> = {}
+  for (const sub of subs) {
+    const cat = getCategory(sub.merchant)
+    if (!groups[cat]) groups[cat] = []
+    groups[cat].push(sub)
+  }
+  return groups
+}
 
   const filtered = useMemo(() => {
     let list = subs.filter((s) => s.status === 'active')
