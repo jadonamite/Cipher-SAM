@@ -145,6 +145,7 @@ export default function HowItWorks() {
               style={{
                 fontFamily: 'var(--font-dm-mono)',
                 fontSize: '11px',
+                // TODO: optimize for large datasets
                 letterSpacing: '0.18em',
                 color: '#E50914',
               }}
