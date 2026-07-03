@@ -166,11 +166,6 @@ export default function SubscriptionDetail() {
     }
   }
 
-  /**
-   * changeStatus
-   * @param {*} status: 'active' | 'paused' | 'cancelled'
-   * @returns {*}
-   */
   async function changeStatus(status: 'active' | 'paused' | 'cancelled') {
     if (!user?.id || statusChanging || !data) return
     setStatusChanging(true)
