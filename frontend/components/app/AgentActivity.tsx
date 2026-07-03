@@ -17,6 +17,10 @@ interface AgentActivityProps {
   userId: string | undefined
 }
 
+export default function AgentActivity({ userId }: AgentActivityProps) {
+  const [actions, setActions] = useState<AgentAction[]>([])
+  const [loading, setLoading] = useState(true)
+
 function formatRelative(date: string): string {
   const d = new Date(date)
   const diff = Date.now() - d.getTime()
@@ -38,10 +42,6 @@ function describeAction(a: AgentAction): string {
   if (t.includes('detect')) return `Detected ${a.merchant}`
   return `${a.type} · ${a.merchant}`
 }
-
-export default function AgentActivity({ userId }: AgentActivityProps) {
-  const [actions, setActions] = useState<AgentAction[]>([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!userId) return
