@@ -18,26 +18,12 @@ import { normalizeSubscription } from '@/lib/normalize'
 import { aggregateByCurrency, formatAggregate, type CurrencyMap } from '@/lib/format'
 import Link from 'next/link'
 
-  async function debugScan() {
-    if (!user?.id || debugScanning) return
-    setDebugScanning(true)
-    setDebugOutput('Running scan… (up to 60s)')
-    try {
-      await fetch('/api/gmail/scan-lock', { method: 'DELETE', headers: { 'x-user-id': user.id } }).catch(() => {})
-      const t0 = Date.now()
-      const res = await fetch('/api/gmail/scan?debug=1', {
-        method: 'POST',
-        headers: { 'x-user-id': user.id },
-      })
-      const data = await res.json()
-      const wall = Date.now() - t0
-      setDebugOutput(JSON.stringify({ http_status: res.status, wall_ms: wall, ...data }, null, 2))
-    } catch (e) {
-      setDebugOutput(`Network error: ${(e as Error).message}`)
-    } finally {
-      setDebugScanning(false)
-    }
-  }
+function monthlyOf(s: Subscription): number {
+  if (s.cadence === 'yearly') return s.amount / 12
+  if (s.cadence === 'weekly') return s.amount * 4.33
+  if (s.cadence === 'daily') return s.amount * 30
+  return s.amount
+}
 
 export default function Dashboard() {
   return (
@@ -53,39 +39,18 @@ type SummaryStats = {
   highRisk: number
 }
 
-  async function triggerWalletScan() {
-    const address = user?.wallet?.address
-    if (!address || walletScanning) return
-    setWalletScanning(true)
-    setScanResult(null)
-    try {
-      const res = await fetch('/api/wallet/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
-        body: JSON.stringify({ address }),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        setScanResult({ created: data.created, updated: data.updated, source: 'Wallet' })
-        showToast(`Wallet scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
-        const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user!.id } })
-        if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
-      } else {
-        showToast(data.error ?? `Wallet scan failed (${res.status})`, 'error')
-      }
-    } catch {
-      showToast('Could not reach server', 'error')
-    } finally {
-      setWalletScanning(false)
-    }
-  }
-
-function monthlyOf(s: Subscription): number {
-  if (s.cadence === 'yearly') return s.amount / 12
-  if (s.cadence === 'weekly') return s.amount * 4.33
-  if (s.cadence === 'daily') return s.amount * 30
-  return s.amount
+function calcStats(subs: Subscription[]): SummaryStats {
+  const active = subs.filter((s) => s.status === 'active')
+  const byCurrency = aggregateByCurrency(active, monthlyOf, (s) => s.currency ?? 'USD')
+  const highRisk = active.filter((s) => (s.confidence ?? 0) >= 60).length
+  return { byCurrency, count: active.length, highRisk }
 }
+
+function DashboardInner() {
+  const { ready, authenticated, user, login } = usePrivy()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { showToast } = useToast()
 
   const [gmailConnected, setGmailConnected] = useState(false)
   const [subs, setSubs] = useState<Subscription[]>([])
@@ -98,17 +63,29 @@ function monthlyOf(s: Subscription): number {
   const [debugScanning, setDebugScanning] = useState(false)
   const [debugOutput, setDebugOutput] = useState<string | null>(null)
 
-  async function handleStatusChange(id: string, status: 'active' | 'paused' | 'cancelled') {
-    if (!user?.id) return
-    try {
-      await fetch(`/api/subscriptions/${id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
-        body: JSON.stringify({ status }),
-      })
-      setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
-    } catch {
-      // offline
+  async function fetchSubs(uid: string) {
+    const [statusRes, subsRes, polRes] = await Promise.all([
+      fetch(`/api/gmail/status?user_id=${uid}`),
+      fetch('/api/subscriptions', { headers: { 'x-user-id': uid } }),
+      fetch('/api/policies', { headers: { 'x-user-id': uid } }),
+    ])
+    const statusData = await statusRes.json()
+    setGmailConnected(statusData.connected ?? false)
+    if (subsRes.ok) {
+      const raw = ((await subsRes.json()).subscriptions ?? []) as Subscription[]
+      const list = raw.map(normalizeSubscription)
+      setSubs(list)
+      // derive lastScan from most recent detected_at
+      const latest = list
+        .map((s) => s.detected_at)
+        .filter(Boolean)
+        .sort()
+        .pop()
+      if (latest) setLastScan(latest as string)
+    }
+    if (polRes.ok) {
+      const pols = (await polRes.json()).policies ?? []
+      setHasPolicies(pols.length > 0)
     }
   }
 
@@ -137,45 +114,6 @@ function monthlyOf(s: Subscription): number {
     }
   }, [searchParams])
 
-  async function fetchSubs(uid: string) {
-    const [statusRes, subsRes, polRes] = await Promise.all([
-      fetch(`/api/gmail/status?user_id=${uid}`),
-      fetch('/api/subscriptions', { headers: { 'x-user-id': uid } }),
-      fetch('/api/policies', { headers: { 'x-user-id': uid } }),
-    ])
-    const statusData = await statusRes.json()
-    setGmailConnected(statusData.connected ?? false)
-    if (subsRes.ok) {
-      const raw = ((await subsRes.json()).subscriptions ?? []) as Subscription[]
-      const list = raw.map(normalizeSubscription)
-      setSubs(list)
-      // derive lastScan from most recent detected_at
-      const latest = list
-        .map((s) => s.detected_at)
-        .filter(Boolean)
-        .sort()
-        .pop()
-      if (latest) setLastScan(latest as string)
-    }
-    if (polRes.ok) {
-      const pols = (await polRes.json()).policies ?? []
-      setHasPolicies(pols.length > 0)
-    }
-  }
-
-function calcStats(subs: Subscription[]): SummaryStats {
-  const active = subs.filter((s) => s.status === 'active')
-  const byCurrency = aggregateByCurrency(active, monthlyOf, (s) => s.currency ?? 'USD')
-  const highRisk = active.filter((s) => (s.confidence ?? 0) >= 60).length
-  return { byCurrency, count: active.length, highRisk }
-}
-
-function DashboardInner() {
-  const { ready, authenticated, user, login } = usePrivy()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { showToast } = useToast()
-
   async function triggerScan() {
     if (!user?.id || scanning) return
     setScanning(true)
@@ -198,6 +136,68 @@ function DashboardInner() {
       showToast('Could not reach server', 'error')
     } finally {
       setScanning(false)
+    }
+  }
+
+  async function debugScan() {
+    if (!user?.id || debugScanning) return
+    setDebugScanning(true)
+    setDebugOutput('Running scan… (up to 60s)')
+    try {
+      await fetch('/api/gmail/scan-lock', { method: 'DELETE', headers: { 'x-user-id': user.id } }).catch(() => {})
+      const t0 = Date.now()
+      const res = await fetch('/api/gmail/scan?debug=1', {
+        method: 'POST',
+        headers: { 'x-user-id': user.id },
+      })
+      const data = await res.json()
+      const wall = Date.now() - t0
+      setDebugOutput(JSON.stringify({ http_status: res.status, wall_ms: wall, ...data }, null, 2))
+    } catch (e) {
+      setDebugOutput(`Network error: ${(e as Error).message}`)
+    } finally {
+      setDebugScanning(false)
+    }
+  }
+
+  async function triggerWalletScan() {
+    const address = user?.wallet?.address
+    if (!address || walletScanning) return
+    setWalletScanning(true)
+    setScanResult(null)
+    try {
+      const res = await fetch('/api/wallet/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
+        body: JSON.stringify({ address }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setScanResult({ created: data.created, updated: data.updated, source: 'Wallet' })
+        showToast(`Wallet scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
+        const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user!.id } })
+        if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
+      } else {
+        showToast(data.error ?? `Wallet scan failed (${res.status})`, 'error')
+      }
+    } catch {
+      showToast('Could not reach server', 'error')
+    } finally {
+      setWalletScanning(false)
+    }
+  }
+
+  async function handleStatusChange(id: string, status: 'active' | 'paused' | 'cancelled') {
+    if (!user?.id) return
+    try {
+      await fetch(`/api/subscriptions/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        body: JSON.stringify({ status }),
+      })
+      setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
+    } catch {
+      // offline
     }
   }
 

@@ -78,11 +78,33 @@ const CADENCE_LABELS: Record<string, string> = {
   yearly: '/yr',
 }
 
+function monthlyEquiv(amount: number, cadence: string) {
+  if (cadence === 'yearly') return amount / 12
+  if (cadence === 'weekly') return amount * 4.33
+  if (cadence === 'daily') return amount * 30
+  return amount
+}
+
+const formatAmount = formatMoney
+
+function formatDate(iso: string | null) {
+  if (!iso) return null
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 export default function RecommendationsPage() {
   const { ready, authenticated, user, login } = usePrivy()
   const router = useRouter()
 
-const formatAmount = formatMoney
+  const [recs, setRecs] = useState<Rec[]>([])
+  const [loading, setLoading] = useState(true)
+  const [acting, setActing] = useState<Record<string, boolean>>({})
+  const [done, setDone] = useState<Record<string, { action: string; cancelUrl?: string }>>({})
+
+  useEffect(() => {
+    if (!ready || !authenticated || !user?.id) return
+    load()
+  }, [ready, authenticated, user?.id])
 
   async function load() {
     setLoading(true)
@@ -95,28 +117,6 @@ const formatAmount = formatMoney
       setLoading(false)
     }
   }
-
-function monthlyEquiv(amount: number, cadence: string) {
-  if (cadence === 'yearly') return amount / 12
-  if (cadence === 'weekly') return amount * 4.33
-  if (cadence === 'daily') return amount * 30
-  return amount
-}
-
-  const [recs, setRecs] = useState<Rec[]>([])
-  const [loading, setLoading] = useState(true)
-  const [acting, setActing] = useState<Record<string, boolean>>({})
-  const [done, setDone] = useState<Record<string, { action: string; cancelUrl?: string }>>({})
-
-  useEffect(() => {
-    if (!ready || !authenticated || !user?.id) return
-    load()
-  }, [ready, authenticated, user?.id])
-
-function formatDate(iso: string | null) {
-  if (!iso) return null
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
 
   async function act(rec: Rec, decision: 'accepted' | 'dismissed') {
     if (acting[rec.id]) return
