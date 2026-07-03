@@ -93,6 +93,7 @@ function computeInsights(subs: Subscription[]): Insight[] {
     const grandByCurrency = aggregateByCurrency(active, monthly, currencyOf)
     const totalStr = formatAggregate(top.map)
     // Percentage uses the dominant currency in the top category against the
+    // same currency's grand total, falling back to absolute share if absent.
     const dominantCurrency = Object.entries(top.map).sort((a, b) => b[1] - a[1])[0][0]
     const grandSame = grandByCurrency[dominantCurrency] ?? 0
     const pct = grandSame > 0 ? Math.round((top.map[dominantCurrency] / grandSame) * 100) : null
