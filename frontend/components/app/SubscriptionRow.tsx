@@ -83,7 +83,7 @@ export default function SubscriptionRow({ sub, onStatusChange, href }: Subscript
         borderColor: hovered ? 'rgba(229,9,20,0.25)' : 'rgba(255,255,255,0.06)',
       }}
       transition={{ duration: 0.18 }}
-      className='relative flex items-center gap-4 px-4 py-3.5'
+      className="relative flex items-center gap-4 px-4 py-3.5"
       style={{
         background: '#141414',
         border: '1px solid rgba(255,255,255,0.06)',
