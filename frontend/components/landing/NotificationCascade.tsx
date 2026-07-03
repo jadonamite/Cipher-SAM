@@ -64,7 +64,6 @@ export default function NotificationCascade() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Drive bleed counter via motion value (smooth tween, no React re-render per frame)
   useEffect(() => {
     let target = 0
     if (phase === 0 || phase === 9) target = 0
