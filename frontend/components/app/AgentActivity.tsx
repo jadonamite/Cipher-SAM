@@ -17,6 +17,16 @@ interface AgentActivityProps {
   userId: string | undefined
 }
 
+function describeAction(a: AgentAction): string {
+  const t = a.type.toLowerCase()
+  if (t.includes('cancel')) return `Cancelled ${a.merchant}`
+  if (t.includes('pause'))  return `Paused ${a.merchant}`
+  if (t.includes('remind')) return `Set reminder for ${a.merchant}`
+  if (t.includes('analyze')) return `Analyzed ${a.merchant}`
+  if (t.includes('detect')) return `Detected ${a.merchant}`
+  return `${a.type} · ${a.merchant}`
+}
+
 function formatRelative(date: string): string {
   const d = new Date(date)
   const diff = Date.now() - d.getTime()
@@ -27,16 +37,6 @@ function formatRelative(date: string): string {
   if (hrs < 24) return `${hrs}h ago`
   const days = Math.floor(hrs / 24)
   return `${days}d ago`
-}
-
-function describeAction(a: AgentAction): string {
-  const t = a.type.toLowerCase()
-  if (t.includes('cancel')) return `Cancelled ${a.merchant}`
-  if (t.includes('pause'))  return `Paused ${a.merchant}`
-  if (t.includes('remind')) return `Set reminder for ${a.merchant}`
-  if (t.includes('analyze')) return `Analyzed ${a.merchant}`
-  if (t.includes('detect')) return `Detected ${a.merchant}`
-  return `${a.type} · ${a.merchant}`
 }
 
 export default function AgentActivity({ userId }: AgentActivityProps) {
