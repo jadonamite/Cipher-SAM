@@ -8,17 +8,8 @@ interface AgentStatusBarProps {
   subCount?: number
 }
 
-function formatRelative(date: Date | string | null | undefined): string {
-  if (!date) return 'never'
-  const d = typeof date === 'string' ? new Date(date) : date
-  const diff = Date.now() - d.getTime()
-  const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  return `${days}d ago`
+function Divider() {
+  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
 }
 
 export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
@@ -75,8 +66,17 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
   )
 }
 
-function Divider() {
-  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
+function formatRelative(date: Date | string | null | undefined): string {
+  if (!date) return 'never'
+  const d = typeof date === 'string' ? new Date(date) : date
+  const diff = Date.now() - d.getTime()
+  const mins = Math.floor(diff / 60_000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
