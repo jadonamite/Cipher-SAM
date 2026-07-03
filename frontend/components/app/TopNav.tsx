@@ -100,7 +100,7 @@ export default function TopNav({
         {actions}
         {rightMeta}
         {user?.email?.address || user?.wallet?.address ? (
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             {isMiniPay && (
               <span style={{
                 fontFamily: 'var(--font-dm-mono)',

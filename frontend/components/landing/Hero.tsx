@@ -126,7 +126,7 @@ export default function Hero() {
               transition={{ duration: 0.5, delay: 0.55 }}
             >
               {isMiniPay ? (
-                <div className='flex items-center gap-3'>
+                <div className="flex items-center gap-3">
                   <div className="w-4 h-4 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
                   <span style={{ fontFamily: 'var(--font-dm-mono)', fontSize: '12px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
                     {isAutoConnecting ? 'Connecting MiniPay...' : 'Connected'}

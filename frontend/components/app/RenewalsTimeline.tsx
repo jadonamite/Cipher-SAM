@@ -18,10 +18,9 @@ function cadenceDays(c: Subscription['cadence']): number {
   return 30
 }
 
-export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
-  const WINDOW = 14
-  const renewals = useMemo(() => computeRenewals(subs, WINDOW), [subs])
-  const [hovered, setHovered] = useState<Renewal | null>(null)
+function computeRenewals(subs: Subscription[], windowDays = 14): Renewal[] {
+  const now = new Date()
+  const out: Renewal[] = []
 
   for (const sub of subs) {
     if (sub.status !== 'active') continue
@@ -39,9 +38,10 @@ export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
   return out.sort((a, b) => a.daysFromNow - b.daysFromNow)
 }
 
-function computeRenewals(subs: Subscription[], windowDays = 14): Renewal[] {
-  const now = new Date()
-  const out: Renewal[] = []
+export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
+  const WINDOW = 14
+  const renewals = useMemo(() => computeRenewals(subs, WINDOW), [subs])
+  const [hovered, setHovered] = useState<Renewal | null>(null)
 
   if (renewals.length === 0) return null
 
