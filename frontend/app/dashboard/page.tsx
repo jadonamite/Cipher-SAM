@@ -18,6 +18,11 @@ import { normalizeSubscription } from '@/lib/normalize'
 import { aggregateByCurrency, formatAggregate, type CurrencyMap } from '@/lib/format'
 import Link from 'next/link'
 
+/**
+ * monthlyOf
+ * @param {*} s: Subscription
+ * @returns {*}
+ */
 function monthlyOf(s: Subscription): number {
   if (s.cadence === 'yearly') return s.amount / 12
   if (s.cadence === 'weekly') return s.amount * 4.33
