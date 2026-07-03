@@ -45,6 +45,10 @@ const socials = [
   },
 ]
 
+/**
+ * Footer
+ * @returns {*}
+ */
 export default function Footer() {
   return (
     <footer

@@ -13,6 +13,10 @@ const handleLogin = (login, setEntering, router, authenticated) => {
   }
 };
 
+/**
+ * CTAFinale
+ * @returns {*}
+ */
 export default function CTAFinale() {
   const { ready, authenticated, login } = usePrivy();
   const router = useRouter();
