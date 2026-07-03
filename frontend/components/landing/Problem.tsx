@@ -1,8 +1,8 @@
 'use client'
 
-import CountUp from 'react-countup'
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
+import CountUp from 'react-countup'
 
 const lines = [
   { text: "Netflix you haven't opened in 4 months.", price: '$15.99/mo' },

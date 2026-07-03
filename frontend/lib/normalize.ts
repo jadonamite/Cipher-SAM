@@ -10,18 +10,25 @@ function numOrNull(value: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-function normalizeFields<T extends Record<string, unknown>>(raw: T, fields: { [key: string]: (value: unknown) => unknown }): T {
-  return { ...raw, ...Object.fromEntries(Object.entries(fields).map(([key, fn]) => [key, fn(raw[key])])) } as T
-}
-
 export function normalizeSubscription<T extends Record<string, unknown>>(raw: T): T {
-  return normalizeFields(raw, { amount: (value) => num(value), confidence: numOrNull })
+  return {
+    ...raw,
+    amount: num(raw.amount),
+    confidence: numOrNull(raw.confidence),
+  } as T
 }
 
 export function normalizeRec<T extends Record<string, unknown>>(raw: T): T {
-  return normalizeFields(raw, { amount: (value) => num(value), confidence: num })
+  return {
+    ...raw,
+    amount: num(raw.amount),
+    confidence: num(raw.confidence),
+  } as T
 }
 
 export function normalizeAction<T extends Record<string, unknown>>(raw: T): T {
-  return normalizeFields(raw, { amount: (value) => num(value) })
+  return {
+    ...raw,
+    amount: num(raw.amount),
+  } as T
 }
