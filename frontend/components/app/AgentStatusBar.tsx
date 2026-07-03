@@ -1,6 +1,4 @@
-'use client'
-
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
 
 interface AgentStatusBarProps {
   scanning?: boolean
@@ -8,22 +6,11 @@ interface AgentStatusBarProps {
   subCount?: number
 }
 
-function formatRelative(date: Date | string | null | undefined): string {
-  if (!date) return 'never'
-  const d = typeof date === 'string' ? new Date(date) : date
-  const diff = Date.now() - d.getTime()
-  const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  return `${days}d ago`
-}
+import { formatRelative } from './formatRelative';
+import { getStatusAndDotColor } from './getStatusAndDotColor';
 
 export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
-  const status = scanning ? 'SCANNING' : 'ACTIVE'
-  const dotColor = scanning ? '#E50914' : '#16A34A'
+  const { status, dotColor } = getStatusAndDotColor(scanning);
 
   return (
     <div
@@ -72,11 +59,11 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
 
       <Field label="AGENT">SAM v0.1</Field>
     </div>
-  )
+  );
 }
 
 function Divider() {
-  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
+  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -97,5 +84,26 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         {children}
       </span>
     </div>
-  )
+  );
+}
+
+// New utility file: getStatusAndDotColor.ts
+export function getStatusAndDotColor(scanning?: boolean) {
+  const status = scanning ? 'SCANNING' : 'ACTIVE';
+  const dotColor = scanning ? '#E50914' : '#16A34A';
+  return { status, dotColor };
+}
+
+// New utility file: formatRelative.ts
+export function formatRelative(date: Date | string | null | undefined): string {
+  if (!date) return 'never';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
 }
