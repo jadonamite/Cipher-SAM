@@ -83,6 +83,7 @@ export default function MobileMenu({
                     fontSize: '16px',
                     letterSpacing: '-0.02em',
                     fontWeight: 700,
+                  // NOTE: revisit this logic after API migration
                   }}
                 >
                   SAM
