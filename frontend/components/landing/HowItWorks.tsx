@@ -115,7 +115,7 @@ export default function HowItWorks() {
         {steps.map((step) => (
           <div
             key={step.number}
-            className='shrink-0 relative'
+            className="shrink-0 relative"
             style={{
               width: 'min(75vw, 380px)',
               borderLeft: '2px solid #E50914',

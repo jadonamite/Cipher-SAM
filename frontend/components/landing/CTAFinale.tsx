@@ -29,7 +29,7 @@ export default function CTAFinale() {
 
   return (
     <section
-      className='relative min-h-screen flex flex-col items-center justify-center overflow-hidden'
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
       style={{ backgroundColor: '#0D0D0D' }}
     >
       {/* Breathing red glow */}

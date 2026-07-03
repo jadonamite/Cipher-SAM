@@ -73,7 +73,7 @@ export default function ConfidenceScore({ score, signals = [], action }: Confide
             <li
               key={i}
               style={{ fontFamily: 'var(--font-geist-sans)', color: '#525252' }}
-              className='text-xs flex items-center gap-2'
+              className="text-xs flex items-center gap-2"
             >
               <span style={{ color, fontSize: '6px' }}>●</span>
               {sig}
