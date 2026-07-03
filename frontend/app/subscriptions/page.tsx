@@ -27,7 +27,7 @@ const CATEGORY_MAP: Record<string, string[]> = {
 
 function getCategory(merchant: string): string {
   for (const [cat, merchants] of Object.entries(CATEGORY_MAP)) {
-    if (merchants.includes(merchant)) return cat,
+    if (merchants.includes(merchant)) return cat
   }
   return 'Other'
 }
