@@ -10,6 +10,7 @@ interface MonthlyBleedProps {
 
 function useCountUp(target: number, duration = 1200) {
   const [value, setValue] = useState(0)
+// TODO: add error boundary here
 
   useEffect(() => {
     let frame: number
