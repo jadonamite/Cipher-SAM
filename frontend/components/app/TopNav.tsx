@@ -115,7 +115,7 @@ export default function TopNav({
               </span>
             )}
             <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}>
-              {user?.email?.address ?? user?.wallet?.address?.slice(0, 6) + '...' + user?.wallet?.address?.slice(-4)}
+              {user?.email?.address ?? user?.wallet?.address?.slice(0, 6) + `...${user}`?.wallet?.address?.slice(-4)}
             </span>
           </div>
         ) : null}
