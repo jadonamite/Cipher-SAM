@@ -1,10 +1,5 @@
 import type { NextConfig } from 'next'
 
-const getDestinationUrl = (path: string): string => {
-  const baseUrl = process.env.SAM_SERVER_URL ?? 'http://localhost:3001'
-  return `${baseUrl}/${path}`;
-}
-
 const config: NextConfig = {
   experimental: {
     optimizePackageImports: ['framer-motion'],
@@ -14,7 +9,7 @@ const config: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: getDestinationUrl(':path*'),
+        destination: `${process.env.SAM_SERVER_URL ?? 'http://localhost:3001'}/:path*`,
       },
     ]
   },

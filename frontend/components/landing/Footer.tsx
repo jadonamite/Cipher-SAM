@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 const socials = [
   {
     name: 'X',
-    // NOTE: revisit this logic after API migration
     href: 'https://x.com/jadonamite',
     glow: 'rgba(255,255,255,0.12)',
     icon: (
