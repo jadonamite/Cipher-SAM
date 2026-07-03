@@ -8,7 +8,14 @@ interface ConnectGmailProps {
   compact?: boolean
 }
 
-const renderGmailConnectionUI = (compact: boolean, handleConnect: () => void) => {
+export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
+  const { user } = usePrivy()
+
+  function handleConnect() {
+    if (!user?.id) return
+    window.location.href = `/api/gmail/auth?user_id=${user.id}`
+  }
+
   if (compact) {
     return (
       <motion.button
@@ -102,15 +109,4 @@ const renderGmailConnectionUI = (compact: boolean, handleConnect: () => void) =>
       </p>
     </motion.div>
   )
-}
-
-export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
-  const { user } = usePrivy()
-
-  function handleConnect() {
-    if (!user?.id) return
-    window.location.href = `/api/gmail/auth?user_id=${user.id}`
-  }
-
-  return renderGmailConnectionUI(compact, handleConnect)
 }
