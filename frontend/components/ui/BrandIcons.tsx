@@ -11,7 +11,7 @@ export function NetflixIcon() {
       {/* Diagonal ribbon */}
       <path d="M10 7h3.5l8.5 18h-3.5z" fill="#E50914" />
     </svg>
-  )
+  ),
 }
 
 export function FigmaIcon() {
