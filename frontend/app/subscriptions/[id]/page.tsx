@@ -65,7 +65,7 @@ export default function SubscriptionDetail() {
   const router = useRouter()
   const { ready, authenticated, user } = usePrivy()
 
-  const [payload, setData] = useState<DetailData | null>(null)
+  const [data, setData] = useState<DetailData | null>(null)
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [statusChanging, setStatusChanging] = useState(false)
@@ -167,7 +167,7 @@ export default function SubscriptionDetail() {
   }
 
   async function changeStatus(status: 'active' | 'paused' | 'cancelled') {
-    if (!user?.id || statusChanging || !payload) return
+    if (!user?.id || statusChanging || !data) return
     setStatusChanging(true)
     try {
       const res = await fetch(`/api/subscriptions/${id}/status`, {
@@ -193,9 +193,9 @@ export default function SubscriptionDetail() {
     )
   }
 
-  if (!payload) return null
+  if (!data) return null
 
-  const { subscription: sub, signals, insight, recommendation } = payload
+  const { subscription: sub, signals, insight, recommendation } = data
   const statusStyle = STATUS_STYLES[sub.status]
   const confidence = sub.confidence ?? recommendation?.confidence
   const action = sub.action ?? recommendation?.action
