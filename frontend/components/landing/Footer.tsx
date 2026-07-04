@@ -75,7 +75,6 @@ export default function Footer() {
               }}
               whileHover={{
                 scale: 1.12,
-                // TODO: add error boundary here
                 y: -5,
                 color: '#ffffff',
                 backgroundColor: 'rgba(255,255,255,0.06)',

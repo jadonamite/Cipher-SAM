@@ -29,17 +29,11 @@ export function useToast() {
 
 let counter = 0
 
-const createToastData = (message: string, type: ToastType = 'info'): ToastData => ({
-  id: ++counter,
-  message,
-  type,
-})
-
 export default function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<ToastData | null>(null)
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
-    setToast(createToastData(message, type))
+    setToast({ id: ++counter, message, type })
   }, [])
 
   const dismiss = useCallback(() => setToast(null), [])
