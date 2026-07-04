@@ -122,7 +122,7 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
                   {step.label}
                 </span>
                 <span
-                  className="hidden sm:inline"
+                  className='hidden sm:inline'
                   style={{
                     fontFamily: 'var(--font-geist-sans)',
                     color: '#3a3a3a',
