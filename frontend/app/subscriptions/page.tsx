@@ -25,79 +25,6 @@ const CATEGORY_MAP: Record<string, string[]> = {
   Communication: ['Slack', 'Zoom'],
 }
 
-function getCategory(merchant: string): string {
-  for (const [cat, merchants] of Object.entries(CATEGORY_MAP)) {
-    if (merchants.includes(merchant)) return cat
-  }
-  return 'Other'
-}
-
-function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
-  const groups: Record<string, Subscription[]> = {}
-  for (const sub of subs) {
-    const cat = getCategory(sub.merchant)
-    if (!groups[cat]) groups[cat] = []
-    groups[cat].push(sub)
-  }
-  return groups
-}
-
-export default function SubscriptionsPage() {
-  const { ready, authenticated, user, login } = usePrivy()
-  const router = useRouter()
-  const { showToast } = useToast()
-
-  const [subs, setSubs] = useState<Subscription[]>([])
-  const [gmailConnected, setGmailConnected] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<Filter>('all')
-  const [sort, setSort] = useState<Sort>('spend')
-  const [analyzing, setAnalyzing] = useState(false)
-
-  async function fetchSubs(uid: string) {
-    const [statusRes, subsRes] = await Promise.all([
-      fetch(`/api/gmail/status?user_id=${uid}`),
-      fetch('/api/subscriptions', { headers: { 'x-user-id': uid } }),
-    ])
-    const statusData = await statusRes.json()
-    setGmailConnected(statusData.connected ?? false)
-    if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
-  }
-
-  useEffect(() => {
-    if (!ready || !authenticated || !user?.id) return
-    setLoading(true)
-    fetchSubs(user.id).catch(() => {}).finally(() => setLoading(false))
-  }, [ready, authenticated, user?.id])
-
-  // Poll every 30s while tab is visible
-  useEffect(() => {
-    if (!authenticated || !user?.id) return
-    const id = setInterval(() => {
-      if (document.visibilityState === 'visible') fetchSubs(user!.id).catch(() => {})
-    }, 30_000)
-    return () => clearInterval(id)
-  }, [authenticated, user?.id])
-
-  async function handleStatusChange(id: string, status: 'active' | 'paused' | 'cancelled') {
-    if (!user?.id) return
-    try {
-      const res = await fetch(`/api/subscriptions/${id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
-        body: JSON.stringify({ status }),
-      })
-      if (res.ok) {
-        setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
-        showToast(`Subscription ${status}`, 'success')
-      } else {
-        showToast('Failed to update subscription', 'error')
-      }
-    } catch {
-      showToast('Could not reach server', 'error')
-    }
-  }
-
   async function runAnalysis() {
     if (!user?.id || analyzing) return
     setAnalyzing(true)
@@ -123,6 +50,79 @@ export default function SubscriptionsPage() {
     } finally {
       setAnalyzing(false)
     }
+  }
+
+  async function handleStatusChange(id: string, status: 'active' | 'paused' | 'cancelled') {
+    if (!user?.id) return
+    try {
+      const res = await fetch(`/api/subscriptions/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        body: JSON.stringify({ status }),
+      })
+      if (res.ok) {
+        setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
+        showToast(`Subscription ${status}`, 'success')
+      } else {
+        showToast('Failed to update subscription', 'error')
+      }
+    } catch {
+      showToast('Could not reach server', 'error')
+    }
+  }
+
+function getCategory(merchant: string): string {
+  for (const [cat, merchants] of Object.entries(CATEGORY_MAP)) {
+    if (merchants.includes(merchant)) return cat
+  }
+  return 'Other'
+}
+
+  const [subs, setSubs] = useState<Subscription[]>([])
+  const [gmailConnected, setGmailConnected] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<Filter>('all')
+  const [sort, setSort] = useState<Sort>('spend')
+  const [analyzing, setAnalyzing] = useState(false)
+
+function groupByCategory(subs: Subscription[]): Record<string, Subscription[]> {
+  const groups: Record<string, Subscription[]> = {}
+  for (const sub of subs) {
+    const cat = getCategory(sub.merchant)
+    if (!groups[cat]) groups[cat] = []
+    groups[cat].push(sub)
+  }
+  return groups
+}
+
+  useEffect(() => {
+    if (!ready || !authenticated || !user?.id) return
+    setLoading(true)
+    fetchSubs(user.id).catch(() => {}).finally(() => setLoading(false))
+  }, [ready, authenticated, user?.id])
+
+  // Poll every 30s while tab is visible
+  useEffect(() => {
+    if (!authenticated || !user?.id) return
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchSubs(user!.id).catch(() => {})
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [authenticated, user?.id])
+
+export default function SubscriptionsPage() {
+  const { ready, authenticated, user, login } = usePrivy()
+  const router = useRouter()
+  const { showToast } = useToast()
+
+  async function fetchSubs(uid: string) {
+    const [statusRes, subsRes] = await Promise.all([
+      fetch(`/api/gmail/status?user_id=${uid}`),
+      fetch('/api/subscriptions', { headers: { 'x-user-id': uid } }),
+    ])
+    const statusData = await statusRes.json()
+    setGmailConnected(statusData.connected ?? false)
+    if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
   }
 
   const filtered = useMemo(() => {

@@ -47,7 +47,7 @@ function CheckLine({ text, delay }: { text: string; delay: number }) {
         {text}
       </motion.p>
     </motion.div>
-  )
+  ),
 }
 
 export default function TrustSection() {
