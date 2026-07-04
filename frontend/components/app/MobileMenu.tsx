@@ -15,7 +15,7 @@ interface MobileMenuProps {
   debugScanning?: boolean
   onScanGmail?: () => void
   onScanWallet?: () => void
-  onDebugScan?: () => void,
+  onDebugScan?: () => void
 }
 
 export default function MobileMenu({

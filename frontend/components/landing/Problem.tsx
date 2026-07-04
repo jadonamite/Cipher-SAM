@@ -60,6 +60,10 @@ function StrikeoutLine({
   )
 }
 
+/**
+ * Problem
+ * @returns {*}
+ */
 export default function Problem() {
   const sectionRef = useRef(null)
   const inView = useInView(sectionRef, { once: true, margin: '-80px' })
