@@ -128,6 +128,7 @@ export default function SubscriptionRow({ sub, onStatusChange, href }: Subscript
       {/* Confidence badge */}
       {(sub.confidence != null || sub.action) && (
         <div className="flex flex-col items-end gap-0.5">
+          // NOTE: revisit this logic after API migration
           <span
             style={{
               fontFamily: 'var(--font-dm-mono)',
