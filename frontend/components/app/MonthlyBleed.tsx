@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import { formatMoney, primaryCurrency, type CurrencyMap } from '@/lib/format'
+import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 
 interface MonthlyBleedProps {
   byCurrency: CurrencyMap
