@@ -34,7 +34,7 @@ export default function HowItWorks() {
   const trackRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    let context: { revert: () => void } | null = null
+    let ctx: { revert: () => void } | null = null
 
     const init = async () => {
       const gsap = (await import('gsap')).default
@@ -45,7 +45,7 @@ export default function HowItWorks() {
       const track = trackRef.current
       if (!section || !track) return
 
-      context = gsap.context(() => {
+      ctx = gsap.context(() => {
         const totalScroll = track.scrollWidth - window.innerWidth
 
         gsap.to(track, {
@@ -64,7 +64,7 @@ export default function HowItWorks() {
     }
 
     init()
-    return () => context?.revert()
+    return () => ctx?.revert()
   }, [])
 
   return (
