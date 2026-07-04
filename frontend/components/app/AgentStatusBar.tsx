@@ -8,6 +8,10 @@ interface AgentStatusBarProps {
   subCount?: number
 }
 
+function Divider() {
+  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
+}
+
 function formatRelative(date: Date | string | null | undefined): string {
   if (!date) return 'never'
   const d = typeof date === 'string' ? new Date(date) : date
@@ -20,10 +24,6 @@ function formatRelative(date: Date | string | null | undefined): string {
   const days = Math.floor(hrs / 24)
   return `${days}d ago`
 }
-
-export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
-  const status = scanning ? 'SCANNING' : 'ACTIVE'
-  const dotColor = scanning ? '#E50914' : '#16A34A'
 
   return (
     <div
@@ -75,9 +75,9 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
   )
 }
 
-function Divider() {
-  return <span style={{ color: '#2a2a2a', fontSize: '10px' }}>·</span>
-}
+export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
+  const status = scanning ? 'SCANNING' : 'ACTIVE'
+  const dotColor = scanning ? '#E50914' : '#16A34A'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
