@@ -45,10 +45,6 @@ function ConfidenceBar({ value, tag }: { value: number; tag: string }) {
   )
 }
 
-/**
- * IntelligencePreview
- * @returns {*}
- */
 export default function IntelligencePreview() {
   const sectionRef = useRef<HTMLElement>(null)
   const inView = useInView(sectionRef, { once: true, margin: '-80px' })
