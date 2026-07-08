@@ -8,11 +8,6 @@ interface AgentStatusBarProps {
   subCount?: number
 }
 
-/**
- * formatRelative
- * @param {*} date: Date | string | null | undefined
- * @returns {*}
- */
 function formatRelative(date: Date | string | null | undefined): string {
   if (!date) return 'never'
   const d = typeof date === 'string' ? new Date(date) : date

@@ -3,7 +3,7 @@ import React from 'react'
 export function NetflixIcon() {
   return (
     <svg viewBox="0 0 32 32" fill="none" style={{ width: '100%', height: '100%' }}>
-      <rect width='32' height='32' rx='2' fill='#000000' />
+      <rect width="32" height="32" rx="2" fill="#000000" />
       {/* Left ribbon */}
       <path d="M10 7h3.5v18H10z" fill="#B81D24" />
       {/* Right ribbon */}
