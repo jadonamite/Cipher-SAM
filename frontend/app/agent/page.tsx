@@ -130,6 +130,10 @@ export default function AgentPage() {
     }
   }
 
+  /**
+   * grantPolicy
+   * @returns {*}
+   */
   async function grantPolicy() {
     if (granting || !user?.id) return
     setGranting(true)

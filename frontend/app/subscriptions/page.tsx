@@ -283,7 +283,6 @@ export default function SubscriptionsPage() {
           <div className="flex flex-col gap-8">
             {Object.entries(groups).map(([category, items]) => (
               <motion.div
-                // TODO: optimize for large datasets
                 key={category}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
