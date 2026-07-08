@@ -118,12 +118,6 @@ export default function RecommendationsPage() {
     }
   }
 
-  /**
-   * act
-   * @param {*} rec: Rec
-   * @param {*} decision: 'accepted' | 'dismissed'
-   * @returns {*}
-   */
   async function act(rec: Rec, decision: 'accepted' | 'dismissed') {
     if (acting[rec.id]) return
     setActing((prev) => ({ ...prev, [rec.id]: true }))
