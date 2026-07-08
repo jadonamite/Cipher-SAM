@@ -44,6 +44,17 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
     }
   }, [])
 
+  const handleAccountsChanged = (accounts: unknown) => {
+    const list = accounts as string[]
+    setMiniPayAddress(list[0] ?? null)
+  }
+
+  const setupMiniPayListeners = () => {
+    if (!isMiniPay || !window.ethereum) return
+    window.ethereum.on('accountsChanged', handleAccountsChanged)
+    return () => window.ethereum?.removeListener('accountsChanged', handleAccountsChanged)
+  }
+
   // Detect on mount — SSR always false, real value in browser
   useEffect(() => {
     const detected = detectMiniPay()
@@ -52,15 +63,7 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
   }, [connectMiniPay])
 
   // Keep address in sync if MiniPay rotates accounts (rare but possible)
-  useEffect(() => {
-    if (!isMiniPay || !window.ethereum) return
-    const handleAccountsChanged = (accounts: unknown) => {
-      const list = accounts as string[]
-      setMiniPayAddress(list[0] ?? null)
-    }
-    window.ethereum.on('accountsChanged', handleAccountsChanged)
-    return () => window.ethereum?.removeListener('accountsChanged', handleAccountsChanged)
-  }, [isMiniPay])
+  useEffect(setupMiniPayListeners, [isMiniPay])
 
   return (
     <MiniPayContext.Provider value={{ isMiniPay, isAutoConnecting, miniPayAddress }}>
