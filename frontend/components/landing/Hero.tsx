@@ -44,6 +44,7 @@ export default function Hero() {
       />
 
       {/* Red ambient glow top-right */}
+      // TODO: consider memoizing this value
       <div
         className="absolute pointer-events-none"
         style={{
