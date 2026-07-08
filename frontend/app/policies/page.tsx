@@ -70,34 +70,22 @@ const BLANK: DraftPolicy = {
   merchant: '',
 }
 
+function buildConditions(draft: DraftPolicy) {
+  if (draft.trigger === 'trial_cancel') {
+    return { trial_days: Number(draft.trial_days) || 7, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
+  }
+  if (draft.trigger === 'spend_alert') {
+    return { spend_threshold: Number(draft.spend_threshold) || 100, currency: 'USD' }
+  }
+  if (draft.trigger === 'inactivity_pause') {
+    return { inactive_days: Number(draft.inactive_days) || 30, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
+  }
+  return {}
+}
+
 export default function PoliciesPage() {
   const { ready, authenticated, user, login } = usePrivy()
   const router = useRouter()
-
-  async function createPolicy() {
-    if (!draft.name || saving) return
-    setSaving(true)
-    try {
-      const res = await fetch('/api/policies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
-        body: JSON.stringify({
-          name: draft.name,
-          trigger: draft.trigger,
-          action: draft.action,
-          conditions: buildConditions(draft),
-        }),
-      })
-      if (res.ok) {
-        const { policy } = await res.json()
-        setPolicies((prev) => [policy, ...prev])
-        setShowNew(false)
-        setDraft(BLANK)
-      }
-    } catch {} finally {
-      setSaving(false)
-    }
-  }
 
   const [policies, setPolicies] = useState<Policy[]>([])
   const [loading, setLoading] = useState(true)
@@ -125,19 +113,28 @@ export default function PoliciesPage() {
     }
   }
 
-  async function applyPolicies() {
-    if (applying || !evalResults) return
-    setApplying(true)
+  async function createPolicy() {
+    if (!draft.name || saving) return
+    setSaving(true)
     try {
-      await fetch('/api/policies/evaluate', {
+      const res = await fetch('/api/policies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
-        body: JSON.stringify({ apply: true }),
+        body: JSON.stringify({
+          name: draft.name,
+          trigger: draft.trigger,
+          action: draft.action,
+          conditions: buildConditions(draft),
+        }),
       })
-      setEvalResults(null)
-      await load()
+      if (res.ok) {
+        const { policy } = await res.json()
+        setPolicies((prev) => [policy, ...prev])
+        setShowNew(false)
+        setDraft(BLANK)
+      }
     } catch {} finally {
-      setApplying(false)
+      setSaving(false)
     }
   }
 
@@ -152,18 +149,12 @@ export default function PoliciesPage() {
     } catch {}
   }
 
-function buildConditions(draft: DraftPolicy) {
-  if (draft.trigger === 'trial_cancel') {
-    return { trial_days: Number(draft.trial_days) || 7, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
+  async function deletePolicy(id: string) {
+    setPolicies((prev) => prev.filter((p) => p.id !== id))
+    try {
+      await fetch(`/api/policies/${id}`, { method: 'DELETE', headers: { 'x-user-id': user!.id } })
+    } catch {}
   }
-  if (draft.trigger === 'spend_alert') {
-    return { spend_threshold: Number(draft.spend_threshold) || 100, currency: 'USD' }
-  }
-  if (draft.trigger === 'inactivity_pause') {
-    return { inactive_days: Number(draft.inactive_days) || 30, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
-  }
-  return {}
-}
 
   async function evaluate() {
     if (evaluating) return
@@ -184,11 +175,20 @@ function buildConditions(draft: DraftPolicy) {
     }
   }
 
-  async function deletePolicy(id: string) {
-    setPolicies((prev) => prev.filter((p) => p.id !== id))
+  async function applyPolicies() {
+    if (applying || !evalResults) return
+    setApplying(true)
     try {
-      await fetch(`/api/policies/${id}`, { method: 'DELETE', headers: { 'x-user-id': user!.id } })
-    } catch {}
+      await fetch('/api/policies/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
+        body: JSON.stringify({ apply: true }),
+      })
+      setEvalResults(null)
+      await load()
+    } catch {} finally {
+      setApplying(false)
+    }
   }
 
   if (!ready) return null
