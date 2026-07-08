@@ -1,3 +1,7 @@
+// Currency-aware money formatting. Renders in the original currency the server
+// extracted — no FX conversion. Aggregations group by currency and surface a
+// primary headline with the remaining currencies as inline suffixes.
+
 export type Currency = 'USD' | 'NGN' | 'EUR' | 'GBP' | string
 
 const SYMBOLS: Record<string, string> = {
@@ -39,24 +43,24 @@ export function aggregateByCurrency<T>(
   return out
 }
 
-function getNonZeroEntries(map: CurrencyMap): [string, number][] {
-  return Object.entries(map).filter(([, v]) => v > 0)
-}
-
-function getPrimaryCurrency(map: CurrencyMap): string | null {
-  const entries = getNonZeroEntries(map)
+// Pick the primary currency to headline: USD if present and non-zero, else the
+// currency with the largest absolute total. Returns null if everything is zero.
+export function primaryCurrency(map: CurrencyMap): string | null {
+  const entries = Object.entries(map).filter(([, v]) => v > 0)
   if (entries.length === 0) return null
   if (map.USD && map.USD > 0) return 'USD'
   entries.sort((a, b) => b[1] - a[1])
   return entries[0][0]
 }
 
-function formatAggregate(map: CurrencyMap): string {
-  const primary = getPrimaryCurrency(map)
+// Render the headline amount + every other non-zero currency as a suffix.
+// Example: { USD: 42, NGN: 40371 } → "$42.00 + ₦40,371"
+export function formatAggregate(map: CurrencyMap): string {
+  const primary = primaryCurrency(map)
   if (!primary) return formatMoney(0, 'USD')
   const headline = formatMoney(map[primary], primary)
-  const extras = getNonZeroEntries(map)
-    .filter(([c, v]) => c !== primary)
+  const extras = Object.entries(map)
+    .filter(([c, v]) => c !== primary && v > 0)
     .map(([c, v]) => formatMoney(v, c))
   if (extras.length === 0) return headline
   return `${headline} + ${extras.join(' + ')}`
