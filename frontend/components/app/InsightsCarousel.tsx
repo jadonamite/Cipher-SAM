@@ -23,6 +23,11 @@ const CATEGORY_MAP: Record<string, string[]> = {
   Communication: ['Slack', 'Zoom'],
 }
 
+/**
+ * getCategory
+ * @param {*} merchant: string
+ * @returns {*}
+ */
 function getCategory(merchant: string): string {
   for (const [cat, merchants] of Object.entries(CATEGORY_MAP)) {
     if (merchants.includes(merchant)) return cat
