@@ -22,7 +22,7 @@ export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
         onClick={handleConnect}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-widest cursor-pointer"
+        className='flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-widest cursor-pointer'
         style={{
           fontFamily: 'var(--font-geist-sans)',
           background: '#E50914',

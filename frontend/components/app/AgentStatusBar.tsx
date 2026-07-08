@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 interface AgentStatusBarProps {
   scanning?: boolean
   lastScan?: Date | string | null
-  subCount?: number,
+  subCount?: number
 }
 
 function formatRelative(date: Date | string | null | undefined): string {
