@@ -17,18 +17,6 @@ interface AgentActivityProps {
   userId: string | undefined
 }
 
-function formatRelative(date: string): string {
-  const d = new Date(date)
-  const diff = Date.now() - d.getTime()
-  const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  return `${days}d ago`
-}
-
 function describeAction(a: AgentAction): string {
   const t = a.type.toLowerCase()
   if (t.includes('cancel')) return `Cancelled ${a.merchant}`
@@ -42,6 +30,18 @@ function describeAction(a: AgentAction): string {
 export default function AgentActivity({ userId }: AgentActivityProps) {
   const [actions, setActions] = useState<AgentAction[]>([])
   const [loading, setLoading] = useState(true)
+
+function formatRelative(date: string): string {
+  const d = new Date(date)
+  const diff = Date.now() - d.getTime()
+  const mins = Math.floor(diff / 60_000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
+}
 
   useEffect(() => {
     if (!userId) return
