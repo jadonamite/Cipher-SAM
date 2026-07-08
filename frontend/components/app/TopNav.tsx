@@ -129,7 +129,6 @@ export default function TopNav({
         scanning={scanning}
         walletScanning={walletScanning}
         debugScanning={debugScanning}
-        // TODO: add input validation
         onScanGmail={onScanGmail}
         onScanWallet={onScanWallet}
         onDebugScan={onDebugScan}

@@ -1,5 +1,4 @@
 'use client'
-// FIXME: handle edge case when value is null
 
 import { motion } from 'framer-motion'
 import type { HTMLAttributes } from 'react'
