@@ -57,7 +57,7 @@ export default function TrustSection() {
   return (
     <section
       ref={sectionRef}
-      className="py-20 sm:py-32"
+      className='py-20 sm:py-32'
       style={{ backgroundColor: '#141414' }}
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-16">

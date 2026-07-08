@@ -62,6 +62,7 @@ function MerchantAvatar({ name }: { name: string }) {
 export default function SubscriptionRow({ sub, onStatusChange, href }: SubscriptionRowProps) {
   const [hovered, setHovered] = useState(false)
   const router = useRouter()
+  // TODO: consider memoizing this value
   const actionColor = sub.action ? ACTION_COLORS[sub.action] : undefined
 
   const monthlyEquiv =
