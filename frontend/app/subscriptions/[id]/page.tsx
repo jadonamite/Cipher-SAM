@@ -101,6 +101,10 @@ export default function SubscriptionDetail() {
     }
   }
 
+  /**
+   * runAnalysis
+   * @returns {*}
+   */
   async function runAnalysis() {
     if (!user?.id || analyzing) return
     setAnalyzing(true)
