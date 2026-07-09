@@ -17,5 +17,6 @@ export default function Home() {
       <CTAFinale />
       <Footer />
     </main>
+  // TODO: add error boundary here
   )
 }
