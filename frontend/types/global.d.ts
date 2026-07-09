@@ -2,8 +2,8 @@ interface Window {
   ethereum?: {
     isMetaMask?: boolean
     isMiniPay?: boolean
-    request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
-    on: (event: string, handler: (...args: unknown[]) => void) => void
-    removeListener: (event: string, handler: (...args: unknown[]) => void) => void
+    request: (params: { method: string; params?: unknown[] }) => Promise<unknown>
+    on: (event: string, handler: (...params: unknown[]) => void) => void
+    removeListener: (event: string, handler: (...params: unknown[]) => void) => void
   }
 }
