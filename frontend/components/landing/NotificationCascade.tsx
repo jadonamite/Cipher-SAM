@@ -1,8 +1,8 @@
 'use client'
 
+import { brandIcons } from '@/components/ui/BrandIcons'
 import { motion, AnimatePresence, animate, useMotionValue, useTransform } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { brandIcons } from '@/components/ui/BrandIcons'
 
 type Notification = {
   brand: string

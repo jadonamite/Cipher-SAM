@@ -210,7 +210,7 @@ export default function IntelligencePreview() {
                     }}
                   >
                     {/* Brand icon */}
-                    <div className="w-8 h-8 rounded-sm overflow-hidden shrink-0 flex items-center justify-center">
+                    <div className='w-8 h-8 rounded-sm overflow-hidden shrink-0 flex items-center justify-center'>
                       {brandIcons[sub.name] ?? (
                         <div
                           className="w-8 h-8 flex items-center justify-center text-xs font-bold"
