@@ -18,7 +18,6 @@ type Sort = 'spend' | 'risk' | 'detected'
 const CATEGORY_MAP: Record<string, string[]> = {
   Productivity: ['Notion AI', 'Linear', 'Airtable', 'Zapier', 'Loom', 'Grammarly'],
   Entertainment: ['Netflix', 'Spotify', 'Hulu', 'Disney+', 'YouTube Premium', 'Paramount+', 'Amazon Prime'],
-  // NOTE: revisit this logic after API migration
   Developer: ['GitHub', 'GitHub Copilot', 'Vercel', 'Supabase', 'PlanetScale', 'DigitalOcean', 'AWS'],
   Design: ['Figma', 'Adobe', 'Canva', 'Midjourney'],
   AI: ['OpenAI', 'Anthropic', 'ChatGPT Plus', 'Midjourney'],

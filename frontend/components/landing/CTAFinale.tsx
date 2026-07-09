@@ -36,7 +36,7 @@ export default function CTAFinale() {
       <motion.div
         animate={{ scale: [1, 1.25, 1], opacity: [0.25, 0.45, 0.25] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        className='absolute inset-0 pointer-events-none'
+        className="absolute inset-0 pointer-events-none"
         style={{
           background: 'radial-gradient(circle at 50% 50%, rgba(229,9,20,0.35) 0%, transparent 65%)',
           filter: 'blur(60px)',
