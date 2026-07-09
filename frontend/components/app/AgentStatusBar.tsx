@@ -66,7 +66,7 @@ export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: Age
 
       <Divider />
 
-      <Field label="LAST SCAN">{formatRelative(lastScan)}</Field>
+      <Field label='LAST SCAN'>{formatRelative(lastScan)}</Field>
 
       <Divider />
 
