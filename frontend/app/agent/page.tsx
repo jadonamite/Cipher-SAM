@@ -1,15 +1,15 @@
 'use client'
 
-import Link from 'next/link'
-import TopNav from '@/components/app/TopNav'
-import dynamic from 'next/dynamic'
-import { SelfAppBuilder, type SelfApp } from '@selfxyz/qrcode'
-import { celo } from 'viem/chains'
-import { createWalletClient, custom } from 'viem'
-import { motion } from 'framer-motion'
 import { useEffect, useState, useMemo } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { createWalletClient, custom } from 'viem'
+import { celo } from 'viem/chains'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import TopNav from '@/components/app/TopNav'
+import { SelfAppBuilder, type SelfApp } from '@selfxyz/qrcode'
 
 type SelfQRcodeProps = {
   selfApp: SelfApp
