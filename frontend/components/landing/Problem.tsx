@@ -73,7 +73,7 @@ export default function Problem() {
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-16">
         <div className="flex flex-col lg:flex-row gap-10 sm:gap-16 lg:gap-24 items-start">
           {/* Large number */}
-          <div className='shrink-0'>
+          <div className="shrink-0">
             <div
               className="font-extrabold leading-none select-none"
               style={{
