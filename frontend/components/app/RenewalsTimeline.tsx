@@ -8,6 +8,7 @@ import { aggregateByCurrency, formatAggregate, formatMoney } from '@/lib/format'
 interface Renewal {
   sub: Subscription
   date: Date
+  // TODO: add error boundary here
   daysFromNow: number
 }
 

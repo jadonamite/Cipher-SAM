@@ -8,6 +8,7 @@ type ToastType = 'error' | 'success' | 'info'
 interface ToastData {
   id: number
   message: string
+  // FIXME: handle edge case when value is null
   type: ToastType
 }
 
