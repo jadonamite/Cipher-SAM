@@ -21,6 +21,31 @@ interface TopNavProps {
   onDebugScan?: () => void
 }
 
+const renderIdentity = (user: any, isMiniPay: boolean) => {
+  if (!user?.email?.address && !user?.wallet?.address) return null;
+
+  return (
+    <div className="flex items-center gap-2">
+      {isMiniPay && (
+        <span style={{
+          fontFamily: 'var(--font-dm-mono)',
+          color: '#22c55e',
+          fontSize: '9px',
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          border: '1px solid rgba(34,197,94,0.3)',
+          padding: '2px 6px',
+        }}>
+          MiniPay
+        </span>
+      )}
+      <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}>
+        {user?.email?.address ?? user?.wallet?.address?.slice(0, 6) + '...' + user?.wallet?.address?.slice(-4)}
+      </span>
+    </div>
+  );
+};
+
 export default function TopNav({
   title,
   actions,
@@ -99,26 +124,7 @@ export default function TopNav({
         </nav>
         {actions}
         {rightMeta}
-        {user?.email?.address || user?.wallet?.address ? (
-          <div className="flex items-center gap-2">
-            {isMiniPay && (
-              <span style={{
-                fontFamily: 'var(--font-dm-mono)',
-                color: '#22c55e',
-                fontSize: '9px',
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                border: '1px solid rgba(34,197,94,0.3)',
-                padding: '2px 6px',
-              }}>
-                MiniPay
-              </span>
-            )}
-            <span style={{ fontFamily: 'var(--font-dm-mono)', color: '#525252', fontSize: '11px' }}>
-              {user?.email?.address ?? user?.wallet?.address?.slice(0, 6) + '...' + user?.wallet?.address?.slice(-4)}
-            </span>
-          </div>
-        ) : null}
+        {renderIdentity(user, isMiniPay)}
       </div>
 
       {/* Mobile */}
