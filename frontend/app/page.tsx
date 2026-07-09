@@ -6,22 +6,16 @@ import TrustSection from '@/components/landing/TrustSection'
 import CTAFinale from '@/components/landing/CTAFinale'
 import Footer from '@/components/landing/Footer'
 
-const landingPageSections = [
-  Hero,
-  Problem,
-  HowItWorks,
-  IntelligencePreview,
-  TrustSection,
-  CTAFinale,
-  Footer,
-]
-
 export default function Home() {
   return (
     <main className="bg-void">
-      {landingPageSections.map((Section, index) => (
-        <Section key={index} />
-      ))}
+      <Hero />
+      <Problem />
+      <HowItWorks />
+      <IntelligencePreview />
+      <TrustSection />
+      <CTAFinale />
+      <Footer />
     </main>
   )
 }
