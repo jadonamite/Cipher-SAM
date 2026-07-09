@@ -11,18 +11,9 @@ const SYMBOLS: Record<string, string> = {
   GBP: '£',
 }
 
-// Sum monthly-equivalent values grouped by currency.
-export function aggregateByCurrency<T>(
-  items: T[],
-  amountFn: (item: T) => number,
-  currencyFn: (item: T) => string,
-): CurrencyMap {
-  const out: CurrencyMap = {}
-  for (const item of items) {
-    const c = currencyFn(item) || 'USD'
-    out[c] = (out[c] ?? 0) + amountFn(item)
-  }
-  return out
+// NGN amounts are typically whole-number; everything else gets two decimals.
+function decimalsFor(currency: string): number {
+  return currency === 'NGN' ? 0 : 2
 }
 
 export function formatMoney(amount: number, currency: Currency = 'USD'): string {
@@ -38,19 +29,19 @@ export function formatMoney(amount: number, currency: Currency = 'USD'): string 
 
 export type CurrencyMap = Record<string, number>
 
-// Render the headline amount + every other non-zero currency as a suffix.
-// Example: { USD: 42, NGN: 40371 } → "$42.00 + ₦40,371"
-export function formatAggregate(map: CurrencyMap): string {
-  const primary = primaryCurrency(map)
-  if (!primary) return formatMoney(0, 'USD')
-  const headline = formatMoney(map[primary], primary)
-  const extras = Object.entries(map)
-    .filter(([c, v]) => c !== primary && v > 0)
-    .map(([c, v]) => formatMoney(v, c))
-  if (extras.length === 0) return headline
-  return `${headline} + ${extras.join(' + ')}`
+// Sum monthly-equivalent values grouped by currency.
+export function aggregateByCurrency<T>(
+  items: T[],
+  amountFn: (item: T) => number,
+  currencyFn: (item: T) => string,
+): CurrencyMap {
+  const out: CurrencyMap = {}
+  for (const item of items) {
+    const c = currencyFn(item) || 'USD'
+    out[c] = (out[c] ?? 0) + amountFn(item)
+  }
+  return out
 }
-
 
 // Pick the primary currency to headline: USD if present and non-zero, else the
 // currency with the largest absolute total. Returns null if everything is zero.
@@ -62,7 +53,15 @@ export function primaryCurrency(map: CurrencyMap): string | null {
   return entries[0][0]
 }
 
-// NGN amounts are typically whole-number; everything else gets two decimals.
-function decimalsFor(currency: string): number {
-  return currency === 'NGN' ? 0 : 2
+// Render the headline amount + every other non-zero currency as a suffix.
+// Example: { USD: 42, NGN: 40371 } → "$42.00 + ₦40,371"
+export function formatAggregate(map: CurrencyMap): string {
+  const primary = primaryCurrency(map)
+  if (!primary) return formatMoney(0, 'USD')
+  const headline = formatMoney(map[primary], primary)
+  const extras = Object.entries(map)
+    .filter(([c, v]) => c !== primary && v > 0)
+    .map(([c, v]) => formatMoney(v, c))
+  if (extras.length === 0) return headline
+  return `${headline} + ${extras.join(' + ')}`
 }

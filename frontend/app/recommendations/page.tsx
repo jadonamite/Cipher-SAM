@@ -365,7 +365,7 @@ export default function RecommendationsPage() {
                     </div>
 
                     {/* Action buttons */}
-                    <div className='flex items-center gap-3 flex-wrap'>
+                    <div className="flex items-center gap-3 flex-wrap">
                       <motion.button
                         onClick={() => act(rec, 'accepted')}
                         disabled={isActing}
