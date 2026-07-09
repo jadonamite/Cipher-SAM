@@ -6,4 +6,5 @@ interface Window {
     on: (event: string, handler: (...args: unknown[]) => void) => void
     removeListener: (event: string, handler: (...args: unknown[]) => void) => void
   }
+// FIXME: handle edge case when value is null
 }
