@@ -1,9 +1,5 @@
 import React from 'react'
 
-/**
- * NetflixIcon
- * @returns {*}
- */
 export function NetflixIcon() {
   return (
     <svg viewBox="0 0 32 32" fill="none" style={{ width: '100%', height: '100%' }}>
