@@ -70,17 +70,6 @@ const BLANK: DraftPolicy = {
   merchant: '',
 }
 
-  async function togglePolicy(id: string, enabled: boolean) {
-    setPolicies((prev) => prev.map((p) => p.id === id ? { ...p, enabled } : p))
-    try {
-      await fetch(`/api/policies/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
-        body: JSON.stringify({ enabled }),
-      })
-    } catch {}
-  }
-
 function buildConditions(draft: DraftPolicy) {
   if (draft.trigger === 'trial_cancel') {
     return { trial_days: Number(draft.trial_days) || 7, ...(draft.merchant ? { merchant: draft.merchant } : {}) }
@@ -93,6 +82,10 @@ function buildConditions(draft: DraftPolicy) {
   }
   return {}
 }
+
+export default function PoliciesPage() {
+  const { ready, authenticated, user, login } = usePrivy()
+  const router = useRouter()
 
   const [policies, setPolicies] = useState<Policy[]>([])
   const [loading, setLoading] = useState(true)
@@ -120,33 +113,6 @@ function buildConditions(draft: DraftPolicy) {
     }
   }
 
-export default function PoliciesPage() {
-  const { ready, authenticated, user, login } = usePrivy()
-  const router = useRouter()
-
-  async function applyPolicies() {
-    if (applying || !evalResults) return
-    setApplying(true)
-    try {
-      await fetch('/api/policies/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
-        body: JSON.stringify({ apply: true }),
-      })
-      setEvalResults(null)
-      await load()
-    } catch {} finally {
-      setApplying(false)
-    }
-  }
-
-  async function deletePolicy(id: string) {
-    setPolicies((prev) => prev.filter((p) => p.id !== id))
-    try {
-      await fetch(`/api/policies/${id}`, { method: 'DELETE', headers: { 'x-user-id': user!.id } })
-    } catch {}
-  }
-
   async function createPolicy() {
     if (!draft.name || saving) return
     setSaving(true)
@@ -172,6 +138,24 @@ export default function PoliciesPage() {
     }
   }
 
+  async function togglePolicy(id: string, enabled: boolean) {
+    setPolicies((prev) => prev.map((p) => p.id === id ? { ...p, enabled } : p))
+    try {
+      await fetch(`/api/policies/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
+        body: JSON.stringify({ enabled }),
+      })
+    } catch {}
+  }
+
+  async function deletePolicy(id: string) {
+    setPolicies((prev) => prev.filter((p) => p.id !== id))
+    try {
+      await fetch(`/api/policies/${id}`, { method: 'DELETE', headers: { 'x-user-id': user!.id } })
+    } catch {}
+  }
+
   async function evaluate() {
     if (evaluating) return
     setEvaluating(true)
@@ -188,6 +172,22 @@ export default function PoliciesPage() {
       }
     } catch {} finally {
       setEvaluating(false)
+    }
+  }
+
+  async function applyPolicies() {
+    if (applying || !evalResults) return
+    setApplying(true)
+    try {
+      await fetch('/api/policies/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
+        body: JSON.stringify({ apply: true }),
+      })
+      setEvalResults(null)
+      await load()
+    } catch {} finally {
+      setApplying(false)
     }
   }
 
