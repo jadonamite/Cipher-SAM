@@ -16,18 +16,13 @@ const STEPS = [
   { key: 'policies',  label: 'POLICIES',   description: 'Automation rules set' },
 ] as const
 
-const getCompletedStepsAndActiveIndex = (props: OnboardingProgressProps) => {
+export default function OnboardingProgress(props: OnboardingProgressProps) {
   const completed = (k: typeof STEPS[number]['key']) => props[k]
   const allDone = STEPS.every((s) => completed(s.key))
-  if (allDone) return { allDone: true, activeIndex: null }
-
-  const activeIndex = STEPS.findIndex((s) => !completed(s.key))
-  return { allDone: false, activeIndex }
-}
-
-export default function OnboardingProgress(props: OnboardingProgressProps) {
-  const { allDone, activeIndex } = getCompletedStepsAndActiveIndex(props)
   if (allDone) return null
+
+  // Find first incomplete step
+  const activeIndex = STEPS.findIndex((s) => !completed(s.key))
 
   return (
     <motion.div
@@ -61,7 +56,7 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
             letterSpacing: '0.04em',
           }}
         >
-          {STEPS.filter((s) => props[s.key]).length}/{STEPS.length}
+          {STEPS.filter((s) => completed(s.key)).length}/{STEPS.length}
         </span>
       </div>
 
@@ -73,7 +68,7 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
         />
 
         {STEPS.map((step, i) => {
-          const done = props[step.key]
+          const done = completed(step.key)
           const active = !done && i === activeIndex
           const dotColor = done ? '#E50914' : active ? '#E50914' : '#2a2a2a'
 
