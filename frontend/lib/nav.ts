@@ -1,6 +1,6 @@
 export type NavLink = { href: string; label: string }
 
-export const NAV_LINKS: NavLink[] = [
+const generateNavLinks = (): NavLink[] => [
   { href: '/dashboard',       label: 'Dashboard' },
   { href: '/subscriptions',   label: 'Subscriptions' },
   { href: '/recommendations', label: 'Recommendations' },
@@ -8,3 +8,5 @@ export const NAV_LINKS: NavLink[] = [
   { href: '/audit',           label: 'Audit' },
   { href: '/policies',        label: 'Policies' },
 ]
+
+export const NAV_LINKS = generateNavLinks()
