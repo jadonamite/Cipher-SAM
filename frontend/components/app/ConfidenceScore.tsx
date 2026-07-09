@@ -22,6 +22,13 @@ const ACTION_LABELS = {
   keep: 'KEEP',
 }
 
+/**
+ * ConfidenceScore
+ * @param {*} { score
+ * @param {*} signals
+ * @param {*} action }: ConfidenceScoreProps
+ * @returns {*}
+ */
 export default function ConfidenceScore({ score, signals = [], action }: ConfidenceScoreProps) {
   const color = action ? ACTION_COLORS[action] : score >= 70 ? '#E50914' : score >= 40 ? '#D97706' : '#16A34A'
 
