@@ -17,7 +17,7 @@ function StrikeoutLine({
 }: {
   text: string
   price: string
-  delay: number,
+  delay: number
 }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
