@@ -93,7 +93,7 @@ export default function Problem() {
           </div>
 
           {/* Text side */}
-          <div className="flex-1 pt-4 lg:pt-8">
+          <div className='flex-1 pt-4 lg:pt-8'>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
