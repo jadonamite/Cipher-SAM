@@ -10,55 +10,6 @@ const COLORS = {
   info:    { border: 'rgba(255,255,255,0.12)', text: '#A3A3A3',  dot: '#525252'  },
 }
 
-const getToastColor = (toast) => {
-  return toast ? COLORS[toast.type] : COLORS.info
-}
-
-const getToastStyle = (color) => ({
-  position: 'fixed',
-  top: '72px',
-  left: '50%',
-  transform: 'translateX(-50%)',
-  zIndex: 9999,
-  minWidth: '280px',
-  maxWidth: '480px',
-  background: '#0f0f0f',
-  border: `1px solid ${color.border}`,
-  borderRadius: '3px',
-  padding: '12px 16px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-})
-
-const getIndicatorDotStyle = (color) => ({
-  width: '6px',
-  height: '6px',
-  borderRadius: '50%',
-  background: color.dot,
-  flexShrink: 0,
-})
-
-const getMessageStyle = () => ({
-  fontFamily: 'var(--font-geist-sans)',
-  fontSize: '13px',
-  color: '#E5E5E5',
-  lineHeight: 1.4,
-  flex: 1,
-})
-
-const getDismissButtonStyle = () => ({
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  color: '#525252',
-  padding: '0 2px',
-  fontSize: '16px',
-  lineHeight: 1,
-  flexShrink: 0,
-})
-
 export default function Toast() {
   const { toast, dismiss } = useToast()
 
@@ -68,7 +19,7 @@ export default function Toast() {
     return () => clearTimeout(t)
   }, [toast, dismiss])
 
-  const color = getToastColor(toast)
+  const c = toast ? COLORS[toast.type] : COLORS.info
 
   return (
     <AnimatePresence>
@@ -79,20 +30,61 @@ export default function Toast() {
           animate={{ opacity: 1, y: 0,   scale: 1     }}
           exit={{    opacity: 0, y: -12,  scale: 0.97  }}
           transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
-          style={getToastStyle(color)}
+          style={{
+            position: 'fixed',
+            top: '72px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            minWidth: '280px',
+            maxWidth: '480px',
+            background: '#0f0f0f',
+            border: `1px solid ${c.border}`,
+            borderRadius: '3px',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          }}
         >
           {/* indicator dot */}
-          <span style={getIndicatorDotStyle(color)} />
+          <span
+            style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              background: c.dot,
+              flexShrink: 0,
+            }}
+          />
 
           {/* message */}
-          <span style={getMessageStyle()}>
+          <span
+            style={{
+              fontFamily: 'var(--font-geist-sans)',
+              fontSize: '13px',
+              color: '#E5E5E5',
+              lineHeight: 1.4,
+              flex: 1,
+            }}
+          >
             {toast.message}
           </span>
 
           {/* dismiss */}
           <button
             onClick={dismiss}
-            style={getDismissButtonStyle()}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#525252',
+              padding: '0 2px',
+              fontSize: '16px',
+              lineHeight: 1,
+              flexShrink: 0,
+            }}
           >
             ×
           </button>
