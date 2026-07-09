@@ -166,6 +166,7 @@ export default function AgentPage() {
     }
   }
 
+  // Build SelfApp config — memoised so it doesn't regenerate on every render
   const selfApp = useMemo(() => {
     if (!user?.id) return null
     return new SelfAppBuilder({
