@@ -186,7 +186,7 @@ export default function InsightsCarousel({ subs }: { subs: Subscription[] }) {
         )}
       </div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode='wait'>
         <motion.div
           key={current.id}
           initial={{ opacity: 0, y: 8 }}
