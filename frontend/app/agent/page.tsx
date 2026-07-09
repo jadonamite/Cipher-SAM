@@ -181,6 +181,10 @@ export default function AgentPage() {
     }).build()
   }, [user?.id])
 
+  /**
+   * onSelfSuccess
+   * @returns {*}
+   */
   async function onSelfSuccess() {
     setSelfSuccess(true)
     setSelfError(null)
