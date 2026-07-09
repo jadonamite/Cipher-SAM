@@ -187,12 +187,6 @@ function DashboardInner() {
     }
   }
 
-  /**
-   * handleStatusChange
-   * @param {*} id: string
-   * @param {*} status: 'active' | 'paused' | 'cancelled'
-   * @returns {*}
-   */
   async function handleStatusChange(id: string, status: 'active' | 'paused' | 'cancelled') {
     if (!user?.id) return
     try {
