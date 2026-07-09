@@ -11,9 +11,18 @@ const SYMBOLS: Record<string, string> = {
   GBP: '£',
 }
 
-// NGN amounts are typically whole-number; everything else gets two decimals.
-function decimalsFor(currency: string): number {
-  return currency === 'NGN' ? 0 : 2
+// Sum monthly-equivalent values grouped by currency.
+export function aggregateByCurrency<T>(
+  items: T[],
+  amountFn: (item: T) => number,
+  currencyFn: (item: T) => string,
+): CurrencyMap {
+  const out: CurrencyMap = {}
+  for (const item of items) {
+    const c = currencyFn(item) || 'USD'
+    out[c] = (out[c] ?? 0) + amountFn(item)
+  }
+  return out
 }
 
 export function formatMoney(amount: number, currency: Currency = 'USD'): string {
@@ -29,30 +38,6 @@ export function formatMoney(amount: number, currency: Currency = 'USD'): string 
 
 export type CurrencyMap = Record<string, number>
 
-// Sum monthly-equivalent values grouped by currency.
-export function aggregateByCurrency<T>(
-  items: T[],
-  amountFn: (item: T) => number,
-  currencyFn: (item: T) => string,
-): CurrencyMap {
-  const out: CurrencyMap = {}
-  for (const item of items) {
-    const c = currencyFn(item) || 'USD'
-    out[c] = (out[c] ?? 0) + amountFn(item)
-  }
-  return out
-}
-
-// Pick the primary currency to headline: USD if present and non-zero, else the
-// currency with the largest absolute total. Returns null if everything is zero.
-export function primaryCurrency(map: CurrencyMap): string | null {
-  const entries = Object.entries(map).filter(([, v]) => v > 0)
-  if (entries.length === 0) return null
-  if (map.USD && map.USD > 0) return 'USD'
-  entries.sort((a, b) => b[1] - a[1])
-  return entries[0][0]
-}
-
 // Render the headline amount + every other non-zero currency as a suffix.
 // Example: { USD: 42, NGN: 40371 } → "$42.00 + ₦40,371"
 export function formatAggregate(map: CurrencyMap): string {
@@ -64,4 +49,20 @@ export function formatAggregate(map: CurrencyMap): string {
     .map(([c, v]) => formatMoney(v, c))
   if (extras.length === 0) return headline
   return `${headline} + ${extras.join(' + ')}`
+}
+
+
+// Pick the primary currency to headline: USD if present and non-zero, else the
+// currency with the largest absolute total. Returns null if everything is zero.
+export function primaryCurrency(map: CurrencyMap): string | null {
+  const entries = Object.entries(map).filter(([, v]) => v > 0)
+  if (entries.length === 0) return null
+  if (map.USD && map.USD > 0) return 'USD'
+  entries.sort((a, b) => b[1] - a[1])
+  return entries[0][0]
+}
+
+// NGN amounts are typically whole-number; everything else gets two decimals.
+function decimalsFor(currency: string): number {
+  return currency === 'NGN' ? 0 : 2
 }
