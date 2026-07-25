@@ -89,6 +89,7 @@ function DashboardInner() {
     }
   }
 
+  // Initial load
   useEffect(() => {
     if (!ready || !authenticated || !user?.id) return
     setLoading(true)

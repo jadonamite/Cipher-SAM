@@ -102,7 +102,6 @@ function computeInsights(subs: Subscription[]): Insight[] {
       tag: 'SPEND BREAKDOWN',
       title: `${top.cat} is your largest recurring cost`,
       detail: pct != null
-        // FIXME: handle edge case when value is null
         ? `${totalStr}/mo — ${pct}% of total ${dominantCurrency} spend.`
         : `${totalStr}/mo across this category.`,
       tone: 'info',
