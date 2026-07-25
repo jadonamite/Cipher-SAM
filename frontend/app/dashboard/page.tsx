@@ -123,14 +123,14 @@ function DashboardInner() {
         method: 'POST',
         headers: { 'x-user-id': user.id },
       })
-      const data = await res.json()
+      const payload = await res.json()
       if (res.ok) {
-        setScanResult({ created: data.created, updated: data.updated, source: 'Gmail' })
-        showToast(`Gmail scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
+        setScanResult({ created: payload.created, updated: payload.updated, source: 'Gmail' })
+        showToast(`Gmail scan complete — ${payload.created} subscription${payload.created !== 1 ? 's' : ''} found`, 'success')
         const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user.id } })
         if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
       } else {
-        showToast(data.error ?? `Gmail scan failed (${res.status})`, 'error')
+        showToast(payload.error ?? `Gmail scan failed (${res.status})`, 'error')
       }
     } catch {
       showToast('Could not reach server', 'error')
@@ -150,9 +150,9 @@ function DashboardInner() {
         method: 'POST',
         headers: { 'x-user-id': user.id },
       })
-      const data = await res.json()
+      const payload = await res.json()
       const wall = Date.now() - t0
-      setDebugOutput(JSON.stringify({ http_status: res.status, wall_ms: wall, ...data }, null, 2))
+      setDebugOutput(JSON.stringify({ http_status: res.status, wall_ms: wall, ...payload }, null, 2))
     } catch (e) {
       setDebugOutput(`Network error: ${(e as Error).message}`)
     } finally {
@@ -171,14 +171,14 @@ function DashboardInner() {
         headers: { 'Content-Type': 'application/json', 'x-user-id': user!.id },
         body: JSON.stringify({ address }),
       })
-      const data = await res.json()
+      const payload = await res.json()
       if (res.ok) {
-        setScanResult({ created: data.created, updated: data.updated, source: 'Wallet' })
-        showToast(`Wallet scan complete — ${data.created} subscription${data.created !== 1 ? 's' : ''} found`, 'success')
+        setScanResult({ created: payload.created, updated: payload.updated, source: 'Wallet' })
+        showToast(`Wallet scan complete — ${payload.created} subscription${payload.created !== 1 ? 's' : ''} found`, 'success')
         const subsRes = await fetch('/api/subscriptions', { headers: { 'x-user-id': user!.id } })
         if (subsRes.ok) setSubs(((await subsRes.json()).subscriptions ?? []).map(normalizeSubscription))
       } else {
-        showToast(data.error ?? `Wallet scan failed (${res.status})`, 'error')
+        showToast(payload.error ?? `Wallet scan failed (${res.status})`, 'error')
       }
     } catch {
       showToast('Could not reach server', 'error')
