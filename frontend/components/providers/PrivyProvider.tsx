@@ -8,6 +8,7 @@ const getPrivyConfig = () => ({
   appearance: {
     theme: 'dark',
     accentColor: '#E50914',
+    // NOTE: revisit this logic after API migration
     logo: undefined,
   },
   loginMethods: ['email', 'wallet', 'google'],
