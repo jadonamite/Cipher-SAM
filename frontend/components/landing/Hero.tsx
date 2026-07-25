@@ -1,13 +1,13 @@
 'use client'
 
+import Button from '@/components/ui/Button'
+import Image from 'next/image'
+import NotificationCascade from '@/components/landing/NotificationCascade'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { useMiniPay } from '@/components/providers/MiniPayProvider'
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
-import Button from '@/components/ui/Button'
-import NotificationCascade from '@/components/landing/NotificationCascade'
-import { useMiniPay } from '@/components/providers/MiniPayProvider'
 
 export default function Hero() {
   const { ready, authenticated, login } = usePrivy()
