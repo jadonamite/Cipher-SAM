@@ -1,9 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
 import type { Subscription } from './SubscriptionRow'
 import { aggregateByCurrency, formatAggregate, formatMoney } from '@/lib/format'
+import { motion } from 'framer-motion'
+import { useMemo, useState } from 'react'
 
 interface Renewal {
   sub: Subscription
