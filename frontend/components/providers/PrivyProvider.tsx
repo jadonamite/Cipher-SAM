@@ -4,7 +4,7 @@ import { PrivyProvider as Privy } from '@privy-io/react-auth'
 
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? ''
 
-const PRIVY_CONFIG = {
+const getPrivyConfig = () => ({
   appearance: {
     theme: 'dark',
     accentColor: '#E50914',
@@ -14,13 +14,13 @@ const PRIVY_CONFIG = {
   embeddedWallets: {
     createOnLogin: 'users-without-wallets',
   },
-}
+})
 
 export default function PrivyProvider({ children }: { children: React.ReactNode }) {
   return (
     <Privy
       appId={PRIVY_APP_ID}
-      config={PRIVY_CONFIG}
+      config={getPrivyConfig()}
     >
       {children}
     </Privy>
