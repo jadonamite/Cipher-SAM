@@ -14,38 +14,20 @@ import { aggregateByCurrency, formatAggregate } from '@/lib/format'
 
 // ... (unchanged imports and types)
 
-const filterSubscriptions = (subs: Subscription[], filter: Filter) => {
-  switch (filter) {
-    case 'monthly':
-      return subs.filter((s) => s.status === 'active' && s.cadence === 'monthly')
-    case 'yearly':
-      return subs.filter((s) => s.status === 'active' && s.cadence === 'yearly')
-    case 'high-risk':
-      return subs.filter((s) => s.status === 'active' && (s.confidence ?? 0) >= 60)
-    default:
-      return subs.filter((s) => s.status === 'active')
-  }
+function filterAndSortSubscriptions(subs: Subscription[], filter: Filter, sort: Sort) {
+  let list = subs.filter((s) => s.status === 'active')
+  if (filter === 'monthly') list = list.filter((s) => s.cadence === 'monthly')
+  if (filter === 'yearly') list = list.filter((s) => s.cadence === 'yearly')
+  if (filter === 'high-risk') list = list.filter((s) => (s.confidence ?? 0) >= 60)
+  return [...list].sort((a, b) => {
+    if (sort === 'risk') return (b.confidence ?? 0) - (a.confidence ?? 0)
+    if (sort === 'detected') return (b.id > a.id ? 1 : -1)
+    // spend
+    const toMonthly = (s: Subscription) =>
+      s.cadence === 'yearly' ? s.amount / 12 : s.cadence === 'weekly' ? s.amount * 4.33 : s.amount
+    return toMonthly(b) - toMonthly(a)
+  })
 }
-
-const toMonthly = (s: Subscription) =>
-  s.cadence === 'yearly' ? s.amount / 12 :
-  s.cadence === 'weekly' ? s.amount * 4.33 :
-  s.cadence === 'daily' ? s.amount * 30 :
-  s.amount
-
-const sortSubscriptions = (subs: Subscription[], sort: Sort) => {
-  switch (sort) {
-    case 'risk':
-      return subs.sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))
-    case 'detected':
-      return subs.sort((a, b) => (b.id > a.id ? 1 : -1))
-    default:
-      return subs.sort((a, b) => toMonthly(b) - toMonthly(a))
-  }
-}
-
-const filterAndSortSubscriptions = (subs: Subscription[], filter: Filter, sort: Sort) =>
-  sortSubscriptions(filterSubscriptions(subs, filter), sort)
 
 export default function SubscriptionsPage() {
   // ... (unchanged state and effects)
@@ -56,7 +38,12 @@ export default function SubscriptionsPage() {
   const totalMonthlyStr = formatAggregate(
     aggregateByCurrency(
       activeSubs,
-      (s) => toMonthly(s),
+      (s) => {
+        if (s.cadence === 'yearly') return s.amount / 12
+        if (s.cadence === 'weekly') return s.amount * 4.33
+        if (s.cadence === 'daily') return s.amount * 30
+        return s.amount
+      },
       (s) => s.currency ?? 'USD',
     ),
   )

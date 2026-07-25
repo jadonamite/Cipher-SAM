@@ -1,7 +1,3 @@
-// Currency-aware money formatting. Renders in the original currency the server
-// extracted — no FX conversion. Aggregations group by currency and surface a
-// primary headline with the remaining currencies as inline suffixes.
-
 export type Currency = 'USD' | 'NGN' | 'EUR' | 'GBP' | string
 
 const SYMBOLS: Record<string, string> = {
@@ -16,8 +12,12 @@ function decimalsFor(currency: string): number {
   return currency === 'NGN' ? 0 : 2
 }
 
+function getCurrencySymbol(currency: string): string {
+  return SYMBOLS[currency] ?? ''
+}
+
 export function formatMoney(amount: number, currency: Currency = 'USD'): string {
-  const symbol = SYMBOLS[currency] ?? ''
+  const symbol = getCurrencySymbol(currency)
   const decimals = decimalsFor(currency)
   const formatted = amount.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
