@@ -6,16 +6,20 @@ import TrustSection from '@/components/landing/TrustSection'
 import CTAFinale from '@/components/landing/CTAFinale'
 import Footer from '@/components/landing/Footer'
 
+const getLandingPageComponents = () => [
+  <Hero key="hero" />, 
+  <Problem key="problem" />, 
+  <HowItWorks key="how-it-works" />, 
+  <IntelligencePreview key="intelligence-preview" />, 
+  <TrustSection key="trust-section" />, 
+  <CTAFinale key="cta-finale" />, 
+  <Footer key="footer" />
+]
+
 export default function Home() {
   return (
     <main className="bg-void">
-      <Hero />
-      <Problem />
-      <HowItWorks />
-      <IntelligencePreview />
-      <TrustSection />
-      <CTAFinale />
-      <Footer />
+      {getLandingPageComponents()}
     </main>
   )
 }

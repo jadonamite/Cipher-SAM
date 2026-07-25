@@ -164,7 +164,7 @@ export default function HowItWorks() {
             </h3>
 
             <p
-              className="text-secondary relative z-10"
+              className='text-secondary relative z-10'
               style={{ fontFamily: 'var(--font-geist-sans)', fontSize: '13px', lineHeight: '1.6' }}
             >
               {step.detail}
