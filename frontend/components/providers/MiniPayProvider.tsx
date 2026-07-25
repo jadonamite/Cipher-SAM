@@ -6,7 +6,7 @@ import { detectMiniPay } from '@/lib/minipay'
 interface MiniPayContextType {
   isMiniPay: boolean
   isAutoConnecting: boolean
-  miniPayAddress: string | null
+  miniPayAddress: string | null,
 }
 
 const MiniPayContext = createContext<MiniPayContextType>({
