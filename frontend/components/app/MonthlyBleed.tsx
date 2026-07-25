@@ -30,21 +30,13 @@ function useCountUp(target: number, duration = 1200) {
   return value
 }
 
-function getFormattedExtras(extras: [string, number][]) {
-  return extras.map(([c, v]) => formatMoney(v, c)).join(' + ')
-}
-
-function getYearlyPrimary(primaryAmount: number, primary: string) {
-  const yearlyPrimary = primaryAmount * 12
-  return formatMoney(yearlyPrimary, primary)
-}
-
 export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
   const primary = primaryCurrency(byCurrency) ?? 'USD'
   const primaryAmount = byCurrency[primary] ?? 0
   const display = useCountUp(primaryAmount)
 
   const extras = Object.entries(byCurrency).filter(([c, v]) => c !== primary && v > 0)
+  const yearlyPrimary = primaryAmount * 12
 
   return (
     <motion.div
@@ -86,7 +78,7 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
             marginTop: '4px',
           }}
         >
-          + {getFormattedExtras(extras)} /month
+          + {extras.map(([c, v]) => formatMoney(v, c)).join(' + ')} /month
         </span>
       )}
       <span
@@ -97,10 +89,10 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
           letterSpacing: '0.02em',
         }}
       >
-        You'll spend{' '} 
+        You'll spend{' '}
         <span style={{ color: '#E50914', fontFamily: 'var(--font-dm-mono)' }}>
-          {getYearlyPrimary(primaryAmount, primary)}
-        </span>{' '} 
+          {formatMoney(yearlyPrimary, primary)}
+        </span>{' '}
         this year if nothing changes.
       </span>
     </motion.div>
