@@ -47,7 +47,6 @@ export default function SubscriptionsPage() {
       (s) => s.currency ?? 'USD',
     ),
   )
-// TODO: consider memoizing this value
 
   // ... (unchanged rendering)
 }
