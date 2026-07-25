@@ -23,15 +23,10 @@ function calculateSavings(recs: Rec[]) {
   return { savingsCandidates, savingsByCurrency, totalSavings, totalSavingsStr }
 }
 
-export default function RecommendationsPage() {
-  // ... (unchanged state and effects)
+const PotentialSavingsBanner = ({ totalSavings, totalSavingsStr }: { totalSavings: number; totalSavingsStr: string }) => {
+  if (totalSavings <= 0) return null
 
-  const { savingsCandidates, savingsByCurrency, totalSavings, totalSavingsStr } = calculateSavings(recs)
-
-  // ... (unchanged rendering logic)
-
-  {/* Potential savings banner */}
-  {totalSavings > 0 && (
+  return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -49,7 +44,17 @@ export default function RecommendationsPage() {
         {totalSavingsStr}
       </span>
     </motion.div>
-  )}
+  )
+}
+
+export default function RecommendationsPage() {
+  // ... (unchanged state and effects)
+
+  const { savingsCandidates, savingsByCurrency, totalSavings, totalSavingsStr } = calculateSavings(recs)
+
+  // ... (unchanged rendering logic)
+
+  <PotentialSavingsBanner totalSavings={totalSavings} totalSavingsStr={totalSavingsStr} />
 
   // ... (unchanged rendering logic)
 }
