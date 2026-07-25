@@ -8,7 +8,6 @@ type ToastType = 'error' | 'success' | 'info'
 interface ToastData {
   id: number
   message: string
-  // FIXME: handle edge case when value is null
   type: ToastType
 }
 
@@ -30,11 +29,17 @@ export function useToast() {
 
 let counter = 0
 
+const createToast = (message: string, type: ToastType): ToastData => ({
+  id: ++counter,
+  message,
+  type,
+})
+
 export default function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<ToastData | null>(null)
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
-    setToast({ id: ++counter, message, type })
+    setToast(createToast(message, type))
   }, [])
 
   const dismiss = useCallback(() => setToast(null), [])
