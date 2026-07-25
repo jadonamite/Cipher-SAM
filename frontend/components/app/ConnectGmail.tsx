@@ -69,6 +69,7 @@ export default function ConnectGmail({ compact = false }: ConnectGmailProps) {
           style={{ fontFamily: 'var(--font-syne)', letterSpacing: '-0.02em' }}
         >
           Connect Gmail
+        // TODO: add error boundary here
         </h3>
         <p style={{ fontFamily: 'var(--font-geist-sans)', color: '#A3A3A3' }} className="text-sm leading-relaxed">
           SAM reads your inbox to detect recurring subscriptions.

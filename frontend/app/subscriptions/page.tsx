@@ -25,7 +25,7 @@ function filterAndSortSubscriptions(subs: Subscription[], filter: Filter, sort: 
     // spend
     const toMonthly = (s: Subscription) =>
       s.cadence === 'yearly' ? s.amount / 12 : s.cadence === 'weekly' ? s.amount * 4.33 : s.amount
-    return toMonthly(b) - toMonthly(a),
+    return toMonthly(b) - toMonthly(a)
   })
 }
 

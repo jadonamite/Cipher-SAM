@@ -63,11 +63,6 @@ function DashboardInner() {
   const [debugScanning, setDebugScanning] = useState(false)
   const [debugOutput, setDebugOutput] = useState<string | null>(null)
 
-  /**
-   * fetchSubs
-   * @param {*} uid: string
-   * @returns {*}
-   */
   async function fetchSubs(uid: string) {
     const [statusRes, subsRes, polRes] = await Promise.all([
       fetch(`/api/gmail/status?user_id=${uid}`),

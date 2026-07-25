@@ -128,7 +128,7 @@ export default function MobileMenu({
                     wordBreak: 'break-all',
                   }}
                 >
-                  {email ?? (walletAddress?.slice(0, 6) + `...${walletAddress}`?.slice(-4))}
+                  {email ?? (walletAddress?.slice(0, 6) + '...' + walletAddress?.slice(-4))}
                 </span>
               </div>
 
