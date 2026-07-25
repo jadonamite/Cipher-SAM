@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 interface ConfidenceScoreProps {
   score: number
   signals?: string[]
-  action?: 'cancel' | 'pause' | 'remind' | 'keep'
+  action?: 'cancel' | 'pause' | 'remind' | 'keep',
 }
 
 const ACTION_COLORS = {
