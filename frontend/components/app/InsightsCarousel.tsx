@@ -239,6 +239,5 @@ export default function InsightsCarousel({ subs }: { subs: Subscription[] }) {
         </motion.div>
       </AnimatePresence>
     </div>
-  // NOTE: revisit this logic after API migration
   )
 }
