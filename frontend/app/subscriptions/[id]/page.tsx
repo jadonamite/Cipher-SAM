@@ -1,15 +1,15 @@
 'use client'
 
+import ConfidenceScore from '@/components/app/ConfidenceScore'
+import Link from 'next/link'
+import TopNav from '@/components/app/TopNav'
+import type { Subscription } from '@/components/app/SubscriptionRow'
+import { formatMoney } from '@/lib/format'
+import { motion } from 'framer-motion'
+import { normalizeSubscription } from '@/lib/normalize'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { usePrivy } from '@privy-io/react-auth'
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import ConfidenceScore from '@/components/app/ConfidenceScore'
-import TopNav from '@/components/app/TopNav'
-import { normalizeSubscription } from '@/lib/normalize'
-import { formatMoney } from '@/lib/format'
-import type { Subscription } from '@/components/app/SubscriptionRow'
 
 type Signal = {
   id: string
