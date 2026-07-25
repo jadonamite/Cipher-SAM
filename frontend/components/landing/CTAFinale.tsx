@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 
 const handleLogin = (login, setEntering, router, authenticated) => {
-  if (authenticated) return router.push('/dashboard');
-  setEntering(true);
-  login();
+  if (authenticated) {
+    router.push('/dashboard');
+  } else {
+    setEntering(true);
+    login();
+  }
 };
 
 export default function CTAFinale() {
@@ -16,7 +19,7 @@ export default function CTAFinale() {
   const [entering, setEntering] = useState(false);
 
   useEffect(() => {
-    if (entering && authenticated) return router.push('/dashboard');
+    if (entering && authenticated) router.push('/dashboard');
   }, [entering, authenticated, router]);
 
   function handleCTA() {
