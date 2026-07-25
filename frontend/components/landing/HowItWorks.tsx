@@ -29,10 +29,6 @@ const steps = [
   },
 ]
 
-/**
- * HowItWorks
- * @returns {*}
- */
 export default function HowItWorks() {
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
