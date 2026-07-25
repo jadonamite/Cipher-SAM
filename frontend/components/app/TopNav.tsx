@@ -74,7 +74,7 @@ export default function TopNav({
       </div>
 
       {/* Desktop: nav links + actions + identity */}
-      <div className='hidden md:flex items-center gap-3'>
+      <div className="hidden md:flex items-center gap-3">
         <nav className="flex items-center gap-3">
           {NAV_LINKS.filter((l) => l.href !== '/dashboard').map((link) => {
             const active = pathname === link.href || pathname?.startsWith(link.href + '/')

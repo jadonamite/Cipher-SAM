@@ -9,29 +9,6 @@ interface ButtonProps extends HTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode
 }
 
-const getSizeClasses = (size: 'sm' | 'md' | 'lg') => {
-  const sizeClasses = {
-    sm: 'px-5 py-2 text-sm',
-    md: 'px-7 py-3 text-sm',
-    lg: 'px-10 py-4 text-base',
-  }
-  return sizeClasses[size]
-}
-
-const getVariantStyles = (variant: 'primary' | 'secondary') => {
-  return variant === 'primary'
-    ? { backgroundColor: '#E50914', color: '#fff', border: 'none' }
-    : {
-        backgroundColor: 'transparent',
-        color: '#fff',
-        border: '1px solid rgba(255,255,255,0.15)',
-      }
-}
-
-const getFontSize = (size: 'sm' | 'md' | 'lg') => {
-  return size === 'sm' ? '11px' : size === 'lg' ? '13px' : '12px'
-}
-
 export default function Button({
   variant = 'primary',
   size = 'md',
@@ -39,16 +16,31 @@ export default function Button({
   className = '',
   ...props
 }: ButtonProps) {
+  const sizeClasses = {
+    sm: 'px-5 py-2 text-sm',
+    md: 'px-7 py-3 text-sm',
+    lg: 'px-10 py-4 text-base',
+  }
+
+  const variantStyles =
+    variant === 'primary'
+      ? { backgroundColor: '#E50914', color: '#fff', border: 'none' }
+      : {
+          backgroundColor: 'transparent',
+          color: '#fff',
+          border: '1px solid rgba(255,255,255,0.15)',
+        }
+
   return (
     <motion.button
       whileHover={{ scale: 1.02, filter: variant === 'primary' ? 'brightness(1.1)' : 'none' }}
       whileTap={{ scale: 0.98 }}
-      className={`font-semibold uppercase tracking-wider cursor-pointer ${getSizeClasses(size)} ${className}`}
+      className={`font-semibold uppercase tracking-wider cursor-pointer ${sizeClasses[size]} ${className}`}
       style={{
-        ...getVariantStyles(variant),
+        ...variantStyles,
         fontFamily: 'var(--font-geist-sans)',
         letterSpacing: '0.08em',
-        fontSize: getFontSize(size),
+        fontSize: size === 'sm' ? '11px' : size === 'lg' ? '13px' : '12px',
         borderRadius: '2px',
         transition: 'border-color 0.2s',
       }}

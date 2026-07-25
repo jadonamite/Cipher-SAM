@@ -40,11 +40,6 @@ const CADENCE_LABELS: Record<string, string> = {
   yearly: '/yr',
 }
 
-export default function SubscriptionRow({ sub, onStatusChange, href }: SubscriptionRowProps) {
-  const [hovered, setHovered] = useState(false)
-  const router = useRouter()
-  const actionColor = sub.action ? ACTION_COLORS[sub.action] : undefined
-
 function MerchantAvatar({ name }: { name: string }) {
   return (
     <div
@@ -63,6 +58,11 @@ function MerchantAvatar({ name }: { name: string }) {
     </div>
   )
 }
+
+export default function SubscriptionRow({ sub, onStatusChange, href }: SubscriptionRowProps) {
+  const [hovered, setHovered] = useState(false)
+  const router = useRouter()
+  const actionColor = sub.action ? ACTION_COLORS[sub.action] : undefined
 
   const monthlyEquiv =
     sub.cadence === 'yearly'
