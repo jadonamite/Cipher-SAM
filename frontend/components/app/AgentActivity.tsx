@@ -10,7 +10,7 @@ interface AgentAction {
   executed_at: string
   merchant: string
   amount: number
-  currency: string,
+  currency: string
 }
 
 interface AgentActivityProps {

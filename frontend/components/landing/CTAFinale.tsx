@@ -1,8 +1,8 @@
+import Button from '@/components/ui/Button';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
-import Button from '@/components/ui/Button';
 
 const handleLogin = (login, setEntering, router, authenticated) => {
   if (authenticated) {

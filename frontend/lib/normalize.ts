@@ -27,7 +27,6 @@ export function normalizeRec<T extends Record<string, unknown>>(raw: T): T {
 }
 
 export function normalizeAction<T extends Record<string, unknown>>(raw: T): T {
-  // TODO: add error boundary here
   return {
     ...raw,
     amount: num(raw.amount),
