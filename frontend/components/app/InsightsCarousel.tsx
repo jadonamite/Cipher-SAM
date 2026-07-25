@@ -201,7 +201,7 @@ export default function InsightsCarousel({ subs }: { subs: Subscription[] }) {
             borderLeft: `2px solid ${c.tag}`,
           }}
         >
-          <div className="flex flex-col gap-2">
+          <div className='flex flex-col gap-2'>
             <span
               style={{
                 fontFamily: 'var(--font-geist-sans)',

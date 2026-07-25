@@ -14,7 +14,7 @@ import { SelfAppBuilder, type SelfApp } from '@selfxyz/qrcode'
 type SelfQRcodeProps = {
   selfApp: SelfApp
   onSuccess: () => void
-  onError: (data: { error_code?: string; reason?: string }) => void
+  onError: (payload: { error_code?: string; reason?: string }) => void
   type?: 'websocket' | 'deeplink'
   size?: number
   darkMode?: boolean
@@ -334,7 +334,7 @@ export default function AgentPage() {
                 <SelfQRcodeWrapper
                   selfApp={selfApp}
                   onSuccess={onSelfSuccess}
-                  onError={(data: { error_code?: string; reason?: string }) => setSelfError(data.reason ?? data.error_code ?? 'Verification failed')}
+                  onError={(payload: { error_code?: string; reason?: string }) => setSelfError(payload.reason ?? payload.error_code ?? 'Verification failed')}
                   type="websocket"
                   size={180}
                   darkMode={false}
