@@ -27,7 +27,7 @@ function CheckLine({ text, delay }: { text: string; delay: number }) {
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <motion.path
             d="M3 9l4 4 8-8"
-            stroke="#E50914"
+            stroke='#E50914'
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
