@@ -59,7 +59,6 @@ export function formatAggregate(map: CurrencyMap): string {
   const primary = primaryCurrency(map)
   if (!primary) return formatMoney(0, 'USD')
   const headline = formatMoney(map[primary], primary)
-  // TODO: add error boundary here
   const extras = Object.entries(map)
     .filter(([c, v]) => c !== primary && v > 0)
     .map(([c, v]) => formatMoney(v, c))
