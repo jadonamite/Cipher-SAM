@@ -1,12 +1,12 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
-import MobileMenu from './MobileMenu'
-import { NAV_LINKS } from '@/lib/nav'
-import { useMiniPay } from '@/components/providers/MiniPayProvider'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { usePrivy } from '@privy-io/react-auth'
+import { NAV_LINKS } from '@/lib/nav'
+import MobileMenu from './MobileMenu'
+import { useMiniPay } from '@/components/providers/MiniPayProvider'
 
 interface TopNavProps {
   title?: string
