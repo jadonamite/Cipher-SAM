@@ -22,8 +22,15 @@ const ACTION_LABELS = {
   keep: 'KEEP',
 }
 
+const getColor = (score: number, action?: 'cancel' | 'pause' | 'remind' | 'keep') => {
+  if (action) return ACTION_COLORS[action]
+  if (score >= 70) return '#E50914'
+  if (score >= 40) return '#D97706'
+  return '#16A34A'
+}
+
 export default function ConfidenceScore({ score, signals = [], action }: ConfidenceScoreProps) {
-  const color = action ? ACTION_COLORS[action] : score >= 70 ? '#E50914' : score >= 40 ? '#D97706' : '#16A34A'
+  const color = getColor(score, action)
 
   return (
     <div className="flex flex-col gap-3">
