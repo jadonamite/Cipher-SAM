@@ -11,6 +11,11 @@ import { aggregateByCurrency, formatAggregate, formatMoney } from '@/lib/format'
 
 // ... (unchanged imports and constants)
 
+/**
+ * calculateSavings
+ * @param {*} recs: Rec[]
+ * @returns {*}
+ */
 function calculateSavings(recs: Rec[]) {
   const savingsCandidates = recs.filter((r) => r.action === 'cancel' || r.action === 'pause')
   const savingsByCurrency = aggregateByCurrency(
