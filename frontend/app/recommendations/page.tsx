@@ -35,7 +35,7 @@ export default function RecommendationsPage() {
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between px-5 py-4"
+      className='flex items-center justify-between px-5 py-4'
       style={{
         background: 'rgba(229,9,20,0.06)',
         border: '1px solid rgba(229,9,20,0.2)',

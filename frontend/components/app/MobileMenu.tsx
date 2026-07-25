@@ -1,10 +1,10 @@
 'use client'
 
-import Link from 'next/link'
-import { NAV_LINKS } from '@/lib/nav'
-import { motion, AnimatePresence } from 'framer-motion'
-import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { NAV_LINKS } from '@/lib/nav'
 
 interface MobileMenuProps {
   walletAddress?: string

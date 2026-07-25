@@ -139,7 +139,6 @@ export default function SubscriptionRow({ sub, onStatusChange, href }: Subscript
             {sub.confidence != null ? `${sub.confidence}% risk` : '— risk'}
           </span>
           {sub.action && (
-            // FIXME: handle edge case when value is null
             <span
               style={{
                 fontFamily: 'var(--font-geist-sans)',

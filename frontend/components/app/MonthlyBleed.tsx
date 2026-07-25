@@ -61,7 +61,6 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
         <span
           style={{
             fontFamily: 'var(--font-dm-mono)',
-            // TODO: add error boundary here
             color: '#525252',
             fontSize: '16px',
             marginBottom: '8px',

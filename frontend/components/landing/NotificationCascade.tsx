@@ -78,8 +78,7 @@ export default function NotificationCascade() {
       duration: phase === 7 ? 0.9 : phase === 0 ? 0.3 : 0.5,
       ease: [0.25, 0.1, 0.25, 1],
     })
-    const result = controls.stop;
-    return result;
+    return controls.stop
   }, [phase, bleedValue])
 
   const visibleCount = phase >= 1 && phase <= 5 ? phase : phase >= 6 ? 5 : 0

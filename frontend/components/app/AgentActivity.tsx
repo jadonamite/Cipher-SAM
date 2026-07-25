@@ -39,11 +39,6 @@ function describeAction(a: AgentAction): string {
   return `${a.type} · ${a.merchant}`
 }
 
-/**
- * AgentActivity
- * @param {*} { userId }: AgentActivityProps
- * @returns {*}
- */
 export default function AgentActivity({ userId }: AgentActivityProps) {
   const [actions, setActions] = useState<AgentAction[]>([])
   const [loading, setLoading] = useState(true)
