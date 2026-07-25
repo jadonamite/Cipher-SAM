@@ -1,15 +1,31 @@
+import Button from '@/components/ui/Button';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
-import Button from '@/components/ui/Button';
 
-import useLogin from './useLogin';
+const handleLogin = (login, setEntering, router, authenticated) => {
+  if (authenticated) {
+    router.push('/dashboard');
+  } else {
+    setEntering(true);
+    login();
+  }
+};
 
 export default function CTAFinale() {
   const { ready, authenticated, login } = usePrivy();
   const router = useRouter();
-  const { handleLogin, entering } = useLogin(login, router, authenticated);
+  const [entering, setEntering] = useState(false);
+
+  useEffect(() => {
+    if (entering && authenticated) router.push('/dashboard');
+  }, [entering, authenticated, router]);
+
+  function handleCTA() {
+    if (!ready) return;
+    handleLogin(login, setEntering, router, authenticated);
+  }
 
   return (
     <section
@@ -71,7 +87,7 @@ export default function CTAFinale() {
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <Button size="lg" onClick={handleLogin}>Get Early Access</Button>
+          <Button size="lg" onClick={handleCTA}>Get Early Access</Button>
         </motion.div>
       </div>
     </section>
