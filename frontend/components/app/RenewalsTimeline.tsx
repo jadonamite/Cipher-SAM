@@ -12,17 +12,16 @@ interface Renewal {
   daysFromNow: number
 }
 
-export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
-  const WINDOW = 14
-  const renewals = useMemo(() => computeRenewals(subs, WINDOW), [subs])
-  const [hovered, setHovered] = useState<Renewal | null>(null)
-
 function cadenceDays(c: Subscription['cadence']): number {
   if (c === 'daily')   return 1
   if (c === 'weekly')  return 7
   if (c === 'yearly')  return 365
   return 30
 }
+
+function computeRenewals(subs: Subscription[], windowDays = 14): Renewal[] {
+  const now = new Date()
+  const out: Renewal[] = []
 
   for (const sub of subs) {
     if (sub.status !== 'active') continue
@@ -40,9 +39,10 @@ function cadenceDays(c: Subscription['cadence']): number {
   return out.sort((a, b) => a.daysFromNow - b.daysFromNow)
 }
 
-function computeRenewals(subs: Subscription[], windowDays = 14): Renewal[] {
-  const now = new Date()
-  const out: Renewal[] = []
+export default function RenewalsTimeline({ subs }: { subs: Subscription[] }) {
+  const WINDOW = 14
+  const renewals = useMemo(() => computeRenewals(subs, WINDOW), [subs])
+  const [hovered, setHovered] = useState<Renewal | null>(null)
 
   if (renewals.length === 0) return null
 

@@ -10,25 +10,21 @@ function numOrNull(value: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-export function normalizeSubscription<T extends Record<string, unknown>>(raw: T): T {
+function normalizeNumber<T extends Record<string, unknown>>(raw: T, key: string, fallback?: number): T {
   return {
     ...raw,
-    amount: num(raw.amount),
-    confidence: numOrNull(raw.confidence),
+    [key]: fallback !== undefined ? num(raw[key], fallback) : numOrNull(raw[key]),
   } as T
+}
+
+export function normalizeSubscription<T extends Record<string, unknown>>(raw: T): T {
+  return normalizeNumber(normalizeNumber(raw, 'amount'), 'confidence')
 }
 
 export function normalizeRec<T extends Record<string, unknown>>(raw: T): T {
-  return {
-    ...raw,
-    amount: num(raw.amount),
-    confidence: num(raw.confidence),
-  } as T
+  return normalizeNumber(normalizeNumber(raw, 'amount'), 'confidence', 0)
 }
 
 export function normalizeAction<T extends Record<string, unknown>>(raw: T): T {
-  return {
-    ...raw,
-    amount: num(raw.amount),
-  } as T
+  return normalizeNumber(raw, 'amount')
 }
