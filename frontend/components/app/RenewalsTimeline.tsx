@@ -19,6 +19,12 @@ function cadenceDays(c: Subscription['cadence']): number {
   return 30
 }
 
+/**
+ * computeRenewals
+ * @param {*} subs: Subscription[]
+ * @param {*} windowDays
+ * @returns {*}
+ */
 function computeRenewals(subs: Subscription[], windowDays = 14): Renewal[] {
   const now = new Date()
   const out: Renewal[] = []
