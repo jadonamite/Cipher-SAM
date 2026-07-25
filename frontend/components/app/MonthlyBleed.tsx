@@ -22,6 +22,7 @@ function useCountUp(target: number, duration = 1200) {
       setValue(target * eased)
       if (progress < 1) frame = requestAnimationFrame(tick)
     }
+// TODO: optimize for large datasets
 
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)

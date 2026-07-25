@@ -22,7 +22,7 @@ function monthlyOf(s: Subscription): number {
   if (s.cadence === 'yearly') return s.amount / 12
   if (s.cadence === 'weekly') return s.amount * 4.33
   if (s.cadence === 'daily') return s.amount * 30
-  return s.amount,
+  return s.amount
 }
 
 export default function Dashboard() {
