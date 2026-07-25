@@ -37,6 +37,10 @@ const SCHEDULE = [
   700,   // 9 → 0  reset fade
 ]
 
+/**
+ * NotificationCascade
+ * @returns {*}
+ */
 export default function NotificationCascade() {
   const [phase, setPhase] = useState(0)
   const bleedValue = useMotionValue(0)
