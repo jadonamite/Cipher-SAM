@@ -61,8 +61,8 @@ export default function AuditPage() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch('/api/actions', { headers: { 'x-user-id': user!.id } })
-      if (res.ok) setActions(((await res.json()).actions ?? []).map(normalizeAction))
+      const response = await fetch('/api/actions', { headers: { 'x-user-id': user!.id } })
+      if (response.ok) setActions(((await response.json()).actions ?? []).map(normalizeAction))
     } catch {} finally {
       setLoading(false)
     }
@@ -72,11 +72,11 @@ export default function AuditPage() {
     if (reversing[action.id]) return
     setReversing((prev) => ({ ...prev, [action.id]: true }))
     try {
-      const res = await fetch(`/api/actions/${action.id}/reverse`, {
+      const response = await fetch(`/api/actions/${action.id}/reverse`, {
         method: 'PATCH',
         headers: { 'x-user-id': user!.id },
       })
-      if (res.ok) {
+      if (response.ok) {
         setActions((prev) =>
           prev.map((a) => a.id === action.id ? { ...a, reversed_at: new Date().toISOString() } : a)
         )
