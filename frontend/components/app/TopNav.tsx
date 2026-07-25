@@ -18,7 +18,7 @@ interface TopNavProps {
   gmailConnected?: boolean
   onScanGmail?: () => void
   onScanWallet?: () => void
-  onDebugScan?: () => void
+  onDebugScan?: () => void,
 }
 
 export default function TopNav({
