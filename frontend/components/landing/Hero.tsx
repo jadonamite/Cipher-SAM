@@ -72,6 +72,7 @@ export default function Hero() {
             className="rounded-lg"
           />
         </motion.div>
+// TODO: add error boundary here
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-10 lg:gap-16">
           {/* Left — 60% */}
