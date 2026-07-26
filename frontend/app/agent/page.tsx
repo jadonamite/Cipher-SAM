@@ -86,6 +86,11 @@ function ShortAddress({ address }: { address: string }) {
   )
 }
 
+/**
+ * StatusDot
+ * @param {*} { ok }: { ok: boolean }
+ * @returns {*}
+ */
 function StatusDot({ ok }: { ok: boolean }) {
   return (
     <span
