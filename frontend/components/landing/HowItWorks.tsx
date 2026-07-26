@@ -29,17 +29,17 @@ const steps = [
   },
 ]
 
-export default function HowItWorks() {
-  const sectionRef = useRef<HTMLElement>(null)
-  const trackRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    let ctx: { revert: () => void } | null = null
-
     const init = async () => {
       const gsap = (await import('gsap')).default
       const { ScrollTrigger } = await import('gsap/ScrollTrigger')
       gsap.registerPlugin(ScrollTrigger)
+
+  useEffect(() => {
+    let ctx: { revert: () => void } | null = null
+
+export default function HowItWorks() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
 
       const section = sectionRef.current
       const track = trackRef.current

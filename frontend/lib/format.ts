@@ -12,6 +12,11 @@ const SYMBOLS: Record<string, string> = {
 }
 
 // NGN amounts are typically whole-number; everything else gets two decimals.
+/**
+ * decimalsFor
+ * @param {*} currency: string
+ * @returns {*}
+ */
 function decimalsFor(currency: string): number {
   return currency === 'NGN' ? 0 : 2
 }
