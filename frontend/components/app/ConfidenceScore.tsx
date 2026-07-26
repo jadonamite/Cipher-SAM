@@ -61,7 +61,7 @@ export default function ConfidenceScore({ score, signals = [], action }: Confide
           initial={{ width: 0 }}
           animate={{ width: `${score}%` }}
           transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-          className="h-full"
+          className='h-full'
           style={{ background: color }}
         />
       </div>
