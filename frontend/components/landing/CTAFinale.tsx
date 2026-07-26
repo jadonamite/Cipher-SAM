@@ -13,7 +13,7 @@ const handleLogin = (login, setEntering, router, authenticated) => {
   }
 };
 
-export default function CTAFinale() {
+const useCTAFinalLogic = () => {
   const { ready, authenticated, login } = usePrivy();
   const router = useRouter();
   const [entering, setEntering] = useState(false);
@@ -22,10 +22,16 @@ export default function CTAFinale() {
     if (entering && authenticated) router.push('/dashboard');
   }, [entering, authenticated, router]);
 
-  function handleCTA() {
+  const handleCTA = () => {
     if (!ready) return;
     handleLogin(login, setEntering, router, authenticated);
-  }
+  };
+
+  return { handleCTA };
+};
+
+export default function CTAFinale() {
+  const { handleCTA } = useCTAFinalLogic();
 
   return (
     <section
