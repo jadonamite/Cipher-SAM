@@ -10,9 +10,17 @@ const lines = [
   { text: 'That productivity app from 2023.', price: '$8/mo' },
 ]
 
-export default function Problem() {
-  const sectionRef = useRef(null)
-  const inView = useInView(sectionRef, { once: true, margin: '-80px' })
+function StrikeoutLine({
+  text,
+  price,
+  delay,
+}: {
+  text: string
+  price: string
+  delay: number
+}) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
 
   return (
     <motion.div
@@ -52,17 +60,9 @@ export default function Problem() {
   )
 }
 
-function StrikeoutLine({
-  text,
-  price,
-  delay,
-}: {
-  text: string
-  price: string
-  delay: number
-}) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
+export default function Problem() {
+  const sectionRef = useRef(null)
+  const inView = useInView(sectionRef, { once: true, margin: '-80px' })
 
   return (
     <section

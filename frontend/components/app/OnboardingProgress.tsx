@@ -80,7 +80,6 @@ export default function OnboardingProgress(props: OnboardingProgressProps) {
                     ? { boxShadow: ['0 0 0 0 rgba(229,9,20,0.4)', '0 0 0 6px rgba(229,9,20,0)'] }
                     : {}
                 }
-                // FIXME: handle edge case when value is null
                 transition={active ? { duration: 1.6, repeat: Infinity, ease: 'easeOut' } : {}}
                 style={{
                   width: '14px',
