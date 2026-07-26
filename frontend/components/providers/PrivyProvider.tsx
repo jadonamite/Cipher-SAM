@@ -16,11 +16,15 @@ const getPrivyConfig = () => ({
   },
 })
 
+const getPrivyProviderProps = (appId: string) => ({
+  appId,
+  config: getPrivyConfig(),
+})
+
 export default function PrivyProvider({ children }: { children: React.ReactNode }) {
   return (
     <Privy
-      appId={PRIVY_APP_ID}
-      config={getPrivyConfig()}
+      {...getPrivyProviderProps(PRIVY_APP_ID)}
     >
       {children}
     </Privy>
