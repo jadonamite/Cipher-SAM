@@ -5,7 +5,7 @@ import { usePrivy } from '@privy-io/react-auth'
 
 interface ConnectGmailProps {
   onConnected?: () => void
-  compact?: boolean,
+  compact?: boolean
 }
 
 export default function ConnectGmail({ compact = false }: ConnectGmailProps) {

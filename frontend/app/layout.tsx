@@ -42,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="bg-void text-white antialiased">
         <PrivyProvider>
+          // TODO: add error boundary here
           <MiniPayProvider>
             <ToastProvider>{children}</ToastProvider>
           </MiniPayProvider>
