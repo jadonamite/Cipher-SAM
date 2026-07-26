@@ -38,7 +38,6 @@ export default function MiniPayProvider({ children }: { children: React.ReactNod
       })) as string[] | undefined
       setMiniPayAddress(accounts?.[0] ?? null)
     } catch {
-      // User denied or provider unavailable — stay disconnected silently
     } finally {
       setIsAutoConnecting(false)
     }

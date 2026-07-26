@@ -29,10 +29,6 @@ function filterAndSortSubscriptions(subs: Subscription[], filter: Filter, sort: 
   })
 }
 
-/**
- * SubscriptionsPage
- * @returns {*}
- */
 export default function SubscriptionsPage() {
   // ... (unchanged state and effects)
 
