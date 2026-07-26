@@ -15,10 +15,13 @@ function useCountUp(target: number, duration = 1200) {
     let frame: number
     const start = performance.now()
 
-export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
-  const primary = primaryCurrency(byCurrency) ?? 'USD'
-  const primaryAmount = byCurrency[primary] ?? 0
-  const display = useCountUp(primaryAmount)
+    function tick(now: number) {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(target * eased)
+      if (progress < 1) frame = requestAnimationFrame(tick)
+    }
 
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
@@ -27,13 +30,10 @@ export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
   return value
 }
 
-    function tick(now: number) {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setValue(target * eased)
-      if (progress < 1) frame = requestAnimationFrame(tick)
-    }
+export default function MonthlyBleed({ byCurrency }: MonthlyBleedProps) {
+  const primary = primaryCurrency(byCurrency) ?? 'USD'
+  const primaryAmount = byCurrency[primary] ?? 0
+  const display = useCountUp(primaryAmount)
 
   const extras = Object.entries(byCurrency).filter(([c, v]) => c !== primary && v > 0)
   const yearlyPrimary = primaryAmount * 12

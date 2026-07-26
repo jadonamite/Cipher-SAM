@@ -19,12 +19,6 @@ const tagColors: Record<string, string> = {
 }
 import { brandIcons } from '@/components/ui/BrandIcons'
 
-/**
- * ConfidenceBar
- * @param {*} { value
- * @param {*} tag }: { value: number; tag: string }
- * @returns {*}
- */
 function ConfidenceBar({ value, tag }: { value: number; tag: string }) {
   const barColor = tag === 'UNDERUSED' ? '#E50914' : tag === 'REVIEW' ? '#D97706' : tag === 'ACTIVE' ? '#16A34A' : '#525252'
   return (
