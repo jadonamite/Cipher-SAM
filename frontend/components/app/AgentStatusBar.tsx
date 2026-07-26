@@ -21,9 +21,12 @@ function formatRelative(date: Date | string | null | undefined): string {
   return `${days}d ago`
 }
 
+function getAgentStatus(scanning: boolean): { status: string; dotColor: string } {
+  return scanning ? { status: 'SCANNING', dotColor: '#E50914' } : { status: 'ACTIVE', dotColor: '#16A34A' }
+}
+
 export default function AgentStatusBar({ scanning, lastScan, subCount = 0 }: AgentStatusBarProps) {
-  const status = scanning ? 'SCANNING' : 'ACTIVE'
-  const dotColor = scanning ? '#E50914' : '#16A34A'
+  const { status, dotColor } = getAgentStatus(scanning)
 
   return (
     <div
