@@ -1,9 +1,9 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { Subscription } from './SubscriptionRow'
 import { aggregateByCurrency, formatAggregate } from '@/lib/format'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
 
 interface Insight {
   id: string

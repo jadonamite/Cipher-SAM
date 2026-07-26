@@ -1,7 +1,7 @@
 'use client'
 
-import type { HTMLAttributes } from 'react'
 import { motion } from 'framer-motion'
+import type { HTMLAttributes } from 'react'
 
 interface ButtonProps extends HTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary'
