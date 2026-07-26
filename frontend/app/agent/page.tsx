@@ -146,7 +146,7 @@ export default function AgentPage() {
           address: SAM_POLICY_ADDRESS,
           abi: SAM_POLICY_ABI,
           functionName: 'grantDefaultScopes',
-          args: [SAM_AGENT_ADDRESS],
+          params: [SAM_AGENT_ADDRESS],
           account,
         })
       }
